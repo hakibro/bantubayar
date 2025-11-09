@@ -20,9 +20,10 @@
                 <h1 class="text-2xl font-bold text-indigo-600">{{ config('app.name', 'App') }}</h1>
             </div>
             <nav class="mt-4 space-y-1">
-                <a href="{{ route('dashboard') }}"
-                    class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">🏠 Dashboard</a>
+
                 @role('admin')
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">🏠 Dashboard</a>
                     <a href="{{ route('admin.petugas.index') }}"
                         class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">🙎
                         Manage Petugas</a>
@@ -33,6 +34,8 @@
                         Autosend WA</a>
                 @endrole
                 @role('petugas')
+                    <a href="{{ route('petugas.dashboard') }}"
+                        class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">🏠 Dashboard</a>
                     <a href="{{ route('petugas.penanganan.index') }}"
                         class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">👥 Data
                         Penanganan</a>

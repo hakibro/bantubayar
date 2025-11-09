@@ -8,10 +8,32 @@ use Illuminate\Http\Request;
 
 class PetugasController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $petugas = User::role('petugas')->get();
-        return view('admin.petugas.index', compact('petugas'));
+        $query = User::role('petugas')->withTrashed();
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($lembaga = $request->input('lembaga')) {
+            $query->where('lembaga', $lembaga);
+        }
+
+        $petugas = $query->orderBy('name')->paginate(10)->withQueryString();
+
+        $daftarLembaga = User::role('petugas')
+            ->select('lembaga')->distinct()->pluck('lembaga')->filter()->values();
+
+        // Jika request dari AJAX → return partial table saja
+        if ($request->ajax()) {
+            return view('admin.petugas.partials.table', compact('petugas'))->render();
+        }
+
+        return view('admin.petugas.index', compact('petugas', 'daftarLembaga'));
     }
 
     public function create()

@@ -3,51 +3,70 @@
 @section('title', 'Admin Dashboard')
 
 @section('content')
-    <h2 class="text-xl font-semibold mb-4">Daftar Petugas</h2>
-    <a href="{{ route('admin.petugas.create') }}" class="btn btn-primary mb-3">+ Tambah Petugas</a>
+    <div class="p-6 bg-gray-50 min-h-screen">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-3">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Manajemen Petugas</h1>
+                <p class="text-sm text-gray-500">Kelola data petugas aktif maupun nonaktif secara real-time.</p>
+            </div>
+            <a href="{{ route('admin.petugas.create') }}"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                + Tambah Petugas
+            </a>
+        </div>
 
-    <table class="table-auto w-full">
-        <thead>
-            <tr>
-                <th>Nama</th>
-                <th>Email</th>
-                <th>Lembaga</th>
-                <th>Status</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($petugas as $p)
-                <tr>
-                    <td>{{ $p->nama }}</td>
-                    <td>{{ $p->email }}</td>
-                    <td>{{ $p->lembaga }}</td>
-                    <td>{{ $p->deleted_at ? 'Nonaktif' : 'Aktif' }}</td>
-                    <td>
-                        @if (!$p->deleted_at)
-                            <a href="{{ route('admin.petugas.edit', $p->id) }}" class="text-blue-500">Edit</a> |
-                            <form action="{{ route('admin.petugas.destroy', $p->id) }}" method="POST" style="display:inline">
-                                @csrf @method('DELETE')
-                                <button class="text-red-500"
-                                    onclick="return confirm('Nonaktifkan petugas ini?')">Hapus</button>
-                            </form>
-                        @else
-                            <form action="{{ route('admin.petugas.restore', $p->id) }}" method="POST"
-                                style="display:inline">
-                                @csrf
-                                <button class="text-green-600">Pulihkan</button>
-                            </form>
-                            |
-                            <form action="{{ route('admin.petugas.forceDelete', $p->id) }}" method="POST"
-                                style="display:inline">
-                                @csrf @method('DELETE')
-                                <button class="text-red-700" onclick="return confirm('Hapus permanen?')">Hapus
-                                    Permanen</button>
-                            </form>
-                        @endif
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+        <!-- Filter & Pencarian -->
+        <div class="mb-6">
+            <div class="flex flex-col md:flex-row gap-3 items-center bg-white p-4 rounded-lg shadow border border-gray-100">
+                <!-- Input Pencarian -->
+                <div class="w-full md:w-1/2">
+                    <input type="text" id="searchInput" placeholder="Cari nama atau email..."
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <!-- Filter Lembaga -->
+                <div class="w-full md:w-1/4">
+                    <select id="filterLembaga"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">Semua Lembaga</option>
+                        @foreach ($daftarLembaga as $l)
+                            <option value="{{ $l }}">{{ $l }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container Tabel -->
+        <div id="tableContainer" class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
+            @include('admin.petugas.partials.table', ['petugas' => $petugas])
+        </div>
+    </div>
+
+    <!-- Live Search Script -->
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const filterLembaga = document.getElementById('filterLembaga');
+        const tableContainer = document.getElementById('tableContainer');
+
+        function fetchPetugas() {
+            const search = searchInput.value;
+            const lembaga = filterLembaga.value;
+
+            fetch(`{{ route('admin.petugas.index') }}?search=${encodeURIComponent(search)}&lembaga=${encodeURIComponent(lembaga)}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest' // 🔥 penting
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    tableContainer.innerHTML = html;
+                })
+                .catch(err => console.error('Error:', err));
+        }
+
+        searchInput.addEventListener('keyup', fetchPetugas);
+        filterLembaga.addEventListener('change', fetchPetugas);
+    </script>
 @endsection
