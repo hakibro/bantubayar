@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\PetugasController;
 use App\Http\Controllers\Admin\AssignController;
 use App\Http\Controllers\Petugas\PenangananController;
+use App\Http\Controllers\Admin\SiswaSyncController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -31,10 +32,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/petugas/{id}/force', [PetugasController::class, 'forceDelete'])->name('petugas.forceDelete');
 
 
+    // Sync Siswa dari API Eksternal
+    Route::get('/siswa/test-api', [SiswaSyncController::class, 'testApi']);
+    Route::get('/siswa/fetch/{idperson}', [SiswaSyncController::class, 'fetch']);
+    Route::get('/siswa/sync/{idperson}', [SiswaSyncController::class, 'sync']);
+
+    Route::get('/siswa/sync-all', [SiswaSyncController::class, 'index']);
+    Route::get('/siswa/sync-all/run', [SiswaSyncController::class, 'getAllSiswa']);
+
     // Assign Siswa ke Petugas
     Route::get('/assign', [AssignController::class, 'index'])->name('assign.index');
-    Route::post('/assign', [AssignController::class, 'store'])->name('assign.store');
-    Route::delete('/assign/{id}', [AssignController::class, 'destroy'])->name('assign.destroy');
+
+    // Route::post('/assign', [AssignController::class, 'store'])->name('assign.store');
+    // Route::delete('/assign/{id}', [AssignController::class, 'destroy'])->name('assign.destroy');
 
     // Auto Pesan WhatsApp
     // Route::get('/whatsapp', [App\Http\Controllers\Admin\WhatsappController::class, 'index'])->name('whatsapp.index');
