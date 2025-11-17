@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Siswa;
 
 class SiswaService
@@ -70,6 +71,11 @@ class SiswaService
                 ];
             }
 
+            // ==== PROGRESS SETUP ====
+            $total = count($data);
+            Cache::put('sync_siswa_total', $total, 3600);
+            Cache::put('sync_siswa_progress', 0, 3600);
+
             $insertData = [];
             foreach ($data as $item) {
                 $insertData[] = [
@@ -90,12 +96,15 @@ class SiswaService
                 ];
             }
 
-            // Batch insert menggunakan chunk agar tidak overload
+            // ==== INSERT PER CHUNK DAN UPDATE PROGRESS ====
+            $processed = 0;
+
             foreach (array_chunk($insertData, 500) as $chunk) {
+
                 \DB::table('siswa')->upsert(
                     $chunk,
-                    ['idperson'],  // unique key
-                    [   // columns to update
+                    ['idperson'],
+                    [
                         'nama',
                         'gender',
                         'lahirtempat',
@@ -110,12 +119,16 @@ class SiswaService
                         'updated_at'
                     ]
                 );
+
+                // Update progress
+                $processed += count($chunk);
+                Cache::put('sync_siswa_progress', $processed, 3600);
             }
 
             return [
                 'status' => true,
                 'message' => 'Sinkronisasi batch selesai.',
-                'total' => count($data),
+                'total' => $total,
             ];
 
         } catch (\Exception $e) {
@@ -125,6 +138,7 @@ class SiswaService
             ];
         }
     }
+
 
     public function syncAllSiswa()
     {
