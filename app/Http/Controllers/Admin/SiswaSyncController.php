@@ -15,10 +15,12 @@ class SiswaSyncController extends Controller
         $this->service = $service;
     }
 
-    public function index()
-    {
-        return view('admin.assign.sync-all-siswa');
-    }
+    // public function index()
+    // {
+    //     return view('admin.assign.get-all-siswa');
+    // }
+
+
 
     /**
      * Test koneksi API SISDA
