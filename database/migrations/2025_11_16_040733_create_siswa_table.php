@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('siswa', function (Blueprint $table) {
             $table->id();
-            $table->string('idperson')->unique();
+            $table->unsignedBigInteger('idperson')->unique();
             $table->string('nama');
             $table->enum('gender', ['L', 'P']);
             $table->string('lahirtempat')->nullable();

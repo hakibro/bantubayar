@@ -43,6 +43,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Assign Siswa ke Petugas
     Route::get('/assign', [AssignController::class, 'index'])->name('assign.index');
 
+    Route::post('/assign/siswa', [AssignController::class, 'assign'])->name('assign.siswa');
+    Route::post('/assign/unassign', [AssignController::class, 'unassign'])->name('assign.unassign');
+    Route::post('/assign/store', [AssignController::class, 'store'])->name('assign.store');
+    Route::delete('/assign/{id}', [AssignController::class, 'destroy'])->name('assign.destroy');
+
     // Route::post('/assign', [AssignController::class, 'store'])->name('assign.store');
     // Route::delete('/assign/{id}', [AssignController::class, 'destroy'])->name('assign.destroy');
 

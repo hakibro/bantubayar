@@ -38,4 +38,11 @@ class Siswa extends Model
         return $query->where('nama', 'like', "%{$keyword}%")
             ->orWhere('idperson', 'like', "%{$keyword}%");
     }
+
+    public function petugas()
+    {
+        return $this->belongsToMany(User::class, 'petugas_siswa', 'siswa_id', 'petugas_id')
+            ->withTimestamps();
+    }
+
 }
