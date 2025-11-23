@@ -43,10 +43,20 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Assign Siswa ke Petugas
     Route::get('/assign', [AssignController::class, 'index'])->name('assign.index');
 
+    // Optional: endpoint to get kelas (per lembaga) jika butuh
+    Route::get('/assign/kelas', [AssignController::class, 'kelas'])->name('assign.kelas');
+
     Route::post('/assign/siswa', [AssignController::class, 'assign'])->name('assign.siswa');
     Route::post('/assign/unassign', [AssignController::class, 'unassign'])->name('assign.unassign');
     Route::post('/assign/store', [AssignController::class, 'store'])->name('assign.store');
     Route::delete('/assign/{id}', [AssignController::class, 'destroy'])->name('assign.destroy');
+
+    // Bulk Assign & Unassign
+    Route::post('/assign/bulk', [AssignController::class, 'bulk'])->name('assign.bulk');
+    Route::post('/assign/bulk-unassign', [AssignController::class, 'bulkUnassign'])
+        ->name('assign.bulkUnassign');
+
+
 
     // Route::post('/assign', [AssignController::class, 'store'])->name('assign.store');
     // Route::delete('/assign/{id}', [AssignController::class, 'destroy'])->name('assign.destroy');
