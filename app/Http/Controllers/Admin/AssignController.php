@@ -14,6 +14,16 @@ class AssignController extends Controller
      */
     public function index(Request $request)
     {
+
+     // Ambil semua data siswa dari database
+    $siswaAll = Siswa::all(); // Ganti Siswa::all() sesuai model atau API-mu
+
+    // Cek apakah tidak ada data sama sekali
+    if ($siswaAll->isEmpty()) {
+        // Kembalikan view khusus ketika tidak ada data siswa
+        return view('admin.assign.get-all-siswa');
+    }   
+
         // ambil semua petugas untuk dropdown filter & assign
         $petugas = User::all();
 

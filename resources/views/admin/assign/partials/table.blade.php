@@ -50,12 +50,11 @@
     </div>
 </div>
 
-<!-- Modal Single Assign -->
+<!-- Modals -->
 <div id="assignModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white w-80 p-6 rounded shadow-lg">
         <h2 class="text-lg font-semibold mb-4">Assign Petugas</h2>
-        <form id="assignForm">
-            @csrf
+        <form id="assignForm">@csrf
             <div id="assignIdsContainer"></div>
             <select name="petugas_id" id="assignPetugasSelect" class="w-full mb-4 border px-2 py-1 rounded">
                 <option value="">— pilih petugas —</option>
@@ -72,12 +71,10 @@
     </div>
 </div>
 
-<!-- Modal Bulk Assign -->
 <div id="bulkAssignModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white w-80 p-6 rounded shadow-lg">
         <h2 class="text-lg font-semibold mb-4">Assign Petugas (Bulk)</h2>
-        <form id="bulkAssignForm">
-            @csrf
+        <form id="bulkAssignForm">@csrf
             <div id="bulkAssignIdsContainer"></div>
             <select name="petugas_id" id="bulkPetugasSelect" class="w-full mb-4 border px-2 py-1 rounded">
                 <option value="">— pilih petugas —</option>
@@ -94,13 +91,11 @@
     </div>
 </div>
 
-<!-- Modal Bulk Unassign -->
 <div id="confirmUnassignModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white w-80 p-6 rounded shadow-lg">
         <h2 class="text-lg font-semibold mb-4 text-red-600">Konfirmasi Unassign</h2>
         <p class="mb-4">Hapus petugas dari siswa terpilih?</p>
-        <form id="unassignForm">
-            @csrf
+        <form id="unassignForm">@csrf
             <div id="unassignIdsContainer"></div>
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="confirmUnassignModal.classList.add('hidden');"
@@ -110,7 +105,6 @@
         </form>
     </div>
 </div>
-
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const assignModal = document.getElementById("assignModal");
@@ -118,49 +112,92 @@
         const confirmUnassignModal = document.getElementById("confirmUnassignModal");
 
         function refreshBulkActionVisibility() {
+            const bulkActionBar = document.getElementById('bulkActionBar');
             const anyChecked = document.querySelectorAll('.checkItem:checked').length > 0;
-            document.getElementById('bulkActionBar').classList.toggle('hidden', !anyChecked);
+            if (bulkActionBar) {
+                bulkActionBar.classList.toggle('hidden', !anyChecked);
+            }
         }
 
-        // Check all & individual check
-        document.addEventListener("change", function(e) {
-            if (e.target.id === "checkAllTop") {
-                const check = e.target.checked;
-                document.querySelectorAll(".checkItem").forEach(cb => cb.checked = check);
-                refreshBulkActionVisibility();
-            }
-            if (e.target.classList.contains("checkItem")) {
-                const all = document.querySelectorAll(".checkItem");
-                const checked = document.querySelectorAll(".checkItem:checked");
-                document.getElementById("checkAllTop").checked = checked.length === all.length;
-                refreshBulkActionVisibility();
-            }
-        });
+        function getCheckedIds() {
+            return [...document.querySelectorAll('.checkItem:checked')].map(cb => cb.value);
+        }
 
-        // Event delegation untuk Single Assign
-        document.getElementById("tableContainer").addEventListener("click", function(e) {
+        function fillContainer(containerId, ids) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            ids.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'siswa_ids[]';
+                input.value = id;
+                container.appendChild(input);
+            });
+        }
+
+        // ===== Event delegation pada document untuk handle dynamic content =====
+        document.addEventListener("click", function(e) {
+            // Single Assign
             if (e.target.classList.contains("singleAssignBtn")) {
                 const id = e.target.dataset.id;
-                document.getElementById("assignIdsContainer").innerHTML =
-                    `<input type='hidden' name='siswa_ids[]' value='${id}'>`;
+                fillContainer("assignIdsContainer", [id]);
                 assignModal.classList.remove("hidden");
                 assignModal.classList.add("flex");
             }
+
+            // Bulk Assign
+            if (e.target.id === "bulkAssignBtn") {
+                const ids = getCheckedIds();
+                if (!ids.length) return alert("Pilih siswa terlebih dahulu");
+                fillContainer("bulkAssignIdsContainer", ids);
+                bulkAssignModal.classList.remove("hidden");
+                bulkAssignModal.classList.add("flex");
+            }
+
+            // Bulk Unassign
+            if (e.target.id === "bulkUnassignBtn") {
+                const ids = getCheckedIds();
+                if (!ids.length) return alert("Pilih siswa terlebih dahulu");
+                fillContainer("unassignIdsContainer", ids);
+                confirmUnassignModal.classList.remove("hidden");
+                confirmUnassignModal.classList.add("flex");
+            }
         });
 
-        // Submit Single Assign
+        // ===== Checkbox events dengan delegation =====
+        document.addEventListener("change", function(e) {
+            // Check All
+            if (e.target.id === "checkAllTop") {
+                const checked = e.target.checked;
+                document.querySelectorAll(".checkItem").forEach(cb => cb.checked = checked);
+                refreshBulkActionVisibility();
+            }
+
+            // Individual checkbox
+            if (e.target.classList.contains("checkItem")) {
+                const checkAllTop = document.getElementById("checkAllTop");
+                if (checkAllTop) {
+                    const all = document.querySelectorAll(".checkItem");
+                    const checked = document.querySelectorAll(".checkItem:checked");
+                    checkAllTop.checked = checked.length === all.length;
+                }
+                refreshBulkActionVisibility();
+            }
+        });
+
+        // ===== Form submits (ini tidak perlu delegation karena modal tidak di-reload) =====
         document.getElementById("assignForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             const petugas = document.getElementById("assignPetugasSelect").value;
             const siswa_ids = [...document.querySelectorAll("#assignIdsContainer input")].map(x => x
                 .value);
-            if (!petugas || siswa_ids.length === 0) return alert("Pilih petugas dan siswa");
+
+            if (!petugas || !siswa_ids.length) return alert("Pilih petugas dan siswa");
 
             const res = await fetch("{{ route('admin.assign.bulk') }}", {
                 method: "POST",
                 headers: {
-                    "X-CSRF-TOKEN": document.querySelector('#assignForm input[name=_token]')
-                        .value,
+                    "X-CSRF-TOKEN": this.querySelector("input[name=_token]").value,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
@@ -171,22 +208,22 @@
             const json = await res.json();
             alert(json.message);
             assignModal.classList.add("hidden");
+            assignModal.classList.remove("flex");
             reloadTable();
         });
 
-        // Submit Bulk Assign
         document.getElementById("bulkAssignForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             const petugas = document.getElementById("bulkPetugasSelect").value;
             const siswa_ids = [...document.querySelectorAll("#bulkAssignIdsContainer input")].map(
                 x => x.value);
-            if (!petugas || siswa_ids.length === 0) return alert("Pilih petugas dan siswa");
+
+            if (!petugas || !siswa_ids.length) return alert("Pilih petugas dan siswa");
 
             const res = await fetch("{{ route('admin.assign.bulk') }}", {
                 method: "POST",
                 headers: {
-                    "X-CSRF-TOKEN": document.querySelector(
-                        '#bulkAssignForm input[name=_token]').value,
+                    "X-CSRF-TOKEN": this.querySelector("input[name=_token]").value,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
@@ -197,21 +234,21 @@
             const json = await res.json();
             alert(json.message);
             bulkAssignModal.classList.add("hidden");
+            bulkAssignModal.classList.remove("flex");
             reloadTable();
         });
 
-        // Submit Bulk Unassign
         document.getElementById("unassignForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             const siswa_ids = [...document.querySelectorAll("#unassignIdsContainer input")].map(x =>
                 x.value);
-            if (siswa_ids.length === 0) return alert("Tidak ada siswa terpilih");
+
+            if (!siswa_ids.length) return alert("Tidak ada siswa terpilih");
 
             const res = await fetch("{{ route('admin.assign.bulkUnassign') }}", {
                 method: "POST",
                 headers: {
-                    "X-CSRF-TOKEN": document.querySelector(
-                        '#unassignForm input[name=_token]').value,
+                    "X-CSRF-TOKEN": this.querySelector('input[name=_token]').value,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
@@ -221,9 +258,11 @@
             const json = await res.json();
             alert(json.message);
             confirmUnassignModal.classList.add("hidden");
+            confirmUnassignModal.classList.remove("flex");
             reloadTable();
         });
 
+        // ===== Reload Table =====
         function reloadTable() {
             fetch("{{ route('admin.assign.index') }}", {
                     headers: {
@@ -231,7 +270,17 @@
                     }
                 })
                 .then(res => res.text())
-                .then(html => document.getElementById("tableContainer").innerHTML = html);
+                .then(html => {
+                    document.getElementById("tableContainer").innerHTML = html;
+                    // Reset checkbox state setelah reload
+                    const checkAllTop = document.getElementById("checkAllTop");
+                    if (checkAllTop) checkAllTop.checked = false;
+                    refreshBulkActionVisibility();
+                })
+                .catch(err => {
+                    console.error('Error reloading table:', err);
+                    alert('Gagal memuat ulang tabel');
+                });
         }
     });
 </script>

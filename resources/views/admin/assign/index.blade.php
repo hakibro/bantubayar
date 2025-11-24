@@ -25,6 +25,7 @@
                             {{ $l === '__NULL__' ? 'Tanpa Lembaga' : $l }}
                         </option>
                     @endforeach
+                     <option value="__NULL__">Tidak di Lembaga Formal</option>
                 </select>
 
                 <select id="filterKelas" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
