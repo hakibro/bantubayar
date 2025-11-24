@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\PetugasController;
+use App\Http\Controllers\Admin\PembayaranSiswaController;
 use App\Http\Controllers\Admin\AssignController;
+use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Petugas\PenangananController;
 use App\Http\Controllers\Admin\SiswaSyncController;
 use App\Http\Controllers\ProfileController;
@@ -32,13 +34,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/petugas/{id}/force', [PetugasController::class, 'forceDelete'])->name('petugas.forceDelete');
 
 
+    // Manajemen Siswa
+    Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
     // Sync Siswa dari API Eksternal
     Route::get('/siswa/test-api', [SiswaSyncController::class, 'testApi']);
     Route::get('/siswa/fetch/{idperson}', [SiswaSyncController::class, 'fetch']);
     Route::get('/siswa/sync/{idperson}', [SiswaSyncController::class, 'sync']);
 
-    Route::get('/siswa/sync-all', [SiswaSyncController::class, 'index']);
-    Route::get('/siswa/sync-all/run', [SiswaSyncController::class, 'getAllSiswa']);
+    Route::get('/siswa/get-all-siswa', [SiswaSyncController::class, 'getAllSiswa']);
+    Route::get('/siswa/sync-all-siswa', [SiswaSyncController::class, 'syncAllSiswa'])->name('siswa.sync-data-siswa');
+    Route::get('/siswa/sync-pembayaran-siswa', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
 
     // Assign Siswa ke Petugas
     Route::get('/assign', [AssignController::class, 'index'])->name('assign.index');
@@ -56,14 +61,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/assign/bulk-unassign', [AssignController::class, 'bulkUnassign'])
         ->name('assign.bulkUnassign');
 
+    // Pembayaran Siswa
+    Route::get('/pembayaran-siswa', [PembayaranSiswaController::class, 'index'])->name('pembayaran-siswa.index');
 
 
-    // Route::post('/assign', [AssignController::class, 'store'])->name('assign.store');
-    // Route::delete('/assign/{id}', [AssignController::class, 'destroy'])->name('assign.destroy');
-
-    // Auto Pesan WhatsApp
-    // Route::get('/whatsapp', [App\Http\Controllers\Admin\WhatsappController::class, 'index'])->name('whatsapp.index');
-    // Route::post('/whatsapp/send', [App\Http\Controllers\Admin\WhatsappController::class, 'send'])->name('whatsapp.send');
 });
 
 // Group route khusus Petugas

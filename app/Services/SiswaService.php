@@ -13,6 +13,7 @@ class SiswaService
     public function __construct()
     {
         $this->baseUrl = "https://api.daruttaqwa.or.id/sisda/v1/siswa";
+        $this->paymentUrl = "https://api.daruttaqwa.or.id/sisda/v1/payments/";
     }
 
     /**
@@ -140,115 +141,186 @@ class SiswaService
         }
     }
 
+    public function syncAllSiswa()
+    {
+        try {
+            // 1. Ambil data API
+            $response = Http::timeout(20)->get($this->baseUrl);
 
-    // public function syncAllSiswa()
-    // {
-    //     try {
-    //         // 1. Ambil semua data dari API
-    //         $response = Http::timeout(20)->get($this->baseUrl);
+            if (!$response->successful()) {
+                return ['status' => false, 'message' => 'Gagal mengambil data dari API.'];
+            }
 
-    //         if (!$response->successful()) {
-    //             return [
-    //                 'status' => false,
-    //                 'message' => 'Gagal mengambil data dari API.'
-    //             ];
-    //         }
+            $apiData = $response->json()['data'] ?? [];
 
-    //         $apiData = $response->json()['data'] ?? [];
+            if (empty($apiData)) {
+                return ['status' => false, 'message' => 'Data API kosong.'];
+            }
 
-    //         if (empty($apiData)) {
-    //             return [
-    //                 'status' => false,
-    //                 'message' => 'Data API kosong.'
-    //             ];
-    //         }
+            // 2. Ambil semua data siswa local dalam bentuk map
+            $dbData = Siswa::get()->keyBy('idperson');
 
-    //         // Ambil semua idperson dari API
-    //         $apiIds = collect($apiData)->pluck('idperson')->toArray();
+            $fields = [
+                'nama',
+                'gender',
+                'lahirtempat',
+                'lahirtanggal',
+                'phone',
+                'UnitFormal',
+                'KelasFormal',
+                'AsramaPondok',
+                'KamarPondok',
+                'TingkatDiniyah',
+                'KelasDiniyah',
+            ];
 
-    //         // Ambil semua idperson di database
-    //         $dbIds = Siswa::pluck('idperson')->toArray();
+            $insertBatch = [];
+            $updateBatch = [];
+            $updatedCount = 0;
+            $insertCount = 0;
+            $apiIds = [];
 
-    //         // Tentukan mana yang update/insert/delete
-    //         $toInsertOrUpdate = [];
-    //         $toDeleteIds = array_diff($dbIds, $apiIds);
+            // 3. Loop data API → tentukan insert/update
+            foreach ($apiData as $item) {
 
-    //         foreach ($apiData as $item) {
-    //             $toInsertOrUpdate[] = [
-    //                 'idperson' => $item['idperson'],
-    //                 'nama' => $item['nama'],
-    //                 'gender' => $item['gender'],
-    //                 'lahirtempat' => $item['lahirtempat'],
-    //                 'lahirtanggal' => $item['lahirtanggal'],
-    //                 'phone' => $item['phone'],
-    //                 'UnitFormal' => $item['UnitFormal'],
-    //                 'KelasFormal' => $item['KelasFormal'],
-    //                 'AsramaPondok' => $item['AsramaPondok'],
-    //                 'KamarPondok' => $item['KamarPondok'],
-    //                 'TingkatDiniyah' => $item['TingkatDiniyah'],
-    //                 'KelasDiniyah' => $item['KelasDiniyah'],
-    //                 'created_at' => now(),
-    //                 'updated_at' => now(),
-    //             ];
-    //         }
+                $id = $item['idperson'];
+                $apiIds[] = $id;
 
-    //         // Hitung insert & update
-    //         $insertCount = 0;
-    //         $updateCount = 0;
+                $local = $dbData->get($id);
 
-    //         foreach ($toInsertOrUpdate as $row) {
-    //             if (in_array($row['idperson'], $dbIds)) {
-    //                 $updateCount++;
-    //             } else {
-    //                 $insertCount++;
-    //             }
-    //         }
+                // -------------- INSERT --------------
+                if (!$local) {
+                    $insertBatch[] = [
+                        'idperson' => $id,
+                        'nama' => $item['nama'],
+                        'gender' => $item['gender'],
+                        'lahirtempat' => $item['lahirtanggal'],
+                        'lahirtanggal' => $item['lahirtanggal'],
+                        'phone' => $item['phone'],
+                        'UnitFormal' => $item['UnitFormal'],
+                        'KelasFormal' => $item['KelasFormal'],
+                        'AsramaPondok' => $item['AsramaPondok'],
+                        'KamarPondok' => $item['KamarPondok'],
+                        'TingkatDiniyah' => $item['TingkatDiniyah'],
+                        'KelasDiniyah' => $item['KelasDiniyah'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
 
-    //         // 2. Upsert (insert/update)
-    //         foreach (array_chunk($toInsertOrUpdate, 500) as $chunk) {
-    //             \DB::table('siswa')->upsert(
-    //                 $chunk,
-    //                 ['idperson'],
-    //                 [
-    //                     'nama',
-    //                     'gender',
-    //                     'lahirtempat',
-    //                     'lahirtanggal',
-    //                     'phone',
-    //                     'UnitFormal',
-    //                     'KelasFormal',
-    //                     'AsramaPondok',
-    //                     'KamarPondok',
-    //                     'TingkatDiniyah',
-    //                     'KelasDiniyah',
-    //                     'updated_at'
-    //                 ]
-    //             );
-    //         }
+                    $insertCount++;
+                    continue;
+                }
 
-    //         // 3. Delete siswa yang tidak ada di API
-    //         $deleteCount = 0;
-    //         if (!empty($toDeleteIds)) {
-    //             $deleteCount = Siswa::whereIn('idperson', $toDeleteIds)->delete();
-    //         }
+                // -------------- UPDATE --------------
+                $changes = false;
 
-    //         return [
-    //             'status' => true,
-    //             'message' => 'Sinkronisasi selesai.',
-    //             'inserted' => $insertCount,
-    //             'updated' => $updateCount,
-    //             'deleted' => $deleteCount,
-    //             'total_api' => count($apiData),
-    //             'total_local' => Siswa::count()
-    //         ];
+                foreach ($fields as $f) {
 
-    //     } catch (\Exception $e) {
-    //         return [
-    //             'status' => false,
-    //             'message' => $e->getMessage(),
-    //         ];
-    //     }
-    // }
+                    $localValue = $local->$f;
+                    $apiValue = $item[$f];
 
+                    // 🔥 NORMALISASI tanggal
+                    if ($f === 'lahirtanggal') {
+                        $localValue = optional($localValue)->format('Y-m-d');
+                    }
+
+                    if ((string) $localValue !== (string) $apiValue) {
+                        $changes = true;
+                        break;
+                    }
+                }
+
+                if ($changes) {
+                    $updateBatch[] = [
+                        'idperson' => $id,
+                        'nama' => $item['nama'],
+                        'gender' => $item['gender'],
+                        'lahirtempat' => $item['lahirtanggal'],
+                        'lahirtanggal' => $item['lahirtanggal'],
+                        'phone' => $item['phone'],
+                        'UnitFormal' => $item['UnitFormal'],
+                        'KelasFormal' => $item['KelasFormal'],
+                        'AsramaPondok' => $item['AsramaPondok'],
+                        'KamarPondok' => $item['KamarPondok'],
+                        'TingkatDiniyah' => $item['TingkatDiniyah'],
+                        'KelasDiniyah' => $item['KelasDiniyah'],
+                        'updated_at' => now(),
+                    ];
+
+                    $updatedCount++;
+                }
+            }
+
+            // 4. Bulk Insert
+            if (!empty($insertBatch)) {
+                foreach (array_chunk($insertBatch, 500) as $chunk) {
+                    Siswa::insert($chunk);
+                }
+            }
+
+            // 5. Bulk Update
+            if (!empty($updateBatch)) {
+                foreach (array_chunk($updateBatch, 500) as $chunk) {
+                    \DB::table('siswa')->upsert(
+                        $chunk,
+                        ['idperson'],
+                        $fields
+                    );
+                }
+            }
+
+            // 6. Delete siswa yang tidak ada di API
+            $deleteCount = Siswa::whereNotIn('idperson', $apiIds)->delete();
+
+            // 7. Hitung skipped
+            $totalApi = count($apiData);
+            $skipped = $totalApi - $insertCount - $updatedCount;
+
+            return [
+                'status' => true,
+                'message' => 'Sinkronisasi selesai.',
+                'inserted' => $insertCount,
+                'updated' => $updatedCount,
+                'skipped' => $skipped,
+                'deleted' => $deleteCount,
+                'total_api' => $totalApi,
+                'total_local' => Siswa::count()
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    public function getPembayaranSiswa($idperson)
+    {
+        $url = $this->paymentUrl . $idperson;
+
+        try {
+            $response = Http::timeout(15)->get($url);
+
+            if (!$response->successful()) {
+                return [
+                    'status' => false,
+                    'message' => 'Gagal mengambil data pembayaran.',
+                    'http_code' => $response->status()
+                ];
+            }
+
+            return [
+                'status' => true,
+                'data' => $response->json()['data'] ?? [],
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
 
 }

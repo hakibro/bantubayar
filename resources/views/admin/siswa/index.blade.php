@@ -1,14 +1,27 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Admin Dashboard')
+@section('title', 'Manage Siswa')
 
 @section('content')
     <div class="p-6 bg-gray-50 min-h-screen">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-2xl font-bold">Assign Siswa ke Petugas</h1>
-                <p class="text-sm text-gray-500">Assign siswa ke petugas — gunakan filter untuk mencari.</p>
+                <h1 class="text-2xl font-bold">Manage Siswa</h1>
+                <p class="text-sm text-gray-500">Sync Data Siswa dari Data Center - Informasi Pembayaran, Lembaga, Kelas.</p>
             </div>
+            <div class="flex gap-3">
+                <a href="javascript:void(0)" onclick="syncSiswa('{{ route('admin.siswa.sync-data-siswa') }}')"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 flex items-center">
+                    <i class="fas fa-database mr-2"></i> Sync Data Siswa
+                </a>
+                <a href="{{ route('admin.siswa.sync-pembayaran-siswa') }}"
+                    class="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 transition duration-200">
+                    <i class="fas fa-money-bill-wave mr-2"></i> Sync Pembayaran Siswa
+                </a>
+            </div>
+
+
+
         </div>
 
         <!-- Filter bar -->

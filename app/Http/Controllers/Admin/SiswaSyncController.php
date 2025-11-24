@@ -45,5 +45,17 @@ class SiswaSyncController extends Controller
 
         return response()->json($result);
     }
+    public function syncPembayaranSiswa()
+    {
+        $result = $this->service->syncPembayaranSiswa();
+
+        return response()->json($result);
+    }
+    public function getPembayaranSiswa()
+    {
+        $result = $this->service->getPembayaranSiswa();
+
+        return response()->json($result);
+    }
 
 }
