@@ -44,7 +44,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/siswa/get-all-siswa', [SiswaSyncController::class, 'getAllSiswa']);
     Route::get('/siswa/sync-all-siswa', [SiswaSyncController::class, 'syncAllSiswa'])->name('siswa.sync-data-siswa');
     Route::get('/siswa/sync-pembayaran-siswa', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
-    Route::get('/siswa/get-progress-pembayaran', [SiswaSyncController::class, 'getProgressPembayaran'])->name('siswa.get-progress-pembayaran');
+    Route::get('/siswa/get-progress-pembayaran', function () {
+        $total = cache()->get('sync_pembayaran_total', 1);
+        $processed = cache()->get('sync_pembayaran_processed', 0);
+
+        $percent = floor(($processed / $total) * 100);
+
+        return response()->json([
+            'progress' => $percent
+        ]);
+    });
+
     Route::get('/siswa/get-pembayaran-siswa/{idperson}', [SiswaSyncController::class, 'getPembayaranSiswa'])->name('siswa.get-pembayaran-siswa');
 
     // Assign Siswa ke Petugas
@@ -102,6 +112,19 @@ Route::post('/sync/pembayaran', function () {
         'message' => 'Proses sync pembayaran dimulai.'
     ]);
 });
+
+Route::get('/sync/pembayaran/progress', function () {
+    $total = Cache::get('sync_total', 0);
+    $done = Cache::get('sync_done', 0);
+
+    return [
+        'total' => $total,
+        'done' => $done,
+        'percent' => $total > 0 ? round(($done / $total) * 100, 2) : 0
+    ];
+});
+
+
 
 
 require __DIR__ . '/auth.php';
