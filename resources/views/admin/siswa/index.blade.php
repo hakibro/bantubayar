@@ -14,10 +14,8 @@
                     class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 flex items-center">
                     <i class="fas fa-database mr-2"></i> Sync Data Siswa
                 </a>
-                <a href="{{ route('admin.siswa.sync-pembayaran-siswa') }}"
-                    class="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 transition duration-200">
-                    <i class="fas fa-money-bill-wave mr-2"></i> Sync Pembayaran Siswa
-                </a>
+                <button id="startSync" class="px-4 py-2 bg-blue-600 text-white">Mulai Sinkron Pembayaran</button>
+
             </div>
 
 
@@ -62,59 +60,38 @@
     </div>
 
     <!-- Modals -->
-    <div id="assignModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white w-80 p-6 rounded shadow-lg">
-            <h2 class="text-lg font-semibold mb-4">Assign Petugas</h2>
-            <form id="assignForm">@csrf
-                <div id="assignIdsContainer"></div>
-                <select name="petugas_id" id="assignPetugasSelect" class="w-full mb-4 border px-2 py-1 rounded">
-                    <option value="">— pilih petugas —</option>
-                    @foreach ($petugas as $p)
-                        <option value="{{ $p->id }}">{{ $p->name }}</option>
-                    @endforeach
-                </select>
-                <div class="flex justify-end gap-2">
-                    <button type="button" class="closeModal px-3 py-1 bg-gray-300 rounded">Batal</button>
-                    <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded">Assign</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="bulkAssignModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white w-80 p-6 rounded shadow-lg">
-            <h2 class="text-lg font-semibold mb-4">Assign Petugas (Bulk)</h2>
-            <form id="bulkAssignForm">@csrf
-                <div id="bulkAssignIdsContainer"></div>
-                <select name="petugas_id" id="bulkPetugasSelect" class="w-full mb-4 border px-2 py-1 rounded">
-                    <option value="">— pilih petugas —</option>
-                    @foreach ($petugas as $p)
-                        <option value="{{ $p->id }}">{{ $p->name }}</option>
-                    @endforeach
-                </select>
-                <div class="flex justify-end gap-2">
-                    <button type="button" class="closeModal px-3 py-1 bg-gray-300 rounded">Batal</button>
-                    <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded">Assign</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="confirmUnassignModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white w-80 p-6 rounded shadow-lg">
-            <h2 class="text-lg font-semibold mb-4 text-red-600">Konfirmasi Unassign</h2>
-            <p class="mb-4">Hapus petugas dari siswa terpilih?</p>
-            <form id="unassignForm">@csrf
-                <div id="unassignIdsContainer"></div>
-                <div class="flex justify-end gap-2">
-                    <button type="button" class="closeModal px-3 py-1 bg-gray-300 rounded">Batal</button>
-                    <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded">Ya, Hapus</button>
-                </div>
-            </form>
+    <div class="w-full mt-4 bg-gray-200 rounded h-6">
+        <div id="progressBar" class="bg-green-500 h-6 rounded text-center text-white text-sm" style="width:0%">
+            0%
         </div>
     </div>
 
     <script>
+        document.getElementById('startSync').addEventListener('click', function() {
+
+            // Mulai sync
+            fetch('/admin/siswa/sync-pembayaran-siswa')
+                .then(response => response.json());
+
+            // Polling progress tiap 500ms
+            let interval = setInterval(() => {
+
+                fetch('/admin/siswa/get-progress-pembayaran')
+                    .then(res => res.json())
+                    .then(data => {
+                        let p = data.progress || 0;
+
+                        let bar = document.getElementById('progressBar');
+                        bar.style.width = p + "%";
+                        bar.innerHTML = p + "%";
+
+                        if (p >= 100) {
+                            clearInterval(interval);
+                        }
+                    });
+
+            }, 500);
+        });
         document.addEventListener("DOMContentLoaded", function() {
             // ===== ELEMENTS =====
             const searchInput = document.getElementById('searchInput');

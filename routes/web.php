@@ -44,6 +44,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/siswa/get-all-siswa', [SiswaSyncController::class, 'getAllSiswa']);
     Route::get('/siswa/sync-all-siswa', [SiswaSyncController::class, 'syncAllSiswa'])->name('siswa.sync-data-siswa');
     Route::get('/siswa/sync-pembayaran-siswa', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
+    Route::get('/siswa/get-progress-pembayaran', [SiswaSyncController::class, 'getProgressPembayaran'])->name('siswa.get-progress-pembayaran');
+    Route::get('/siswa/get-pembayaran-siswa/{idperson}', [SiswaSyncController::class, 'getPembayaranSiswa'])->name('siswa.get-pembayaran-siswa');
 
     // Assign Siswa ke Petugas
     Route::get('/assign', [AssignController::class, 'index'])->name('assign.index');

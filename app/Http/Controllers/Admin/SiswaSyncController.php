@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\SiswaService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class SiswaSyncController extends Controller
@@ -45,17 +47,25 @@ class SiswaSyncController extends Controller
 
         return response()->json($result);
     }
+
+
+    public function getPembayaranSiswa($idperson)
+    {
+        $result = $this->service->getPembayaranSiswa($idperson);
+
+        return response()->json($result);
+    }
+
     public function syncPembayaranSiswa()
     {
         $result = $this->service->syncPembayaranSiswa();
 
         return response()->json($result);
     }
-    public function getPembayaranSiswa()
+    public function getProgressPembayaran()
     {
-        $result = $this->service->getPembayaranSiswa();
-
-        return response()->json($result);
+        $progress = Cache::get('progress_pembayaran', 0);
+        return response()->json(['progress' => $progress]);
     }
 
 }
