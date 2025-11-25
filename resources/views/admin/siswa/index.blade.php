@@ -17,9 +17,12 @@
                 <button id="startSync" class="px-4 py-2 bg-blue-600 text-white">Mulai Sinkron Pembayaran</button>
 
             </div>
-
-
-
+        </div>
+        <!-- Progressbar  -->
+        <div id="progressContainer" class="hidden w-full my-4 bg-gray-200 rounded h-6">
+            <div id="progressBar" class="bg-green-500 h-6 rounded text-center text-white text-sm" style="width:0%">
+                0%
+            </div>
         </div>
 
         <!-- Filter bar -->
@@ -59,12 +62,7 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    <div class="w-full mt-4 bg-gray-200 rounded h-6">
-        <div id="progressBar" class="bg-green-500 h-6 rounded text-center text-white text-sm" style="width:0%">
-            0%
-        </div>
-    </div>
+
 
     <script>
         document.getElementById('startSync').addEventListener('click', function() {
@@ -72,6 +70,9 @@
             // Mulai sync
             fetch('/admin/siswa/sync-pembayaran-siswa')
                 .then(response => response.json());
+
+            //show progress bar
+            document.getElementById('progressContainer').classList.remove('hidden');
 
             // Polling progress tiap 500ms
             let interval = setInterval(() => {

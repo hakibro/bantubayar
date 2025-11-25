@@ -94,4 +94,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::post('/sync/pembayaran', function () {
+    \App\Jobs\DispatchSyncPembayaranJob::dispatch();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Proses sync pembayaran dimulai.'
+    ]);
+});
+
+
 require __DIR__ . '/auth.php';
