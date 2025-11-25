@@ -24,6 +24,7 @@ class Siswa extends Model
         'KamarPondok',
         'TingkatDiniyah',
         'KelasDiniyah',
+        'pembayaran',
     ];
 
     protected $casts = [

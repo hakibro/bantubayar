@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Schema;
 use App\Models\User;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
@@ -11,8 +12,13 @@ class SiswaController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil semua data siswa dari database
-        $siswaAll = Siswa::all(); // Ganti Siswa::all() sesuai model atau API-mu
+        // Ambil semua kolom dari tabel siswa
+        $columns = Schema::getColumnListing('siswa');
+
+        // hilangkan kolom pembayaran
+        $columns = array_diff($columns, ['pembayaran']);
+
+        $siswaAll = Siswa::select($columns)->get();
 
         // Cek apakah tidak ada data sama sekali
         if ($siswaAll->isEmpty()) {

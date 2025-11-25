@@ -13,32 +13,64 @@
 
         <!-- Filter bar -->
         <div class="mb-6">
-            <div class="flex flex-col md:flex-row gap-3 items-center bg-white p-4 rounded-lg shadow border border-gray-100">
+            <div class="flex flex-col md:flex-row gap-3 items-center bg-white p-4 rounded-xl shadow border border-gray-100">
+
+                <!-- Input Search -->
                 <input id="searchInput" type="text" placeholder="Cari nama atau idperson..."
-                    class="w-full md:w-1/3 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    class="w-full md:w-1/3 px-4 py-2.5 border border-gray-300 rounded-xl
+                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                   transition-all duration-150 text-gray-700 placeholder:text-gray-400">
 
-                <select id="filterLembaga" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
-                    <option value="">Semua Lembaga</option>
-                    @foreach ($daftarLembaga as $l)
-                        <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
-                            {{ $l === '__NULL__' ? 'Tanpa Lembaga' : $l }}
-                        </option>
-                    @endforeach
-                    <option value="__NULL__">Tidak di Lembaga Formal</option>
-                </select>
+                <!-- Filter Lembaga -->
+                <div class="relative w-full md:w-1/4">
+                    <select id="filterLembaga"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white text-gray-700
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                       transition-all duration-150 cursor-pointer">
 
-                <select id="filterKelas" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
-                    <option value="">Semua Kelas</option>
-                </select>
+                        <option value="" class="text-gray-500 font-medium">— Semua Lembaga —</option>
 
-                <select id="filterPetugas" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
-                    <option value="">Semua Petugas</option>
-                    @foreach ($petugas as $p)
-                        <option value="{{ $p->id }}">{{ $p->name }}</option>
-                    @endforeach
-                </select>
+                        @foreach ($daftarLembaga as $l)
+                            <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
+                                {{ $l === '__NULL__' ? 'Tanpa Lembaga' : $l }}
+                            </option>
+                        @endforeach
+
+                        <option value="__NULL__" class="text-gray-600 font-medium">Tidak di Lembaga Formal</option>
+                    </select>
+                </div>
+
+                <!-- Filter Kelas -->
+                <div class="relative w-full md:w-1/4">
+                    <select id="filterKelas"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white text-gray-700
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                       transition-all duration-150 cursor-pointer">
+
+                        <option value="" class="text-gray-500 font-medium">— Semua Kelas —</option>
+                    </select>
+                </div>
+
+                <!-- Filter Petugas -->
+                <div class="relative w-full md:w-1/4">
+                    <select id="filterPetugas"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white text-gray-700
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                       transition-all duration-150 cursor-pointer">
+
+                        <option value="" class="text-gray-500 font-medium">— Semua Petugas —</option>
+
+                        @foreach ($petugas as $p)
+                            <option value="{{ $p->id }}">{{ $p->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
             </div>
         </div>
+
+
+
 
         <!-- TABLE -->
         <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">

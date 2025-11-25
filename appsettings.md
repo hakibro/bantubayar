@@ -1,3 +1,0 @@
-SESSION_DRIVER=database
-CACHE_STORE=redis
-QUEUE_CONNECTION=database
