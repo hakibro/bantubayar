@@ -19,14 +19,20 @@ class DispatchSyncPembayaranJob implements ShouldQueue
         // Hitung total siswa
         $total = Siswa::count();
 
+        if ($total === 0) {
+            return;
+        }
+
         // Simpan total & reset progress
         cache()->put('sync_pembayaran_total', $total);
         cache()->put('sync_pembayaran_processed', 0);
+        cache()->put('sync_pembayaran_failed', 0);
 
-        // Dispatch job kecil
+        // Dispatch job per siswa
         Siswa::select('id', 'idperson')->chunk(100, function ($chunk) {
             foreach ($chunk as $siswa) {
-                SyncPembayaranSiswaJob::dispatch($siswa);
+                // Pass idperson string, bukan object siswa
+                SyncPembayaranSiswaJob::dispatch($siswa->idperson);
             }
         });
     }

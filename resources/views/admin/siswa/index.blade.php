@@ -14,8 +14,10 @@
                     class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 flex items-center">
                     <i class="fas fa-database mr-2"></i> Sync Data Siswa
                 </a>
-                <button id="startSync" class="px-4 py-2 bg-blue-600 text-white">Mulai Sinkron Pembayaran</button>
-
+                <a href="{{ route('admin.sync-pembayaran.index') }}"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center">
+                    <i class="fas fa-money-bill-wave mr-2"></i> Sinkron Pembayaran
+                </a>
             </div>
         </div>
         <!-- Progressbar  -->
@@ -24,8 +26,6 @@
                 0%
             </div>
         </div>
-
-        <!-- Filter bar -->
         <div class="mb-6">
             <div class="flex flex-col md:flex-row gap-3 items-center bg-white p-4 rounded-lg shadow border border-gray-100">
                 <input id="searchInput" type="text" placeholder="Cari nama atau idperson..."
@@ -65,34 +65,6 @@
 
 
     <script>
-        document.getElementById('startSync').addEventListener('click', function() {
-
-            // Mulai sync
-            fetch('/admin/siswa/sync-pembayaran-siswa')
-                .then(response => response.json());
-
-            //show progress bar
-            document.getElementById('progressContainer').classList.remove('hidden');
-
-            // Polling progress tiap 500ms
-            let interval = setInterval(() => {
-
-                fetch('/admin/siswa/get-progress-pembayaran')
-                    .then(res => res.json())
-                    .then(data => {
-                        let p = data.progress || 0;
-
-                        let bar = document.getElementById('progressBar');
-                        bar.style.width = p + "%";
-                        bar.innerHTML = p + "%";
-
-                        if (p >= 100) {
-                            clearInterval(interval);
-                        }
-                    });
-
-            }, 500);
-        });
         document.addEventListener("DOMContentLoaded", function() {
             // ===== ELEMENTS =====
             const searchInput = document.getElementById('searchInput');

@@ -301,25 +301,30 @@ class SiswaService
         $url = $this->paymentUrl . $idperson;
 
         try {
-            $response = Http::timeout(15)->get($url);
+            $response = Http::timeout(30)->retry(2, 1000)->get($url);
 
             if (!$response->successful()) {
                 return [
                     'status' => false,
-                    'message' => 'Gagal mengambil data pembayaran.',
-                    'http_code' => $response->status()
+                    'message' => 'Gagal mengambil data pembayaran. HTTP ' . $response->status(),
+                    'http_code' => $response->status(),
+                    'data' => []
                 ];
             }
 
+            $data = $response->json()['data'] ?? [];
+
             return [
                 'status' => true,
-                'data' => $response->json()['data'] ?? [],
+                'message' => 'Berhasil',
+                'data' => $data,
             ];
 
         } catch (\Exception $e) {
             return [
                 'status' => false,
-                'message' => $e->getMessage(),
+                'message' => 'API Error: ' . $e->getMessage(),
+                'data' => []
             ];
         }
     }

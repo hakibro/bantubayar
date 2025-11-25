@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\PetugasController;
 use App\Http\Controllers\Admin\PembayaranSiswaController;
 use App\Http\Controllers\Admin\AssignController;
 use App\Http\Controllers\Admin\SiswaController;
+use App\Http\Controllers\Admin\SyncPembayaranController;
 use App\Http\Controllers\Petugas\PenangananController;
 use App\Http\Controllers\Admin\SiswaSyncController;
 use App\Http\Controllers\ProfileController;
@@ -54,6 +55,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
             'progress' => $percent
         ]);
     });
+
+    // Sinkronisasi Pembayaran (Halaman & API)
+    Route::get('/sync-pembayaran', [SyncPembayaranController::class, 'index'])->name('sync-pembayaran.index');
+    Route::post('/sync-pembayaran/start', [SyncPembayaranController::class, 'start'])->name('sync-pembayaran.start');
+    Route::post('/sync-pembayaran/cancel', [SyncPembayaranController::class, 'cancel'])->name('sync-pembayaran.cancel');
+    Route::get('/sync-pembayaran/progress', [SyncPembayaranController::class, 'progress'])->name('sync-pembayaran.progress');
+    Route::post('/sync-pembayaran/reset', [SyncPembayaranController::class, 'reset'])->name('sync-pembayaran.reset');
 
     Route::get('/siswa/get-pembayaran-siswa/{idperson}', [SiswaSyncController::class, 'getPembayaranSiswa'])->name('siswa.get-pembayaran-siswa');
 

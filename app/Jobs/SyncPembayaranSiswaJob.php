@@ -22,26 +22,57 @@ class SyncPembayaranSiswaJob implements ShouldQueue
     public function __construct($idperson)
     {
         $this->idperson = $idperson;
-        $this->onQueue('sync-pembayaran'); // optional, biar antriannya rapi
     }
 
+    public function queue(): string
+    {
+        return 'sync-pembayaran';
+    }
+
+    /**
+     * Handle job dengan error handling yang proper
+     */
     public function handle(SiswaService $service)
     {
-        // ambil data pembayaran via API
-        $result = $service->getPembayaranSiswa($this->idperson);
+        try {
+            // ambil data pembayaran via API
+            $result = $service->getPembayaranSiswa($this->idperson);
 
-        if (!$result['status']) {
-            return;
+            if ($result['status']) {
+                // simpan ke DB
+                Siswa::where('idperson', $this->idperson)
+                    ->update([
+                        'pembayaran' => json_encode($result['data']),
+                        'updated_at' => now()
+                    ]);
+                Log::info('SyncPembayaranSiswaJob success for ' . $this->idperson);
+            } else {
+                // Jika gagal, increment failed counter
+                Cache::increment('sync_pembayaran_failed');
+                Log::warning('SyncPembayaranSiswaJob failed (API error) for ' . $this->idperson, [
+                    'message' => $result['message'] ?? 'Unknown error'
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('SyncPembayaranSiswaJob exception for ' . $this->idperson, [
+                'error' => $e->getMessage(),
+                'attempt' => $this->attempts()
+            ]);
+            Cache::increment('sync_pembayaran_failed');
+
+            // Jika sudah attempt ke-3, jangan retry lagi
+            if ($this->attempts() >= 3) {
+                Log::error('SyncPembayaranSiswaJob FAILED after 3 attempts for ' . $this->idperson);
+                // Jangan throw exception, biar job selesai dengan graceful
+                Cache::increment('sync_pembayaran_processed');
+                return;
+            }
+
+            // Throw exception untuk trigger retry oleh Laravel
+            throw $e;
         }
 
-        // simpan ke DB
-        Siswa::where('idperson', $this->idperson)
-            ->update([
-                'pembayaran' => json_encode($result['data']),
-                'updated_at' => now()
-            ]);
-
         // Tambah progress
-        Cache::increment('sync_done');
+        Cache::increment('sync_pembayaran_processed');
     }
 }
