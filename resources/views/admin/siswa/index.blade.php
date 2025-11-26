@@ -57,7 +57,7 @@
         <!-- TABLE -->
         <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
             <div id="tableContainer">
-                @include('admin.assign.partials.table', ['siswa' => $siswa, 'petugas' => $petugas])
+                @include('admin.siswa.partials.table', ['siswa' => $siswa, 'petugas' => $petugas])
             </div>
         </div>
     </div>
@@ -126,7 +126,7 @@
                     petugas_id: filterPetugas.value
                 });
 
-                fetch(`{{ route('admin.assign.index') }}?${params.toString()}`, {
+                fetch(`{{ route('admin.siswa.index') }}?${params.toString()}`, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
@@ -145,7 +145,7 @@
 
             // ===== FILTER EVENTS =====
             filterLembaga.addEventListener('change', () => {
-                fetch(`{{ route('admin.assign.kelas') }}?lembaga=${filterLembaga.value}`, {
+                fetch(`{{ route('admin.siswa.kelas') }}?lembaga=${filterLembaga.value}`, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
@@ -164,164 +164,6 @@
             filterKelas.addEventListener('change', fetchSiswa);
             filterPetugas.addEventListener('change', fetchSiswa);
 
-            // ===== EVENT DELEGATION =====
-            document.addEventListener("click", function(e) {
-                // Close modal buttons
-                if (e.target.classList.contains("closeModal")) {
-                    closeAllModals();
-                }
-
-                // Single Assign
-                if (e.target.classList.contains("singleAssignBtn")) {
-                    const id = e.target.dataset.id;
-                    fillContainer("assignIdsContainer", [id]);
-                    assignModal.classList.remove("hidden");
-                    assignModal.classList.add("flex");
-                }
-
-                // Bulk Assign
-                if (e.target.id === "bulkAssignBtn") {
-                    const ids = getCheckedIds();
-                    if (!ids.length) return alert("Pilih siswa terlebih dahulu");
-                    fillContainer("bulkAssignIdsContainer", ids);
-                    bulkAssignModal.classList.remove("hidden");
-                    bulkAssignModal.classList.add("flex");
-                }
-
-                // Bulk Unassign
-                if (e.target.id === "bulkUnassignBtn") {
-                    const ids = getCheckedIds();
-                    if (!ids.length) return alert("Pilih siswa terlebih dahulu");
-                    fillContainer("unassignIdsContainer", ids);
-                    confirmUnassignModal.classList.remove("hidden");
-                    confirmUnassignModal.classList.add("flex");
-                }
-
-                // Pagination
-                if (e.target.classList.contains("ajaxPage")) {
-                    e.preventDefault();
-                    fetch(e.target.href, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(res => res.text())
-                        .then(html => {
-                            tableContainer.innerHTML = html;
-                            const checkAllTop = document.getElementById("checkAllTop");
-                            if (checkAllTop) checkAllTop.checked = false;
-                            refreshBulkActionVisibility();
-                        });
-                }
-            });
-
-            // ===== CHECKBOX EVENTS =====
-            document.addEventListener("change", function(e) {
-                if (e.target.id === "checkAllTop") {
-                    const checked = e.target.checked;
-                    document.querySelectorAll(".checkItem").forEach(cb => cb.checked = checked);
-                    refreshBulkActionVisibility();
-                }
-
-                if (e.target.classList.contains("checkItem")) {
-                    const checkAllTop = document.getElementById("checkAllTop");
-                    if (checkAllTop) {
-                        const all = document.querySelectorAll(".checkItem");
-                        const checked = document.querySelectorAll(".checkItem:checked");
-                        checkAllTop.checked = checked.length === all.length;
-                    }
-                    refreshBulkActionVisibility();
-                }
-            });
-
-            // ===== FORM SUBMITS =====
-            document.getElementById("assignForm").addEventListener("submit", async function(e) {
-                e.preventDefault();
-                const petugas = document.getElementById("assignPetugasSelect").value;
-                const siswa_ids = [...document.querySelectorAll("#assignIdsContainer input")].map(x => x
-                    .value);
-
-                if (!petugas || !siswa_ids.length) return alert("Pilih petugas dan siswa");
-
-                try {
-                    const res = await fetch("{{ route('admin.assign.bulk') }}", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": this.querySelector("input[name=_token]").value,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            siswa_ids,
-                            petugas_id: petugas
-                        })
-                    });
-                    const json = await res.json();
-                    alert(json.message);
-                    closeAllModals();
-                    fetchSiswa();
-                } catch (err) {
-                    console.error('Error:', err);
-                    alert('Terjadi kesalahan');
-                }
-            });
-
-            document.getElementById("bulkAssignForm").addEventListener("submit", async function(e) {
-                e.preventDefault();
-                const petugas = document.getElementById("bulkPetugasSelect").value;
-                const siswa_ids = [...document.querySelectorAll("#bulkAssignIdsContainer input")].map(
-                    x => x.value);
-
-                if (!petugas || !siswa_ids.length) return alert("Pilih petugas dan siswa");
-
-                try {
-                    const res = await fetch("{{ route('admin.assign.bulk') }}", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": this.querySelector("input[name=_token]").value,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            siswa_ids,
-                            petugas_id: petugas
-                        })
-                    });
-                    const json = await res.json();
-                    alert(json.message);
-                    closeAllModals();
-                    fetchSiswa();
-                } catch (err) {
-                    console.error('Error:', err);
-                    alert('Terjadi kesalahan');
-                }
-            });
-
-            document.getElementById("unassignForm").addEventListener("submit", async function(e) {
-                e.preventDefault();
-                const siswa_ids = [...document.querySelectorAll("#unassignIdsContainer input")].map(x =>
-                    x.value);
-
-                if (!siswa_ids.length) return alert("Tidak ada siswa terpilih");
-
-                try {
-                    const res = await fetch("{{ route('admin.assign.bulkUnassign') }}", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": this.querySelector('input[name=_token]').value,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            siswa_ids
-                        })
-                    });
-                    const json = await res.json();
-                    alert(json.message);
-                    closeAllModals();
-                    fetchSiswa();
-                } catch (err) {
-                    console.error('Error:', err);
-                    alert('Terjadi kesalahan');
-                }
-            });
         });
     </script>
 @endsection

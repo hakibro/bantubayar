@@ -159,7 +159,7 @@
                 }, tickMs);
 
                 try {
-                    const res = await fetch("{{ url('/admin/siswa/sync-all/run') }}", {
+                    const res = await fetch("{{ url('/admin/siswa/get-all-siswa') }}", {
                         method: 'GET',
                         headers: {
                             'Accept': 'application/json',
@@ -191,7 +191,7 @@
         `;
                         // redirect setelah 3 detik
                         setTimeout(() => {
-                            window.location.href = "{{ url('/admin/assign') }}";
+                            window.location.href = "{{ url('/admin/siswa') }}";
                         }, 3000);
 
                     } else {

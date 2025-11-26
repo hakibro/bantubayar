@@ -24,7 +24,6 @@ class Siswa extends Model
         'KamarPondok',
         'TingkatDiniyah',
         'KelasDiniyah',
-        'pembayaran',
     ];
 
     protected $casts = [
@@ -44,6 +43,11 @@ class Siswa extends Model
     {
         return $this->belongsToMany(User::class, 'petugas_siswa', 'siswa_id', 'petugas_id')
             ->withTimestamps();
+    }
+
+    public function pembayaran()
+    {
+        return $this->hasMany(SiswaPembayaran::class);
     }
 
 }

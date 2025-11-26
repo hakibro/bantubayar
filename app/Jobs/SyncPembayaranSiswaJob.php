@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Services\SiswaService;
 use App\Models\Siswa;
+use App\Models\SiswaPembayaran;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Queue\SerializesModels;
@@ -39,15 +40,29 @@ class SyncPembayaranSiswaJob implements ShouldQueue
             $result = $service->getPembayaranSiswa($this->idperson);
 
             if ($result['status']) {
-                // TODO simpan ke tabel pembayaran berdasarkan periode
-                // TODO: buat tabel pembayaran dulu sebelum pakai kode ini
-                // pertimbangkan relasi one-to-many jika diperlukan
-                // 
-                Siswa::where('idperson', $this->idperson)
-                    ->update([
-                        'pembayaran' => json_encode($result['data']),
-                        'updated_at' => now()
-                    ]);
+
+                $siswa = Siswa::where('idperson', $this->idperson)->first();
+
+                if (!$siswa) {
+                    return;
+                }
+
+                // result['data'] adalah array siswa (1 siswa per API)
+                $periods = $result['data'][0]['periods'] ?? [];
+
+                foreach ($periods as $period) {
+
+                    SiswaPembayaran::updateOrCreate(
+                        [
+                            'siswa_id' => $siswa->id,
+                            'periode' => $period['period_id'],
+                        ],
+                        [
+                            'data' => $period,  // simpan 1 periode sebagai JSON
+                        ]
+                    );
+                }
+
                 Log::info('SyncPembayaranSiswaJob success for ' . $this->idperson);
             } else {
                 // Jika gagal, increment failed counter
