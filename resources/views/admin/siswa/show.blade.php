@@ -12,6 +12,8 @@
                 <p class="text-gray-500">ID Person: {{ $siswa->idperson }}</p>
             </div>
 
+            <!-- TODO: Buat sync pembayaran single siswa -->
+
             <a href="{{ route('admin.siswa.index') }}"
                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow hover:bg-gray-300 flex items-center">
                 <i class="fas fa-arrow-left mr-2"></i> Kembali
