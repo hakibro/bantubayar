@@ -39,7 +39,10 @@ class SyncPembayaranSiswaJob implements ShouldQueue
             $result = $service->getPembayaranSiswa($this->idperson);
 
             if ($result['status']) {
-                // simpan ke DB
+                // TODO simpan ke tabel pembayaran berdasarkan periode
+                // TODO: buat tabel pembayaran dulu sebelum pakai kode ini
+                // pertimbangkan relasi one-to-many jika diperlukan
+                // 
                 Siswa::where('idperson', $this->idperson)
                     ->update([
                         'pembayaran' => json_encode($result['data']),

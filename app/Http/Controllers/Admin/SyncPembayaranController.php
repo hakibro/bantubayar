@@ -18,10 +18,10 @@ class SyncPembayaranController extends Controller
     public function index()
     {
         $totalSiswa = Siswa::count();
-        $processedSiswa = cache()->get('sync_pembayaran_processed', 0);
-        $failedSiswa = cache()->get('sync_pembayaran_failed', 0);
-        $totalSiswaSync = cache()->get('sync_pembayaran_total', 0);
-        $isRunning = cache()->has('sync_pembayaran_status') && cache()->get('sync_pembayaran_status') === 'running';
+        $processedSiswa = Cache::get('sync_pembayaran_processed', 0);
+        $failedSiswa = Cache::get('sync_pembayaran_failed', 0);
+        $totalSiswaSync = Cache::get('sync_pembayaran_total', 0);
+        $isRunning = Cache::has('sync_pembayaran_status') && Cache::get('sync_pembayaran_status') === 'running';
 
         return view('admin.sync-pembayaran.index', compact(
             'totalSiswa',
@@ -39,7 +39,7 @@ class SyncPembayaranController extends Controller
     {
         try {
             // Cek apakah proses sudah running
-            if (cache()->get('sync_pembayaran_status') === 'running') {
+            if (Cache::get('sync_pembayaran_status') === 'running') {
                 return response()->json([
                     'status' => false,
                     'message' => 'Proses sinkronisasi sudah berjalan.'
@@ -57,12 +57,12 @@ class SyncPembayaranController extends Controller
             }
 
             // Set status sebagai running
-            cache()->put('sync_pembayaran_status', 'running', now()->addHours(1));
+            Cache::put('sync_pembayaran_status', 'running', now()->addHours(1));
 
             // Simpan total & reset progress
-            cache()->put('sync_pembayaran_total', $total);
-            cache()->put('sync_pembayaran_processed', 0);
-            cache()->put('sync_pembayaran_failed', 0);
+            Cache::put('sync_pembayaran_total', $total);
+            Cache::put('sync_pembayaran_processed', 0);
+            Cache::put('sync_pembayaran_failed', 0);
 
             // Dispatch job per siswa (direct dispatch, bukan via DispatchSyncPembayaranJob)
             Siswa::select('id', 'idperson')->chunk(100, function ($chunk) {
@@ -87,7 +87,7 @@ class SyncPembayaranController extends Controller
                 'message' => 'Proses sinkronisasi pembayaran dimulai.'
             ]);
         } catch (\Exception $e) {
-            cache()->forget('sync_pembayaran_status');
+            Cache::forget('sync_pembayaran_status');
             Log::error('SyncPembayaran start error', [
                 'error' => $e->getMessage()
             ]);
@@ -105,10 +105,10 @@ class SyncPembayaranController extends Controller
     {
         try {
             // Clear semua cache sync
-            cache()->forget('sync_pembayaran_status');
-            cache()->forget('sync_pembayaran_total');
-            cache()->forget('sync_pembayaran_processed');
-            cache()->forget('sync_pembayaran_failed');
+            Cache::forget('sync_pembayaran_status');
+            Cache::forget('sync_pembayaran_total');
+            Cache::forget('sync_pembayaran_processed');
+            Cache::forget('sync_pembayaran_failed');
 
             return response()->json([
                 'status' => true,
@@ -128,16 +128,16 @@ class SyncPembayaranController extends Controller
     public function progress()
     {
         try {
-            $total = cache()->get('sync_pembayaran_total', 0);
-            $processed = cache()->get('sync_pembayaran_processed', 0);
-            $failed = cache()->get('sync_pembayaran_failed', 0);
-            $isRunning = cache()->get('sync_pembayaran_status') === 'running';
+            $total = Cache::get('sync_pembayaran_total', 0);
+            $processed = Cache::get('sync_pembayaran_processed', 0);
+            $failed = Cache::get('sync_pembayaran_failed', 0);
+            $isRunning = Cache::get('sync_pembayaran_status') === 'running';
 
             $percent = $total > 0 ? round(($processed / $total) * 100, 2) : 0;
 
             // Jika sudah selesai (processed == total dan running)
             if ($processed >= $total && $total > 0 && $isRunning) {
-                cache()->put('sync_pembayaran_status', 'completed', now()->addHours(1));
+                Cache::put('sync_pembayaran_status', 'completed', now()->addHours(1));
             }
 
             return response()->json([
@@ -162,10 +162,10 @@ class SyncPembayaranController extends Controller
     public function reset()
     {
         try {
-            cache()->forget('sync_pembayaran_status');
-            cache()->forget('sync_pembayaran_total');
-            cache()->forget('sync_pembayaran_processed');
-            cache()->forget('sync_pembayaran_failed');
+            Cache::forget('sync_pembayaran_status');
+            Cache::forget('sync_pembayaran_total');
+            Cache::forget('sync_pembayaran_processed');
+            Cache::forget('sync_pembayaran_failed');
 
             return response()->json([
                 'status' => true,
