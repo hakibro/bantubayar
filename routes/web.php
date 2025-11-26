@@ -48,17 +48,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::get('/siswa/get-all-siswa', [SiswaSyncController::class, 'getAllSiswa']);
     Route::get('/siswa/sync-all-siswa', [SiswaSyncController::class, 'syncAllSiswa'])->name('siswa.sync-data-siswa');
-    Route::get('/siswa/sync-pembayaran-siswa', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
-    Route::get('/siswa/get-progress-pembayaran', function () {
-        $total = cache()->get('sync_pembayaran_total', 1);
-        $processed = cache()->get('sync_pembayaran_processed', 0);
+    Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
 
-        $percent = floor(($processed / $total) * 100);
-
-        return response()->json([
-            'progress' => $percent
-        ]);
-    });
 
     // Sinkronisasi Pembayaran (Halaman & API)
     Route::get('/sync-pembayaran', [SyncPembayaranController::class, 'index'])->name('sync-pembayaran.index');
@@ -66,6 +57,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/sync-pembayaran/cancel', [SyncPembayaranController::class, 'cancel'])->name('sync-pembayaran.cancel');
     Route::get('/sync-pembayaran/progress', [SyncPembayaranController::class, 'progress'])->name('sync-pembayaran.progress');
     Route::post('/sync-pembayaran/reset', [SyncPembayaranController::class, 'reset'])->name('sync-pembayaran.reset');
+
 
     Route::get('/siswa/get-pembayaran-siswa/{idperson}', [SiswaSyncController::class, 'getPembayaranSiswa'])->name('siswa.get-pembayaran-siswa');
 

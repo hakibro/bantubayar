@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use App\Models\SiswaPembayaran;
 use App\Jobs\DispatchSyncPembayaranJob;
 use App\Models\Siswa;
 
@@ -329,116 +330,49 @@ class SiswaService
         }
     }
 
-    public function syncPembayaranSiswa()
+    public function syncPembayaranSiswa($id)
     {
-        try {
-            DispatchSyncPembayaranJob::dispatch();
+        // 1. Ambil data siswa
+        $siswa = Siswa::findOrFail($id);
 
-            return [
-                'status' => true,
-                'message' => 'Proses sync pembayaran sudah dimulai (queue).'
-            ];
-        } catch (\Exception $e) {
+        // 2. Ambil pembayaran lewat API (gunakan helper getPembayaranSiswa)
+        $result = $this->getPembayaranSiswa($siswa->idperson);
+
+        if (!$result['status']) {
             return [
                 'status' => false,
-                'message' => $e->getMessage(),
+                'message' => $result['message'],
             ];
         }
+
+        $data = $result['data'];
+
+        if (empty($data) || empty($data[0]['periods'])) {
+            return [
+                'status' => false,
+                'message' => 'Tidak ada data pembayaran untuk siswa ini.',
+            ];
+        }
+
+        // 3. Hapus pembayaran lama untuk siswa ini
+        SiswaPembayaran::where('siswa_id', $siswa->id)->delete();
+
+        // 4. Insert pembayaran per periode
+        foreach ($data[0]['periods'] as $periode) {
+            SiswaPembayaran::create([
+                'siswa_id' => $siswa->id,
+                'periode' => $periode['period_id'] ?? null,
+                'data' => $periode, // JSON lengkap periode
+            ]);
+        }
+
+        return [
+            'status' => true,
+            'message' => 'Sync pembayaran siswa berhasil.',
+        ];
     }
 
-    // public function syncPembayaranSiswa()
-    // {
-    //     try {
 
-    //         // Reset progress
-    //         Cache::put('progress_pembayaran', 0);
-
-    //         // 1. Ambil semua idperson siswa
-    //         $siswaList = Siswa::select('idperson')->pluck('idperson')->toArray();
-    //         $total = count($siswaList);
-
-    //         if ($total === 0) {
-    //             return ['status' => false, 'message' => 'Tidak ada siswa.'];
-    //         }
-
-    //         $batch = [];
-    //         $updatedCount = 0;
-    //         $failed = 0;
-    //         $current = 0;
-
-    //         // 2. Loop siswa satu per satu
-    //         foreach ($siswaList as $idperson) {
-
-    //             $current++;
-
-    //             // Update progress setiap berjalan
-    //             $progress = intval(($current / $total) * 100);
-    //             Cache::put('progress_pembayaran', $progress);
-
-    //             $url = $this->paymentUrl . $idperson;
-
-    //             try {
-    //                 $response = Http::timeout(15)->get($url);
-
-    //                 if ($response->failed()) {
-    //                     $failed++;
-    //                     continue;
-    //                 }
-
-    //                 $data = $response->json()['data'] ?? [];
-
-    //                 $batch[] = [
-    //                     'idperson' => $idperson,
-    //                     'pembayaran' => $data,
-    //                     'updated_at' => now(),
-    //                 ];
-
-    //             } catch (\Exception $e) {
-    //                 $failed++;
-    //                 continue;
-    //             }
-
-    //             // Jika batch sudah penuh → commit
-    //             if (count($batch) >= 300) {
-    //                 $this->commitPembayaranBatch($batch);
-    //                 $updatedCount += count($batch);
-    //                 $batch = [];
-    //             }
-    //         }
-
-    //         // Commit batch terakhir
-    //         if (!empty($batch)) {
-    //             $this->commitPembayaranBatch($batch);
-    //             $updatedCount += count($batch);
-    //         }
-
-    //         Cache::put('progress_pembayaran', 100);
-    //         return [
-    //             'status' => true,
-    //             'message' => 'Sinkronisasi pembayaran selesai.',
-    //             'updated' => $updatedCount,
-    //             'failed' => $failed,
-    //             'total' => $total,
-    //         ];
-
-    //     } catch (\Exception $e) {
-    //         Cache::put('progress_pembayaran', 0);
-    //         return [
-    //             'status' => false,
-    //             'message' => $e->getMessage(),
-    //         ];
-    //     }
-    // }
-    // private function commitPembayaranBatch($batch)
-    // {
-    //     foreach ($batch as $item) {
-    //         Siswa::where('idperson', $item['idperson'])
-    //             ->update([
-    //                 'pembayaran' => json_encode($item['pembayaran']),
-    //                 'updated_at' => now()
-    //             ]);
-    //     }
-    // }
 
 
 

@@ -22,7 +22,13 @@
 
         {{-- DATA SISWA --}}
         <div class="bg-white shadow p-5 rounded mb-6">
-            <h2 class="text-lg font-semibold mb-3">Informasi Siswa</h2>
+            <div class="flex justify-between">
+                <h2 class="text-lg font-semibold mb-3">Informasi Siswa</h2>
+                <button onclick="syncPembayaran({{ $siswa->id }})"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center">
+                    <i class="fas fa-sync mr-2"></i> Sync Pembayaran
+                </button>
+            </div>
             <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
                     <strong>Nama:</strong>
@@ -137,4 +143,74 @@
         </div>
 
     </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg flex items-center">
+            <i class="fas fa-spinner fa-spin text-3xl text-blue-600 mr-3"></i>
+            <span class="text-lg font-semibold">Sedang memproses...</span>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-check-circle text-green-600 text-4xl mb-2"></i>
+            <h2 class="text-xl font-semibold">Berhasil!</h2>
+            <p id="successMessage" class="mt-2"></p>
+            <button onclick="closeSuccess()" class="mt-4 px-4 py-2 bg-green-600 text-white rounded">OK</button>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-times-circle text-red-600 text-4xl mb-2"></i>
+            <h2 class="text-xl font-semibold">Gagal!</h2>
+            <p id="errorMessage" class="mt-2"></p>
+            <button onclick="closeError()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded">Tutup</button>
+        </div>
+    </div>
+
+    <script>
+        function syncPembayaran(id) {
+            // Tampilkan loading
+            document.getElementById("loadingModal").classList.remove("hidden");
+
+            fetch("{{ url('admin/siswa/sync-pembayaran-siswa') }}/" + id, {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("loadingModal").classList.add("hidden");
+
+                    if (data.status) {
+                        document.getElementById("successMessage").innerText = data.message;
+                        document.getElementById("successModal").classList.remove("hidden");
+                    } else {
+                        document.getElementById("errorMessage").innerText = data.message;
+                        document.getElementById("errorModal").classList.remove("hidden");
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("loadingModal").classList.add("hidden");
+                    document.getElementById("errorMessage").innerText = "Terjadi kesalahan.";
+                    document.getElementById("errorModal").classList.remove("hidden");
+                });
+        }
+
+        function closeSuccess() {
+            document.getElementById("successModal").classList.add("hidden");
+            location.reload(); // refresh halaman
+        }
+
+        function closeError() {
+            document.getElementById("errorModal").classList.add("hidden");
+        }
+    </script>
+
 @endsection
