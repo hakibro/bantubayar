@@ -96,5 +96,16 @@ class SiswaController extends Controller
         return response()->json($kelas);
     }
 
+    public function show($id)
+    {
+        $siswa = Siswa::with([
+            'pembayaran' => function ($q) {
+                $q->orderBy('periode', 'desc');
+            }
+        ])->findOrFail($id);
+
+        return view('admin.siswa.show', compact('siswa'));
+    }
+
 
 }

@@ -31,8 +31,10 @@
                     {{ $assigned ? $assigned->name : '—' }}
                 </td>
                 <td class="px-4 py-3 text-center">
-                    <button type="button" class="px-3 py-1 bg-blue-600 text-white rounded singleAssignBtn"
-                        data-id="{{ $item->id }}">Detail</button>
+                    <a href="{{ route('admin.siswa.show', $item->id) }}"
+                        class="px-3 py-1 bg-blue-600 text-white rounded inline-block">
+                        Detail
+                    </a>
                 </td>
             </tr>
         @empty

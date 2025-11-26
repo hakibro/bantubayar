@@ -19,13 +19,13 @@
                     <i class="fas fa-money-bill-wave mr-2"></i> Sinkron Pembayaran
                 </a>
             </div>
+
         </div>
-        <!-- Progressbar  -->
-        <div id="progressContainer" class="hidden w-full my-4 bg-gray-200 rounded h-6">
-            <div id="progressBar" class="bg-green-500 h-6 rounded text-center text-white text-sm" style="width:0%">
-                0%
-            </div>
-        </div>
+
+
+
+
+        {{-- Search & Filters --}}
         <div class="mb-6">
             <div class="flex flex-col md:flex-row gap-3 items-center bg-white p-4 rounded-lg shadow border border-gray-100">
                 <input id="searchInput" type="text" placeholder="Cari nama atau idperson..."

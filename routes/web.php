@@ -38,6 +38,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Manajemen Siswa
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
     Route::get('/siswa/kelas', [SiswaController::class, 'kelas'])->name('siswa.kelas');
+    Route::get('/siswa/{id}', [SiswaController::class, 'show'])->name('siswa.show');
 
     // Sync Siswa dari API Eksternal
     Route::get('/siswa/test-api', [SiswaSyncController::class, 'testApi']);
