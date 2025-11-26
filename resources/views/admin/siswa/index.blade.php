@@ -16,14 +16,11 @@
                 </a>
                 <a href="{{ route('admin.sync-pembayaran.index') }}"
                     class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center">
-                    <i class="fas fa-money-bill-wave mr-2"></i> Sinkron Pembayaran
+                    <i class="fas fa-money-bill-wave mr-2"></i> Sinkron Semua Pembayaran (Dev Only)
                 </a>
             </div>
 
         </div>
-
-
-
 
         {{-- Search & Filters --}}
         <div class="mb-6">
@@ -45,6 +42,21 @@
                     <option value="">Semua Kelas</option>
                 </select>
 
+                <select id="filterAsrama" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
+                    <option value="">Semua Asrama</option>
+                    @foreach ($daftarAsrama as $l)
+                        <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
+                            {{ $l === '__NULL__' ? 'Tanpa Lembaga' : $l }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <select id="filterKamar" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
+                    <option value="">Semua Kamar</option>
+                </select>
+
+
+
                 <select id="filterPetugas" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
                     <option value="">Semua Petugas</option>
                     @foreach ($petugas as $p)
@@ -62,20 +74,17 @@
         </div>
     </div>
 
-
-
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // ===== ELEMENTS =====
             const searchInput = document.getElementById('searchInput');
             const filterLembaga = document.getElementById('filterLembaga');
             const filterKelas = document.getElementById('filterKelas');
+            const filterAsrama = document.getElementById('filterAsrama');
+            const filterKamar = document.getElementById('filterKamar');
             const filterPetugas = document.getElementById('filterPetugas');
             const tableContainer = document.getElementById('tableContainer');
 
-            const assignModal = document.getElementById("assignModal");
-            const bulkAssignModal = document.getElementById("bulkAssignModal");
-            const confirmUnassignModal = document.getElementById("confirmUnassignModal");
 
             // ===== UTILITY FUNCTIONS =====
             function debounce(fn, ms) {
@@ -86,43 +95,14 @@
                 };
             }
 
-            function refreshBulkActionVisibility() {
-                const bulkActionBar = document.getElementById('bulkActionBar');
-                const anyChecked = document.querySelectorAll('.checkItem:checked').length > 0;
-                if (bulkActionBar) {
-                    bulkActionBar.classList.toggle('hidden', !anyChecked);
-                }
-            }
-
-            function getCheckedIds() {
-                return [...document.querySelectorAll('.checkItem:checked')].map(cb => cb.value);
-            }
-
-            function fillContainer(containerId, ids) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = '';
-                ids.forEach(id => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'siswa_ids[]';
-                    input.value = id;
-                    container.appendChild(input);
-                });
-            }
-
-            function closeAllModals() {
-                [assignModal, bulkAssignModal, confirmUnassignModal].forEach(modal => {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                });
-            }
-
             // ===== FETCH TABLE =====
             function fetchSiswa() {
                 const params = new URLSearchParams({
                     search: searchInput.value,
                     lembaga: filterLembaga.value,
                     kelas: filterKelas.value,
+                    asrama: filterAsrama.value,
+                    kamar: filterKamar.value,
                     petugas_id: filterPetugas.value
                 });
 
@@ -134,9 +114,6 @@
                     .then(res => res.text())
                     .then(html => {
                         tableContainer.innerHTML = html;
-                        const checkAllTop = document.getElementById("checkAllTop");
-                        if (checkAllTop) checkAllTop.checked = false;
-                        refreshBulkActionVisibility();
                     })
                     .catch(err => {
                         console.error('Error loading table:', err);
@@ -160,8 +137,25 @@
                     });
             });
 
+            filterAsrama.addEventListener('change', () => {
+                fetch(`{{ route('admin.siswa.kamar') }}?asrama=${filterAsrama.value}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(kamar => {
+                        filterKamar.innerHTML = `<option value="">Semua Kamar</option>`;
+                        kamar.forEach(k => {
+                            filterKamar.innerHTML += `<option value="${k}">${k}</option>`;
+                        });
+                        fetchSiswa();
+                    });
+            });
+
             searchInput.addEventListener('keyup', debounce(fetchSiswa, 300));
             filterKelas.addEventListener('change', fetchSiswa);
+            filterKamar.addEventListener('change', fetchSiswa);
             filterPetugas.addEventListener('change', fetchSiswa);
 
         });

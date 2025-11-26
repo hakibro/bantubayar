@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Show Siswa')
+@section('title', 'Manage Siswa')
 
 @section('content')
     <div class="max-w-5xl mx-auto p-6">
@@ -8,7 +8,7 @@
         {{-- HEADER --}}
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Detail Siswa</h1>
+                <h1 class="text-2xl font-bold text-gray-800">{{ $siswa->nama }}</h1>
                 <p class="text-gray-500">ID Person: {{ $siswa->idperson }}</p>
             </div>
 
@@ -28,14 +28,16 @@
                     <strong>Nama:</strong>
                     <p>{{ $siswa->nama }}</p>
                 </div>
+
                 <div>
-                    <strong>Kelas:</strong>
-                    <p>{{ $siswa->kelas ?? '-' }}</p>
+                    <strong>Lembaga Formal:</strong>
+                    <p>{{ $siswa->UnitFormal ?? '-' }} ({{ $siswa->KelasFormal ?? '-' }})</p>
                 </div>
                 <div>
-                    <strong>Unit:</strong>
-                    <p>{{ $siswa->unit ?? '-' }}</p>
+                    <strong>Asrama:</strong>
+                    <p>{{ $siswa->AsramaPondok ?? '-' }} - {{ $siswa->KamarPondok ?? '-' }}</p>
                 </div>
+
                 <div>
                     <strong>Terakhir Update Pembayaran:</strong>
                     <p>{{ $siswa->pembayaran->max('updated_at')?->format('d M Y H:i') }}</p>

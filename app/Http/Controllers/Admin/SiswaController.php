@@ -59,6 +59,21 @@ class SiswaController extends Controller
             $query->where('KelasFormal', $request->kelas);
         }
 
+        // filter asrama
+        if ($request->filled('asrama')) {
+            if ($request->asrama === '__NULL__') {
+                $query->whereNull('AsramaPondok');
+            } else {
+                $query->where('AsramaPondok', $request->asrama);
+            }
+        }
+        // filter kamar
+        if ($request->filled('kamar')) {
+            $query->where('KamarPondok', $request->kamar);
+        }
+
+
+
         // filter by petugas (whereHas pivot)
         if ($request->filled('petugas_id')) {
             $query->whereHas('petugas', function ($q) use ($request) {
@@ -68,7 +83,6 @@ class SiswaController extends Controller
 
         // ambil hasil (boleh tambahkan paginate jika perlu)
         $siswa = $query->orderBy('nama')->paginate(40)->withQueryString();
-        ;
 
 
         // jika request ajax (fetch XHR), kembalikan partial table saja
@@ -77,9 +91,10 @@ class SiswaController extends Controller
         }
 
         // normal page load -> perlu juga daftar lembaga untuk dropdown (unique)
-        $daftarLembaga = Siswa::select('UnitFormal')->distinct()->pluck('UnitFormal')->filter()->values();
+        $daftarLembaga = Siswa::select('UnitFormal')->distinct()->pluck('UnitFormal')->filter()->sort()->values();
+        $daftarAsrama = Siswa::select('AsramaPondok')->distinct()->pluck('AsramaPondok')->filter()->sort()->values();
 
-        return view('admin.siswa.index', compact('siswa', 'petugas', 'daftarLembaga'));
+        return view('admin.siswa.index', compact('siswa', 'petugas', 'daftarLembaga', 'daftarAsrama'));
 
     }
 
@@ -90,10 +105,22 @@ class SiswaController extends Controller
             ->select('KelasFormal')
             ->distinct()
             ->whereNotNull('KelasFormal')
-            ->orderBy('KelasFormal')
+            ->orderBy('KelasFormal', 'asc')
             ->pluck('KelasFormal');
 
         return response()->json($kelas);
+    }
+    public function kamar(Request $request)
+    {
+        $asrama = $request->asrama;
+        $kamar = Siswa::when($asrama, fn($q) => $q->where('AsramaPondok', $asrama))
+            ->select('KamarPondok')
+            ->distinct()
+            ->whereNotNull('KamarPondok')
+            ->orderBy('KamarPondok', 'asc')
+            ->pluck('KamarPondok');
+
+        return response()->json($kamar);
     }
 
     public function show($id)

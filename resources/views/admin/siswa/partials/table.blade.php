@@ -5,27 +5,22 @@
 
             <th class="px-4 py-3 text-left">Nama</th>
             <th class="px-4 py-3 text-left">Lembaga Formal</th>
-            <th class="px-4 py-3 text-left">Kelas</th>
+            <th class="px-4 py-3 text-left">Pondok</th>
             <th class="px-4 py-3 text-left">Petugas Saat Ini</th>
             <th class="px-4 py-3 text-center">Aksi</th>
         </tr>
     </thead>
     <tbody>
-        <tr id="bulkActionBar" class="bg-gray-50 hidden">
-            <td colspan="5" class="px-4 py-2">
-                <div class="flex items-center gap-3 mb-3">
-                    <button id="bulkAssignBtn" class="px-3 py-1 bg-blue-600 text-white rounded">Assign</button>
-                    <button id="bulkUnassignBtn" class="px-3 py-1 bg-red-600 text-white rounded">Unassign</button>
-                </div>
-            </td>
-        </tr>
+
 
         @forelse ($siswa as $item)
             <tr class="border-b hover:bg-gray-50">
 
                 <td class="px-4 py-3">{{ $item->nama }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ $item->UnitFormal ?? 'Tidak ada' }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ $item->KelasFormal ?? 'Tidak ada' }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ $item->UnitFormal ?? 'Tidak ada' }} -
+                    {{ $item->KelasFormal ?? 'Tidak ada' }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ $item->AsramaPondok ?? 'Tidak ada' }} -
+                    {{ $item->KamarPondok ?? 'Tidak ada' }}</td>
                 <td class="px-4 py-3 text-gray-600">
                     @php $assigned = $item->petugas->first(); @endphp
                     {{ $assigned ? $assigned->name : '—' }}

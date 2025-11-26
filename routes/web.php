@@ -38,6 +38,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Manajemen Siswa
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
     Route::get('/siswa/kelas', [SiswaController::class, 'kelas'])->name('siswa.kelas');
+    Route::get('/siswa/kamar', [SiswaController::class, 'kamar'])->name('siswa.kamar');
     Route::get('/siswa/{id}', [SiswaController::class, 'show'])->name('siswa.show');
 
     // Sync Siswa dari API Eksternal
@@ -73,6 +74,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Optional: endpoint to get kelas (per lembaga) jika butuh
     Route::get('/assign/kelas', [AssignController::class, 'kelas'])->name('assign.kelas');
+    Route::get('/assign/kamar', [AssignController::class, 'kamar'])->name('assign.kamar');
 
     Route::post('/assign/siswa', [AssignController::class, 'assign'])->name('assign.siswa');
     Route::post('/assign/unassign', [AssignController::class, 'unassign'])->name('assign.unassign');

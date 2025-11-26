@@ -28,7 +28,7 @@
                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
                        transition-all duration-150 cursor-pointer">
 
-                        <option value="" class="text-gray-500 font-medium">— Semua Lembaga —</option>
+                        <option value="" class="text-gray-500 font-medium">Semua Lembaga</option>
 
                         @foreach ($daftarLembaga as $l)
                             <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
@@ -47,9 +47,39 @@
                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
                        transition-all duration-150 cursor-pointer">
 
-                        <option value="" class="text-gray-500 font-medium">— Semua Kelas —</option>
+                        <option value="" class="text-gray-500 font-medium">Semua Kelas</option>
                     </select>
                 </div>
+
+                <!-- Filter Asrama -->
+                <div class="relative w-full md:w-1/4">
+                    <select id="filterAsrama"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white text-gray-700
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+               transition-all duration-150 cursor-pointer">
+
+                        <option value="" class="text-gray-500 font-medium">Semua Asrama</option>
+                        @foreach ($daftarAsrama as $l)
+                            <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
+                                {{ $l === '__NULL__' ? 'Tanpa Asrama' : $l }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Filter Kamar -->
+                <div class="relative w-full md:w-1/4">
+                    <select id="filterKamar"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl bg-white text-gray-700
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+               transition-all duration-150 cursor-pointer">
+
+                        <option value="" class="text-gray-500 font-medium">Semua Kamar</option>
+                    </select>
+                </div>
+
+
+
 
                 <!-- Filter Petugas -->
                 <div class="relative w-full md:w-1/4">
@@ -58,7 +88,7 @@
                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
                        transition-all duration-150 cursor-pointer">
 
-                        <option value="" class="text-gray-500 font-medium">— Semua Petugas —</option>
+                        <option value="" class="text-gray-500 font-medium">Semua Petugas</option>
 
                         @foreach ($petugas as $p)
                             <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -139,6 +169,8 @@
             const searchInput = document.getElementById('searchInput');
             const filterLembaga = document.getElementById('filterLembaga');
             const filterKelas = document.getElementById('filterKelas');
+            const filterAsrama = document.getElementById('filterAsrama');
+            const filterKamar = document.getElementById('filterKamar');
             const filterPetugas = document.getElementById('filterPetugas');
             const tableContainer = document.getElementById('tableContainer');
 
@@ -192,6 +224,8 @@
                     search: searchInput.value,
                     lembaga: filterLembaga.value,
                     kelas: filterKelas.value,
+                    asrama: filterAsrama.value,
+                    kamar: filterKamar.value,
                     petugas_id: filterPetugas.value
                 });
 
@@ -228,9 +262,26 @@
                         fetchSiswa();
                     });
             });
+            filterAsrama.addEventListener('change', () => {
+                fetch(`{{ route('admin.assign.kamar') }}?asrama=${filterAsrama.value}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(kamar => {
+                        filterKamar.innerHTML = `<option value="">Semua Kamar</option>`;
+                        kamar.forEach(k => {
+                            filterKamar.innerHTML += `<option value="${k}">${k}</option>`;
+                        });
+                        fetchSiswa();
+                    });
+            });
 
             searchInput.addEventListener('keyup', debounce(fetchSiswa, 300));
             filterKelas.addEventListener('change', fetchSiswa);
+            filterKamar.addEventListener('change', fetchSiswa);
+
             filterPetugas.addEventListener('change', fetchSiswa);
 
             // ===== EVENT DELEGATION =====
