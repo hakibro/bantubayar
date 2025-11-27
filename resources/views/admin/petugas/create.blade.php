@@ -67,21 +67,38 @@
 
                 <!-- Lembaga -->
                 <div>
-                    <label for="lembaga" class="block text-sm font-medium text-gray-700 mb-1">Lembaga</label>
-                    <select id="lembaga" name="lembaga"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        <option value="" disabled selected>Pilih lembaga</option>
-                        <option value="RA" {{ old('lembaga') == 'RA' ? 'selected' : '' }}>RA</option>
-                        <option value="MI" {{ old('lembaga') == 'MI' ? 'selected' : '' }}>MI</option>
-                        <option value="MTs" {{ old('lembaga') == 'MTs' ? 'selected' : '' }}>MTs</option>
-                        <option value="SMP" {{ old('lembaga') == 'SMP' ? 'selected' : '' }}>SMP</option>
-                        <option value="MA" {{ old('lembaga') == 'MA' ? 'selected' : '' }}>MA</option>
-                        <option value="SMA" {{ old('lembaga') == 'SMA' ? 'selected' : '' }}>SMA</option>
-                        <option value="SMK" {{ old('lembaga') == 'SMK' ? 'selected' : '' }}>SMK</option>
-                        <option value="Pondok" {{ old('lembaga') == 'Pondok' ? 'selected' : '' }}>Pondok</option>
-                        <option value="Yayasan" {{ old('lembaga') == 'Yayasan' ? 'selected' : '' }}>Yayasan</option>
+                    <label for="lembaga" class="block text-sm font-medium text-gray-700 mb-1">
+                        Lembaga
+                    </label>
+
+                    <select id="lembaga" name="unit_formal"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+
+                        <option value="" hidden>Pilih Lembaga</option>
+
+                        <!-- Kelompok: Unit Formal -->
+                        <optgroup label="Lembaga Formal">
+                            @foreach ($lembaga['UnitFormal'] as $item)
+                                <option value="{{ $item }}">{{ $item }}</option>
+                            @endforeach
+                        </optgroup>
+
+                        <!-- Kelompok: Asrama Pondok -->
+                        <optgroup label="Asrama Pondok">
+                            @foreach ($lembaga['AsramaPondok'] as $item)
+                                <option value="{{ $item }}">{{ $item }}</option>
+                            @endforeach
+                        </optgroup>
+
+                        <!-- Kelompok: Tingkat Diniyah -->
+                        <optgroup label="Tingkat Diniyah">
+                            @foreach ($lembaga['TingkatDiniyah'] as $item)
+                                <option value="{{ $item }}">{{ $item }}</option>
+                            @endforeach
+                        </optgroup>
                     </select>
                 </div>
+
 
                 <!-- Tombol -->
                 <div class="pt-3 flex justify-end space-x-3">

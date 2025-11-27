@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 use App\Models\User;
+use App\Models\Siswa;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -38,8 +39,17 @@ class PetugasController extends Controller
 
     public function create()
     {
-        return view('admin.petugas.create');
+        $lembagaRaw = Siswa::select('UnitFormal', 'AsramaPondok', 'TingkatDiniyah')->get();
+
+        $lembaga = [
+            'UnitFormal' => $lembagaRaw->pluck('UnitFormal')->filter()->unique()->sort()->values(),
+            'AsramaPondok' => $lembagaRaw->pluck('AsramaPondok')->filter()->unique()->sort()->values(),
+            'TingkatDiniyah' => $lembagaRaw->pluck('TingkatDiniyah')->filter()->unique()->sort()->values(),
+        ];
+
+        return view('admin.petugas.create', compact('lembaga'));
     }
+
 
     public function store(Request $request)
     {

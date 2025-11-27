@@ -30,10 +30,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/petugas/{id}/edit', [PetugasController::class, 'edit'])->name('petugas.edit');
     Route::put('/petugas/{id}', [PetugasController::class, 'update'])->name('petugas.update');
     Route::delete('/petugas/{id}', [PetugasController::class, 'destroy'])->name('petugas.destroy');
+
     // Restore & Permanent Delete
     Route::post('/petugas/{id}/restore', [PetugasController::class, 'restore'])->name('petugas.restore');
     Route::delete('/petugas/{id}/force', [PetugasController::class, 'forceDelete'])->name('petugas.forceDelete');
-
 
     // Manajemen Siswa
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
@@ -50,14 +50,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/siswa/sync-all-siswa', [SiswaSyncController::class, 'syncAllSiswa'])->name('siswa.sync-data-siswa');
     Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
 
-
     // Sinkronisasi Pembayaran (Halaman & API)
     Route::get('/sync-pembayaran', [SyncPembayaranController::class, 'index'])->name('sync-pembayaran.index');
     Route::post('/sync-pembayaran/start', [SyncPembayaranController::class, 'start'])->name('sync-pembayaran.start');
     Route::post('/sync-pembayaran/cancel', [SyncPembayaranController::class, 'cancel'])->name('sync-pembayaran.cancel');
     Route::get('/sync-pembayaran/progress', [SyncPembayaranController::class, 'progress'])->name('sync-pembayaran.progress');
     Route::post('/sync-pembayaran/reset', [SyncPembayaranController::class, 'reset'])->name('sync-pembayaran.reset');
-
 
     Route::get('/siswa/get-pembayaran-siswa/{idperson}', [SiswaSyncController::class, 'getPembayaranSiswa'])->name('siswa.get-pembayaran-siswa');
 

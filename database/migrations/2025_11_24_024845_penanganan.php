@@ -9,14 +9,34 @@ return new class extends Migration {
     {
         Schema::create('penanganan', function (Blueprint $table) {
             $table->id();
+
+            // Relasi siswa & petugas
             $table->foreignId('id_siswa')->constrained('siswa')->onDelete('cascade');
             $table->foreignId('id_petugas')->constrained('users')->onDelete('cascade');
-            $table->enum('jenis', ['chat', 'telepon', 'visit']);
-            $table->text('catatan')->nullable();
-            $table->json('rating')->nullable(); // format: {"angka":5,"sikap":"kooperatif","catatan":"langsung membayar"}
+
+            // Jenis pembayaran: diisi berdasarkan siswa_pembayaran yang belum lunas
+            // format contoh: "SPP 2024 - Januari", "Gedung 2024", dll.
+            $table->string('jenis_pembayaran');
+
+            // Jenis penanganan
+            $table->enum('jenis_penanganan', ['chat', 'telepon', 'visit']);
+
+            // Catatan petugas
+            $table->json('catatan')->nullable();
+
+            // Rating JSON
+            // {"angka": 5, "sikap": "kooperatif", "catatan": "langsung membayar"}
+            $table->json('rating')->nullable();
+
+            // Hasil: lunas atau rekom
             $table->enum('hasil', ['lunas', 'rekom'])->nullable();
+
+            // Wajib jika hasil = rekom
             $table->date('tanggal_rekom')->nullable();
+
+            // Status progress penanganan
             $table->enum('status', ['belum', 'proses', 'selesai'])->default('belum');
+
             $table->timestamps();
             $table->softDeletes();
         });
