@@ -4,29 +4,114 @@
 
 @section('content')
     <div class="bg-white p-6 rounded-xl shadow">
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-xl font-semibold text-gray-800">
-                Daftar Siswa
-            </h1>
+        <h1 class="text-xl font-semibold text-gray-800 mb-4">
+            Daftar Siswa
+        </h1>
 
-            <form method="GET" class="flex items-center gap-2">
-                <input type="text" name="search" placeholder="Cari nama / ID Person..." value="{{ request('search') }}"
-                    class="px-3 py-2 border rounded-lg text-sm w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Cari
-                </button>
-            </form>
-        </div>
+        {{-- FILTER BAR --}}
+        <form method="GET"
+            class="flex flex-wrap items-center gap-3 mb-6 bg-white p-4 rounded-xl shadow border border-gray-200">
 
+            {{-- Search --}}
+            <input type="text" name="search" placeholder="Cari nama / ID Person..." value="{{ request('search') }}"
+                class="px-3 py-2 border rounded-lg text-sm w-48 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+
+            {{-- FORMAL --}}
+            <select name="UnitFormal"
+                class="px-3 py-2 border rounded-lg text-sm bg-white w-40 focus:ring-2 focus:ring-blue-500"
+                {{ $lock['UnitFormal'] ? 'disabled' : '' }}>
+                <option value="">Lembaga</option>
+                @foreach ($filterOptions['UnitFormal'] as $item)
+                    <option value="{{ $item }}"
+                        {{ request('UnitFormal', $selected['UnitFormal']) == $item ? 'selected' : '' }}>
+                        {{ $item }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select name="KelasFormal"
+                class="px-3 py-2 border rounded-lg text-sm bg-white w-32 focus:ring-2 focus:ring-blue-500">
+                <option value="">Kelas</option>
+                @foreach ($filterOptions['KelasFormal'] as $item)
+                    <option value="{{ $item }}" {{ request('KelasFormal') == $item ? 'selected' : '' }}>
+                        {{ $item }}
+                    </option>
+                @endforeach
+            </select>
+
+
+            {{-- PONDOK --}}
+            <select name="AsramaPondok"
+                class="px-3 py-2 border rounded-lg text-sm bg-white w-36 focus:ring-2 focus:ring-blue-500"
+                {{ $lock['AsramaPondok'] ? 'disabled' : '' }}>
+                <option value="">Asrama</option>
+                @foreach ($filterOptions['AsramaPondok'] as $item)
+                    <option value="{{ $item }}"
+                        {{ request('AsramaPondok', $selected['AsramaPondok']) == $item ? 'selected' : '' }}>
+                        {{ $item }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select name="KamarPondok"
+                class="px-3 py-2 border rounded-lg text-sm bg-white w-32 focus:ring-2 focus:ring-blue-500">
+                <option value="">Kamar</option>
+                @foreach ($filterOptions['KamarPondok'] as $item)
+                    <option value="{{ $item }}" {{ request('KamarPondok') == $item ? 'selected' : '' }}>
+                        {{ $item }}
+                    </option>
+                @endforeach
+            </select>
+
+
+            {{-- DINIYAH --}}
+            <select name="TingkatDiniyah"
+                class="px-3 py-2 border rounded-lg text-sm bg-white w-36 focus:ring-2 focus:ring-blue-500"
+                {{ $lock['TingkatDiniyah'] ? 'disabled' : '' }}>
+                <option value="">Diniyah</option>
+                @foreach ($filterOptions['TingkatDiniyah'] as $item)
+                    <option value="{{ $item }}"
+                        {{ request('TingkatDiniyah', $selected['TingkatDiniyah']) == $item ? 'selected' : '' }}>
+                        {{ $item }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select name="KelasDiniyah"
+                class="px-3 py-2 border rounded-lg text-sm bg-white w-36 focus:ring-2 focus:ring-blue-500">
+                <option value="">Kelas Diniyah</option>
+                @foreach ($filterOptions['KelasDiniyah'] as $item)
+                    <option value="{{ $item }}" {{ request('KelasDiniyah') == $item ? 'selected' : '' }}>
+                        {{ $item }}
+                    </option>
+                @endforeach
+            </select>
+
+            {{-- Tombol --}}
+            <button
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm">
+                Filter
+            </button>
+        </form>
+        <script>
+            document.querySelectorAll('select').forEach(function(el) {
+                el.addEventListener('change', function() {
+                    this.form.submit();
+                });
+            });
+        </script>
+
+        {{-- TABLE --}}
         <div class="overflow-x-auto">
             <table class="min-w-full border-collapse">
                 <thead class="bg-gray-100">
                     <tr>
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">ID</th>
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Nama</th>
-                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Gender</th>
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Lembaga</th>
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Asrama</th>
+                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Diniyah</th>
                         <th class="px-4 py-3 text-center text-gray-600 text-sm font-semibold">Aksi</th>
                     </tr>
                 </thead>
@@ -36,9 +121,17 @@
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3">{{ $item->idperson }}</td>
                             <td class="px-4 py-3 font-medium">{{ $item->nama }}</td>
-                            <td class="px-4 py-3">{{ $item->gender }}</td>
-                            <td class="px-4 py-3">{{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}</td>
-                            <td class="px-4 py-3">{{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}</td>
+
+
+                            <td class="px-4 py-3">
+                                {{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}
+                            </td>
+                            <td class="px-4 py-3">{{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '-' }}
+                            </td>
 
                             <td class="px-4 py-3 text-center">
                                 <a href="{{ route('bendahara.siswa.show', $item->id) }}"
@@ -47,10 +140,9 @@
                                 </a>
                             </td>
                         </tr>
-
                     @empty
                         <tr>
-                            <td colspan="5" class="py-6 text-center text-gray-500">
+                            <td colspan="6" class="py-6 text-center text-gray-500">
                                 Tidak ada data siswa ditemukan.
                             </td>
                         </tr>
@@ -59,6 +151,7 @@
             </table>
         </div>
 
+        {{-- PAGINATION --}}
         <div class="mt-4">
             {{ $siswa->links() }}
         </div>

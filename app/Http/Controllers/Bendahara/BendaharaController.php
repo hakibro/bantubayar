@@ -11,17 +11,100 @@ class BendaharaController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil lembaga milik user yang sedang login
-        $lembaga = auth()->user()->lembaga;
+        $lembagaUser = auth()->user()->lembaga;
 
-        $query = Siswa::query();
+        // ================================================
+        // 1) Tentukan scope siswa sesuai lembaga user
+        // ================================================
+        $scope = Siswa::query()
+            ->where(function ($q) use ($lembagaUser) {
+                $q->where('UnitFormal', $lembagaUser)
+                    ->orWhere('AsramaPondok', $lembagaUser)
+                    ->orWhere('TingkatDiniyah', $lembagaUser);
+            });
 
-        // Filter berdasarkan lembaga user
-        $query->where('UnitFormal', $lembaga)
-            ->orWhere('AsramaPondok', $lembaga)
-            ->orWhere('TingkatDiniyah', $lembaga);
 
-        // Jika ada pencarian
+        // ================================================
+        // 2) Filter dropdown (hanya data dalam scope)
+        // ================================================
+        $columns = [
+            'UnitFormal',
+            'KelasFormal',
+            'AsramaPondok',
+            'KamarPondok',
+            'TingkatDiniyah',
+            'KelasDiniyah',
+        ];
+
+        $filterOptions = [];
+
+        foreach ($columns as $col) {
+            $filterOptions[$col] = (clone $scope)
+                ->select($col)
+                ->whereNotNull($col)
+                ->distinct()
+                ->orderBy($col)
+                ->pluck($col);
+        }
+
+
+        // ================================================
+        // 3) Tentukan lembaga mana yang terkunci otomatis
+        // ================================================
+        $lock = [
+            'UnitFormal' => false,
+            'AsramaPondok' => false,
+            'TingkatDiniyah' => false,
+        ];
+
+        $selected = [
+            'UnitFormal' => null,
+            'AsramaPondok' => null,
+            'TingkatDiniyah' => null,
+        ];
+
+        if (in_array($lembagaUser, $filterOptions['UnitFormal']->toArray())) {
+            $lock['UnitFormal'] = true;
+            $selected['UnitFormal'] = $lembagaUser;
+        }
+
+        if (in_array($lembagaUser, $filterOptions['AsramaPondok']->toArray())) {
+            $lock['AsramaPondok'] = true;
+            $selected['AsramaPondok'] = $lembagaUser;
+        }
+
+        if (in_array($lembagaUser, $filterOptions['TingkatDiniyah']->toArray())) {
+            $lock['TingkatDiniyah'] = true;
+            $selected['TingkatDiniyah'] = $lembagaUser;
+        }
+
+        // ================================================
+        // 4) Query siswa
+        // ================================================
+        $query = (clone $scope);
+
+        // Filter berdasarkan lembaga yang terkunci
+        foreach ($selected as $field => $value) {
+            if ($value) {
+                $query->where($field, $value);
+            }
+        }
+
+        // Filter manual dari dropdown user
+        foreach ($request->only([
+            'UnitFormal',
+            'KelasFormal',
+            'AsramaPondok',
+            'KamarPondok',
+            'TingkatDiniyah',
+            'KelasDiniyah'
+        ]) as $field => $value) {
+            if ($value) {
+                $query->where($field, $value);
+            }
+        }
+
+        // Search
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama', 'like', "%{$request->search}%")
@@ -29,10 +112,19 @@ class BendaharaController extends Controller
             });
         }
 
-        $siswa = $query->paginate(40);
+        $siswa = $query->paginate(40)->appends($request->query());
 
-        return view('bendahara.penanganan.index', compact('siswa', 'lembaga'));
+        return view('bendahara.penanganan.index', compact(
+            'siswa',
+            'filterOptions',
+            'lock',
+            'selected'
+        ));
     }
+
+
+
+
 
     public function show($id)
     {
