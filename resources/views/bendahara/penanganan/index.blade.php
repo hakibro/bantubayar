@@ -6,7 +6,7 @@
     <div class="bg-white p-6 rounded-xl shadow">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-xl font-semibold text-gray-800">
-                Daftar Siswa • {{ $lembaga }}
+                Daftar Siswa
             </h1>
 
             <form method="GET" class="flex items-center gap-2">
@@ -25,7 +25,8 @@
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">ID</th>
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Nama</th>
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Gender</th>
-                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Kelas</th>
+                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Lembaga</th>
+                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Asrama</th>
                         <th class="px-4 py-3 text-center text-gray-600 text-sm font-semibold">Aksi</th>
                     </tr>
                 </thead>
@@ -36,7 +37,8 @@
                             <td class="px-4 py-3">{{ $item->idperson }}</td>
                             <td class="px-4 py-3 font-medium">{{ $item->nama }}</td>
                             <td class="px-4 py-3">{{ $item->gender }}</td>
-                            <td class="px-4 py-3">{{ $item->KelasFormal ?? '-' }}</td>
+                            <td class="px-4 py-3">{{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}</td>
+                            <td class="px-4 py-3">{{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}</td>
 
                             <td class="px-4 py-3 text-center">
                                 <a href="{{ route('bendahara.siswa.show', $item->id) }}"

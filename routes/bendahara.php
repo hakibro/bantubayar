@@ -14,5 +14,5 @@ Route::middleware(['auth', 'role:bendahara'])->prefix('bendahara')->name('bendah
     Route::get('/penanganan', [BendaharaController::class, 'index'])->name('penanganan.index');
     Route::get('/penanganan/{id}', [BendaharaController::class, 'show'])->name('penanganan.show');
     Route::post('/penanganan/{id}/update', [BendaharaController::class, 'update'])->name('penanganan.update');
-    Route::post('/siswa/{id}', [BendaharaController::class, 'show'])->name('siswa.show');
+    Route::get('/siswa/{id}', [BendaharaController::class, 'show'])->name('siswa.show');
 });

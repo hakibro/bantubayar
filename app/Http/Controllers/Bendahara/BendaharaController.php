@@ -17,7 +17,9 @@ class BendaharaController extends Controller
         $query = Siswa::query();
 
         // Filter berdasarkan lembaga user
-        $query->where('UnitFormal', $lembaga);
+        $query->where('UnitFormal', $lembaga)
+            ->orWhere('AsramaPondok', $lembaga)
+            ->orWhere('TingkatDiniyah', $lembaga);
 
         // Jika ada pencarian
         if ($request->search) {
@@ -27,8 +29,19 @@ class BendaharaController extends Controller
             });
         }
 
-        $siswa = $query->paginate(15);
+        $siswa = $query->paginate(40);
 
         return view('bendahara.penanganan.index', compact('siswa', 'lembaga'));
+    }
+
+    public function show($id)
+    {
+        $siswa = Siswa::with([
+            'pembayaran' => function ($q) {
+                $q->orderBy('periode', 'desc');
+            }
+        ])->findOrFail($id);
+
+        return view('bendahara.penanganan.show', compact('siswa'));
     }
 }

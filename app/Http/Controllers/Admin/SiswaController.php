@@ -12,13 +12,8 @@ class SiswaController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil semua kolom dari tabel siswa
-        $columns = Schema::getColumnListing('siswa');
 
-        // hilangkan kolom pembayaran
-        $columns = array_diff($columns, ['pembayaran']);
-
-        $siswaAll = Siswa::select($columns)->get();
+        $siswaAll = Siswa::all();
 
         // Cek apakah tidak ada data sama sekali
         if ($siswaAll->isEmpty()) {
@@ -27,7 +22,7 @@ class SiswaController extends Controller
         }
 
         // ambil semua petugas untuk dropdown filter & assign
-        $petugas = User::all();
+        $petugas = User::role('petugas')->get();
 
         // build query siswa dengan eager load petugas (limit 1)
         $query = Siswa::with([

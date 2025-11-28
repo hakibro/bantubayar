@@ -26,7 +26,7 @@ class PenggunaController extends Controller
 
         $petugas = $query->orderBy('name')->paginate(10)->withQueryString();
 
-        $daftarLembaga = User::role('petugas')
+        $daftarLembaga = User::role(['petugas', 'bendahara'])
             ->select('lembaga')->distinct()->pluck('lembaga')->filter()->values();
 
         // Jika request dari AJAX → return partial table saja
