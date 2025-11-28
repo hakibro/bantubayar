@@ -24,7 +24,7 @@ class SiswaService
     public function testConnection()
     {
         try {
-            $response = Http::timeout(10)->get($this->baseUrl);
+            $response = Http::timeout(20)->get($this->baseUrl);
 
             if ($response->successful()) {
                 $json = $response->json();
@@ -237,7 +237,7 @@ class SiswaService
                         'idperson' => $id,
                         'nama' => $item['nama'],
                         'gender' => $item['gender'],
-                        'lahirtempat' => $item['lahirtanggal'],
+                        'lahirtempat' => $item['lahirtempat'],
                         'lahirtanggal' => $item['lahirtanggal'],
                         'phone' => $item['phone'],
                         'UnitFormal' => $item['UnitFormal'],

@@ -71,7 +71,7 @@
                         Lembaga
                     </label>
 
-                    <select id="lembaga" name="unit_formal"
+                    <select id="lembaga" name="lembaga"
                         class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
 
                         <option value="" hidden>Pilih Lembaga</option>
@@ -96,6 +96,24 @@
                                 <option value="{{ $item }}">{{ $item }}</option>
                             @endforeach
                         </optgroup>
+                    </select>
+                </div>
+
+                <!-- Role -->
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700 mb-1">
+                        Role Petugas
+                    </label>
+
+                    <select id="role" name="role"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        required>
+
+                        <option value="" hidden>Pilih Role</option>
+
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                        @endforeach
                     </select>
                 </div>
 

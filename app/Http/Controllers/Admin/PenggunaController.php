@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use App\Models\Siswa;
-
+use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class PetugasController extends Controller
+class PenggunaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::role('petugas')->withTrashed();
+        $query = User::role(['petugas', 'bendahara'])->withTrashed();
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -47,7 +47,9 @@ class PetugasController extends Controller
             'TingkatDiniyah' => $lembagaRaw->pluck('TingkatDiniyah')->filter()->unique()->sort()->values(),
         ];
 
-        return view('admin.petugas.create', compact('lembaga'));
+        $roles = Role::all(); // ambil semua role
+
+        return view('admin.petugas.create', compact('lembaga', 'roles'));
     }
 
 
@@ -60,22 +62,30 @@ class PetugasController extends Controller
             'lembaga' => 'nullable|string|max:255',
         ]);
 
-        $petugas = User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
             'lembaga' => $request->lembaga,
         ]);
 
-        $petugas->assignRole('petugas');
+        $user->assignRole($request->role);
 
         return redirect()->route('admin.petugas.index')->with('success', 'Petugas created successfully.');
     }
 
     public function edit($id)
     {
+        $lembagaRaw = Siswa::select('UnitFormal', 'AsramaPondok', 'TingkatDiniyah')->get();
+
+        $lembaga = [
+            'UnitFormal' => $lembagaRaw->pluck('UnitFormal')->filter()->unique()->sort()->values(),
+            'AsramaPondok' => $lembagaRaw->pluck('AsramaPondok')->filter()->unique()->sort()->values(),
+            'TingkatDiniyah' => $lembagaRaw->pluck('TingkatDiniyah')->filter()->unique()->sort()->values(),
+        ];
+        $roles = Role::all(); // semua role
         $petugas = User::findOrFail($id);
-        return view('admin.petugas.edit', compact('petugas'));
+        return view('admin.petugas.edit', compact('petugas', 'lembaga', 'roles'));
     }
 
     public function update(Request $request, $id)

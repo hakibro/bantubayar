@@ -16,7 +16,8 @@ class AssignController extends Controller
     {
 
         // ambil semua petugas untuk dropdown filter & assign
-        $petugas = User::all();
+        $petugas = User::role('petugas')->get();
+
 
         // build query siswa dengan eager load petugas (limit 1)
         $query = Siswa::with([

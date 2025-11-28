@@ -68,36 +68,74 @@
                 <!-- Konfirmasi Password -->
                 <div>
                     <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi
-                        Password</label>
+                        Password (opsional)</label>
                     <input type="password" id="password_confirmation" name="password_confirmation"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        placeholder="Ulangi password" required>
+                        placeholder="Ulangi password">
                 </div>
 
                 <!-- Lembaga -->
                 <div>
-                    <label for="lembaga" class="block text-sm font-medium text-gray-700 mb-1">Lembaga</label>
+                    <label for="lembaga" class="block text-sm font-medium text-gray-700 mb-1">
+                        Lembaga
+                    </label>
+
                     <select id="lembaga" name="lembaga"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        <option value="" disabled {{ old('lembaga', $petugas->lembaga) ? '' : 'selected' }}>Pilih
-                            lembaga</option>
-                        <option value="RA" {{ old('lembaga', $petugas->lembaga) == 'RA' ? 'selected' : '' }}>RA</option>
-                        <option value="MI" {{ old('lembaga', $petugas->lembaga) == 'MI' ? 'selected' : '' }}>MI</option>
-                        <option value="MTs" {{ old('lembaga', $petugas->lembaga) == 'MTs' ? 'selected' : '' }}>MTs
-                        </option>
-                        <option value="SMP" {{ old('lembaga', $petugas->lembaga) == 'SMP' ? 'selected' : '' }}>SMP
-                        </option>
-                        <option value="MA" {{ old('lembaga', $petugas->lembaga) == 'MA' ? 'selected' : '' }}>MA
-                        </option>
-                        <option value="SMA" {{ old('lembaga', $petugas->lembaga) == 'SMA' ? 'selected' : '' }}>SMA
-                        </option>
-                        <option value="SMK" {{ old('lembaga', $petugas->lembaga) == 'SMK' ? 'selected' : '' }}>SMK
-                        </option>
-                        <option value="Pondok" {{ old('lembaga', $petugas->lembaga) == 'Pondok' ? 'selected' : '' }}>Pondok
-                        </option>
-                        <option value="Yayasan" {{ old('lembaga', $petugas->lembaga) == 'Yayasan' ? 'selected' : '' }}>
-                            Yayasan</option>
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+
+                        <option value="" hidden>Pilih Lembaga</option>
+
+                        <!-- Kelompok: Unit Formal -->
+                        <optgroup label="Lembaga Formal">
+                            @foreach ($lembaga['UnitFormal'] as $item)
+                                <option value="{{ $item }}" {{ $petugas->lembaga == $item ? 'selected' : '' }}>
+                                    {{ $item }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+
+                        <!-- Kelompok: Asrama Pondok -->
+                        <optgroup label="Asrama Pondok">
+                            @foreach ($lembaga['AsramaPondok'] as $item)
+                                <option value="{{ $item }}" {{ $petugas->lembaga == $item ? 'selected' : '' }}>
+                                    {{ $item }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+
+                        <!-- Kelompok: Tingkat Diniyah -->
+                        <optgroup label="Tingkat Diniyah">
+                            @foreach ($lembaga['TingkatDiniyah'] as $item)
+                                <option value="{{ $item }}" {{ $petugas->lembaga == $item ? 'selected' : '' }}>
+                                    {{ $item }}
+                                </option>
+                            @endforeach
+                        </optgroup>
                     </select>
+
+                </div>
+
+                <!-- Role -->
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700 mb-1">
+                        Role Petugas
+                    </label>
+
+                    <select id="role" name="role"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        required>
+
+                        <option value="" hidden>Pilih Role</option>
+
+                        @php $selectedRole = $petugas->getRoleNames()->first(); @endphp
+
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->name }}" {{ $selectedRole == $role->name ? 'selected' : '' }}>
+                                {{ ucfirst($role->name) }}
+                            </option>
+                        @endforeach
+                    </select>
+
                 </div>
 
 

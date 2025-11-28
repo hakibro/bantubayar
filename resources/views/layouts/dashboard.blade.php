@@ -46,6 +46,16 @@
                     </a>
                 @endrole
 
+                @role('bendahara')
+                    <a href="{{ route('bendahara.dashboard') }}"
+                        class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
+                        <i class="fas fa-home mr-2"></i> Dashboard
+                    </a>
+                    <a href="{{ route('bendahara.penanganan.index') }}"
+                        class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
+                        <i class="fas fa-users mr-2"></i> Data Penanganan
+                    </a>
+                @endrole
                 @role('petugas')
                     <a href="{{ route('petugas.dashboard') }}"
                         class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
@@ -82,83 +92,10 @@
         </div>
     </div>
 
-    <!-- Modal Notifikasi -->
-    <div id="notifModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
-            <button id="closeModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
-                <i class="fas fa-times"></i>
-            </button>
-            <h3 class="text-lg font-semibold mb-4" id="notifTitle">Notifikasi</h3>
-            <p class="text-gray-700" id="notifMessage"></p>
-            <ul class="mt-4 text-sm text-gray-600" id="notifDetails"></ul>
-            <div class="mt-6 text-right">
-                <button id="okModal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Modal -->
-    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
-        <div class="bg-white p-6 rounded-lg shadow text-center">
-            <i class="fas fa-spinner fa-spin text-4xl text-indigo-600"></i>
-            <p class="mt-3 text-gray-700 font-semibold">Memproses... Mohon tunggu</p>
-        </div>
-    </div>
-
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        function syncSiswa(url) {
 
-            // Tampilkan loading
-            $('#loadingModal').removeClass('hidden');
-
-            $.ajax({
-                url: url,
-                method: "GET",
-
-                success: function(data) {
-
-                    // Tutup loading
-                    $('#loadingModal').addClass('hidden');
-
-                    // Set judul
-                    $('#notifTitle').text(data.status ? 'Sukses' : 'Gagal');
-                    $('#notifMessage').text(data.message);
-
-                    // Detail
-                    let details =
-                        `<li>Inserted: ${data.inserted}</li>
-                <li>Updated: ${data.updated}</li>
-                <li>Deleted: ${data.deleted}</li>
-                <li>Skipped: ${data.skipped}</li>
-                <li>Total API: ${data.total_api}</li>
-                <li>Total Local: ${data.total_local}</li>`;
-
-                    $('#notifDetails').html(details);
-
-                    // Tampilkan modal notif
-                    $('#notifModal').removeClass('hidden');
-                },
-
-                error: function() {
-                    // Tutup loading
-                    $('#loadingModal').addClass('hidden');
-
-                    $('#notifTitle').text('Error');
-                    $('#notifMessage').text('Terjadi kesalahan saat sinkronisasi.');
-                    $('#notifDetails').html('');
-                    $('#notifModal').removeClass('hidden');
-                }
-            });
-        }
-
-        // Tutup modal notifikasi
-        $('#closeModal, #okModal').click(function() {
-            $('#notifModal').addClass('hidden');
-        });
-    </script>
-
+    @stack('scripts')
 
 
 
