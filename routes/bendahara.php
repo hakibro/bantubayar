@@ -19,5 +19,4 @@ Route::middleware(['auth', 'role:bendahara'])->prefix('bendahara')->name('bendah
 
     // Sync Single Pembayaran Siswa
     Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
-
 });

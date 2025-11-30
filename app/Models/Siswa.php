@@ -45,9 +45,43 @@ class Siswa extends Model
             ->withTimestamps();
     }
 
+    public function penanganan()
+    {
+        return $this->hasMany(Penanganan::class, 'id_siswa');
+    }
+
     public function pembayaran()
     {
-        return $this->hasMany(SiswaPembayaran::class);
+        return $this->hasMany(SiswaPembayaran::class, 'siswa_id');
     }
+
+    public function getKategoriBelumLunas(array $data)
+    {
+        $belumLunas = [];
+
+        foreach ($data['categories'] as $category) {
+
+            // Jika summary fully_paid = false → langsung belum lunas
+            if ($category['summary']['fully_paid'] === false) {
+
+                // Cari item mana yang belum lunas (optional)
+                $unpaidItems = array_filter($category['items'], function ($item) {
+                    return $item['payment_status'] === 'unpaid' || $item['remaining_balance'] != 0;
+                });
+
+                $belumLunas[] = [
+                    'category_name' => $category['category_name'],
+                    'summary' => $category['summary'],
+                    'items' => array_values($unpaidItems)
+                ];
+            }
+        }
+
+        return $belumLunas;
+    }
+
+
+
+
 
 }

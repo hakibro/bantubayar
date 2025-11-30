@@ -15,32 +15,27 @@ class Penanganan extends Model
     protected $fillable = [
         'id_siswa',
         'id_petugas',
-        'jenis',
+        'jenis_pembayaran',
+        'jenis_penanganan',
         'catatan',
         'rating',
         'hasil',
         'tanggal_rekom',
-        'status',
+        'status'
     ];
 
     protected $casts = [
+        'jenis_pembayaran' => 'array',
         'rating' => 'array',
-        'tanggal_rekom' => 'date',
     ];
 
-    /**
-     * Relasi ke model Siswa
-     */
     public function siswa()
     {
         return $this->belongsTo(Siswa::class, 'id_siswa');
     }
 
-    /**
-     * Relasi ke model Petugas
-     */
     public function petugas()
     {
-        return $this->belongsTo(Users::class, 'id_petugas');
+        return $this->belongsTo(User::class, 'id_petugas');
     }
 }

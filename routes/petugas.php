@@ -1,5 +1,5 @@
 <?php
-use App\Http\Controllers\Petugas\PenangananController;
+use App\Http\Controllers\Petugas\PetugasController;
 
 // Group route khusus Petugas
 Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
@@ -10,7 +10,7 @@ Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')
     })->name('dashboard');
 
     // Penanganan (misalnya: menangani siswa, laporan, atau pembayaran)
-    Route::get('/penanganan', [PenangananController::class, 'index'])->name('penanganan.index');
-    Route::get('/penanganan/{id}', [PenangananController::class, 'show'])->name('penanganan.show');
-    Route::post('/penanganan/{id}/update', [PenangananController::class, 'update'])->name('penanganan.update');
+    Route::get('/petugas', [PetugasController::class, 'index'])->name('petugas.index');
+    Route::get('/petugas/{id}', [PetugasController::class, 'show'])->name('petugas.show');
+    Route::post('/petugas/{id}/update', [PetugasController::class, 'update'])->name('petugas.update');
 });

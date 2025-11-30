@@ -3,12 +3,21 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PenangananController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+
+
+Route::get('/penanganan', [PenangananController::class, 'index'])->name('penanganan.index');
+Route::get('/penanganan/siswa/{id_siswa}', [PenangananController::class, 'indexSiswa'])
+    ->name('penanganan.siswa');
+
+Route::get('/penanganan/create/{siswa}', [PenangananController::class, 'create'])->name('penanganan.create');
+Route::post('/penanganan/store', [PenangananController::class, 'store'])->name('penanganan.store');
 
 
 

@@ -28,6 +28,12 @@
                     class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center">
                     <i class="fas fa-sync mr-2"></i> Sync Pembayaran
                 </button>
+                @if (count($siswa->getKategoriBelumLunas()) > 0)
+                    <a href="{{ route('penanganan.siswa', $siswa->id) }}" class="px-3 py-1 bg-red-500 text-white rounded">
+                        Penanganan
+                    </a>
+                @endif
+
             </div>
             <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>

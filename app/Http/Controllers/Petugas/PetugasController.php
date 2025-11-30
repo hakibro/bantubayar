@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 
-class PenangananController extends Controller
+class PetugasController extends Controller
 {
     public function index()
     {
