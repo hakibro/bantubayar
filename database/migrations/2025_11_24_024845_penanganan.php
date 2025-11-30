@@ -16,13 +16,13 @@ return new class extends Migration {
 
             // Jenis pembayaran: diisi berdasarkan siswa_pembayaran yang belum lunas
             // format contoh: "SPP 2024 - Januari", "Gedung 2024", dll.
-            $table->string('jenis_pembayaran');
+            $table->json('jenis_pembayaran');
 
             // Jenis penanganan
             $table->enum('jenis_penanganan', ['chat', 'telepon', 'visit']);
 
             // Catatan petugas
-            $table->json('catatan')->nullable();
+            $table->text('catatan')->nullable();
 
             // Rating JSON
             // {"angka": 5, "sikap": "kooperatif", "catatan": "langsung membayar"}

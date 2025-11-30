@@ -80,16 +80,16 @@
                         {{-- SUMMARY --}}
                         <div class="grid grid-cols-3 gap-4 text-sm">
                             <div>
-                                <strong>Total Tagihan:</strong>
+                                <strong>Total Bayar:</strong>
                                 <p>{{ number_format($s['total_billed']) }}</p>
                             </div>
                             <div>
-                                <strong>Total Bayar:</strong>
+                                <strong>Total Tagihan:</strong>
                                 <p>{{ number_format($s['total_paid']) }}</p>
                             </div>
                             <div>
                                 <strong>Sisa:</strong>
-                                <p class="{{ $s['total_remaining'] <= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                <p class="{{ $s['total_remaining'] < 0 ? 'text-red-600' : 'text-green-600' }}">
                                     {{ number_format($s['total_remaining']) }}
                                 </p>
                             </div>
@@ -105,8 +105,8 @@
                                     <thead>
                                         <tr class="bg-gray-100">
                                             <th class="p-2 text-left">Unit</th>
-                                            <th class="p-2 text-left">Tagihan</th>
                                             <th class="p-2 text-left">Bayar</th>
+                                            <th class="p-2 text-left">Tagihan</th>
                                             <th class="p-2 text-left">Sisa</th>
                                             <th class="p-2 text-left">Status</th>
                                             <th class="p-2 text-left">Tanggal</th>
@@ -177,7 +177,7 @@
             // Tampilkan loading
             document.getElementById("loadingModal").classList.remove("hidden");
 
-            fetch("{{ url('admin/siswa/sync-pembayaran-siswa') }}/" + id, {
+            fetch("{{ url('bendahara/siswa/sync-pembayaran-siswa') }}/" + id, {
                     method: "GET",
                     headers: {
                         "X-Requested-With": "XMLHttpRequest",
