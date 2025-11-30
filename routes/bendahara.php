@@ -16,6 +16,8 @@ Route::middleware(['auth', 'role:bendahara'])->prefix('bendahara')->name('bendah
     Route::get('/penanganan/{id}', [BendaharaController::class, 'show'])->name('penanganan.show');
     Route::post('/penanganan/{id}/update', [BendaharaController::class, 'update'])->name('penanganan.update');
     Route::get('/siswa/{id}', [BendaharaController::class, 'show'])->name('siswa.show');
+
+    // Sync Single Pembayaran Siswa
     Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
 
 });
