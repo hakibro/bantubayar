@@ -12,10 +12,9 @@ Route::middleware(['auth', 'role:bendahara'])->prefix('bendahara')->name('bendah
     })->name('dashboard');
 
     // Penanganan (misalnya: menangani siswa, laporan, atau pembayaran)
-    Route::get('/penanganan', [BendaharaController::class, 'index'])->name('penanganan.index');
-    Route::get('/penanganan/{id}', [BendaharaController::class, 'show'])->name('penanganan.show');
-    Route::post('/penanganan/{id}/update', [BendaharaController::class, 'update'])->name('penanganan.update');
+    Route::get('/', [BendaharaController::class, 'index'])->name('penanganan.index');
     Route::get('/siswa/{id}', [BendaharaController::class, 'show'])->name('siswa.show');
+    Route::post('/siswa/{id}/update', [BendaharaController::class, 'update'])->name('siswa.update');
 
     // Sync Single Pembayaran Siswa
     Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');

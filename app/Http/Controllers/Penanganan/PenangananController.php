@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Penanganan;
 
+use App\Http\Controllers\Controller;
 use App\Models\Penanganan;
 use App\Models\Siswa;
 use Illuminate\Http\Request;

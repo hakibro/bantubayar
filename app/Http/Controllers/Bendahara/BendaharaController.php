@@ -114,7 +114,7 @@ class BendaharaController extends Controller
 
         $siswa = $query->paginate(40)->appends($request->query());
 
-        return view('bendahara.penanganan.index', compact(
+        return view('bendahara.siswa.index', compact(
             'siswa',
             'filterOptions',
             'lock',
@@ -134,6 +134,6 @@ class BendaharaController extends Controller
             }
         ])->findOrFail($id);
 
-        return view('bendahara.penanganan.show', compact('siswa'));
+        return view('bendahara.siswa.show', compact('siswa'));
     }
 }
