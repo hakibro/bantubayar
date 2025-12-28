@@ -5,7 +5,7 @@ use App\Http\Controllers\Petugas\PetugasController;
 Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
 
     // Dashboard Petugas
-    Route::get('petugas/dashboard', function () {
+    Route::get('/dashboard', function () {
         return view('petugas.dashboard');
     })->name('dashboard');
 

@@ -26,30 +26,37 @@
         <div class="space-y-4">
 
             @forelse ($penanganan as $p)
-                <div x-data="{ open: false }" class="bg-white border rounded-lg shadow-sm p-4 hover:shadow transition">
+                <div x-data="{ open: false }"
+                    class="bg-white border rounded-lg shadow-sm hover:shadow transition p-4 space-y-4">
 
                     {{-- HEADER --}}
                     <div class="flex justify-between items-start">
-                        <div class="space-y-0.5">
-                            <p class="text-xs text-gray-500">
-                                {{ $p->created_at->format('d M Y H:i') }}
-                            </p>
-                            <p class="font-semibold text-gray-800">
+                        <div>
+                            <h3 class="font-semibold text-gray-800">
                                 Penanganan via {{ ucfirst($p->jenis_penanganan) }}
-                            </p>
-                        </div>
-
-                        <span
-                            class="px-2 py-1 rounded text-xs font-medium
+                            </h3>
+                            <span
+                                class="px-2 py-1 rounded text-xs font-medium
                     @if ($p->status === 'selesai') bg-green-100 text-green-700
-                    @elseif ($p->status === 'proses') bg-yellow-100 text-yellow-700
-                    @else bg-gray-100 text-gray-700 @endif">
-                            {{ ucfirst($p->status) }}
-                        </span>
+                    @else ($p->status !== 'selesai') bg-yellow-100 text-yellow-700 @endif">
+                                {{ ucfirst($p->status) }}
+                            </span>
+
+                        </div>
+                        <p class="text-xs text-gray-500">
+                            {{ $p->created_at->format('d M Y H:i') }}
+                            <br>
+                            {{ $p->created_at->diffForHumans() }}
+                        </p>
+
                     </div>
 
-                    {{-- RINGKASAN TOTAL --}}
-                    <div class="mt-3 text-sm text-red-700 space-y-1">
+                    {{-- SUMMARY --}}
+                    <div class="bg-gray-50 rounded-lg p-3 space-y-2">
+                        <p class="text-xs font-semibold text-gray-500 uppercase">
+                            Ringkasan Tunggakan
+                        </p>
+
                         @php
                             $groupedByPeriode = collect($p->jenis_pembayaran)->groupBy('periode');
                         @endphp
@@ -64,11 +71,11 @@
                                 }
                             @endphp
 
-                            <div class="flex items-center gap-3">
-                                <span class="font-semibold text-gray-700 min-w-[88px]">
-                                    {{ $periode }}
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-700 font-medium">
+                                    Periode {{ $periode }}
                                 </span>
-                                <span class="font-semibold">
+                                <span class="font-semibold text-red-600">
                                     Rp {{ number_format($totalPeriode, 0, ',', '.') }}
                                 </span>
                             </div>
@@ -76,33 +83,31 @@
                     </div>
 
                     {{-- TOGGLE --}}
-                    <button @click="open = !open" class="mt-3 text-xs text-blue-600 hover:underline focus:outline-none">
-                        <span x-show="!open">Lihat detail</span>
+                    <button @click="open = !open" class="text-xs text-blue-600 hover:underline focus:outline-none">
+                        <span x-show="!open">Lihat detail pembayaran</span>
                         <span x-show="open">Sembunyikan detail</span>
                     </button>
 
                     {{-- DETAIL --}}
-                    <div x-show="open" x-transition class="mt-3 border-t pt-3 text-sm space-y-4">
+                    <div x-show="open" x-transition class="border-t pt-4 space-y-4 text-sm">
 
                         @foreach ($groupedByPeriode as $periode => $itemsPerPeriode)
-                            <div class="space-y-2">
+                            <div class="space-y-3">
                                 <p class="font-semibold text-gray-700">
                                     Periode {{ $periode }}
                                 </p>
 
                                 @foreach ($itemsPerPeriode as $jp)
-                                    <div class="ml-3 space-y-1">
+                                    <div class="pl-3 border-l space-y-1">
                                         <p class="font-medium text-gray-800">
                                             {{ $jp['category_name'] }}
                                         </p>
 
-                                        <ul class="list-disc ml-5 text-xs text-gray-600 space-y-1">
+                                        <ul class="text-xs text-gray-600 space-y-1">
                                             @foreach ($jp['items'] as $item)
-                                                <li class="flex items-center gap-3">
-                                                    <span class="flex-1">
-                                                        {{ $item['unit_name'] }}
-                                                    </span>
-                                                    <span class="text-red-600 font-medium whitespace-nowrap">
+                                                <li class="flex justify-between">
+                                                    <span>{{ $item['unit_name'] }}</span>
+                                                    <span class="font-medium text-red-600">
                                                         Rp {{ number_format($item['remaining_balance'], 0, ',', '.') }}
                                                     </span>
                                                 </li>
@@ -115,17 +120,15 @@
                     </div>
 
                     {{-- FOOTER --}}
-                    <div class="mt-4 pt-3 border-t flex justify-between items-center text-sm">
-                        <div class="text-gray-600">
-                            <span class="text-gray-500">Petugas:</span>
-                            <span class="font-medium">{{ $p->petugas->name }}</span>
-                        </div>
+                    <div class="pt-3 border-t flex justify-between items-center text-xs text-gray-600">
+                        <span>
+                            Petugas: <strong class="text-gray-800">{{ $p->petugas->name }}</strong>
+                        </span>
 
                         <a href="#" class="text-blue-600 hover:underline">
                             Detail
                         </a>
                     </div>
-
                 </div>
             @empty
                 <div class="bg-white border rounded-lg p-6 text-center text-gray-500">
@@ -134,6 +137,7 @@
             @endforelse
 
         </div>
+
 
 
 
