@@ -7,10 +7,21 @@
             Riwayat Penanganan – {{ $siswa->nama }}
         </h2>
 
-        <a href="{{ route('penanganan.create', $siswa->id) }}"
-            class="px-3 py-1 bg-blue-600 text-white rounded inline-block mb-4">
-            Buat Penanganan Baru
-        </a>
+        @if ($bolehBuatPenanganan)
+            <a href="{{ route('penanganan.create', $siswa->id) }}"
+                class="px-3 py-1 bg-blue-600 text-white rounded inline-block mb-4">
+                Buat Penanganan Baru
+            </a>
+        @else
+            <div class="mb-4 px-3 py-2 bg-yellow-50 border border-yellow-300 text-yellow-800 rounded">
+                Penanganan sebelumnya <strong>belum selesai</strong>.
+                <br>
+                Status terakhir:
+                <span class="font-semibold capitalize">
+                    {{ str_replace('_', ' ', $penangananTerakhir->status) }}
+                </span>
+            </div>
+        @endif
 
         <div class="space-y-4">
 

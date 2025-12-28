@@ -10,7 +10,7 @@ Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')
     })->name('dashboard');
 
     // Penanganan (misalnya: menangani siswa, laporan, atau pembayaran)
-    Route::get('/petugas', [PetugasController::class, 'index'])->name('petugas.index');
-    Route::get('/petugas/{id}', [PetugasController::class, 'show'])->name('petugas.show');
-    Route::post('/petugas/{id}/update', [PetugasController::class, 'update'])->name('petugas.update');
+    Route::get('/penanganan', [PetugasController::class, 'index'])->name('penanganan.index');
+    Route::get('/penanganan/{id}', [PetugasController::class, 'show'])->name('penanganan.show');
+    Route::post('/penanganan/{id}/update', [PetugasController::class, 'update'])->name('penanganan.update');
 });

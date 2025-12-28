@@ -114,9 +114,23 @@
 
             <textarea id="waMessage" rows="10" readonly class="w-full border rounded-lg p-3 text-sm bg-gray-50">{{ $waMessage }}</textarea>
 
-            <div class="flex flex-wrap gap-3 mt-4">
+            <div class="flex flex-wrap gap-3 mt-4" x-data="{ openQrPesan: false, openQrCall: false }">
+
                 @if (!empty($phone))
-                    <a href="{{ $waUrl }}" target="_blank" class="...">Kirim via WhatsApp</a>
+                    <a href="{{ $waUrl }}" target="_blank"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        Kirim via WhatsApp
+                    </a>
+
+                    <button type="button" @click="openQrPesan = true"
+                        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                        QR Pesan WA
+                    </button>
+
+                    <button type="button" @click="openQrCall = true"
+                        class="px-4 py-2 border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-50 transition">
+                        QR Telepon WA
+                    </button>
                 @else
                     <p class="text-sm text-red-600 mt-2">
                         Nomor HP siswa belum tersedia.
@@ -127,7 +141,15 @@
                     class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
                     Salin Pesan
                 </button>
+
+                {{-- MODAL --}}
+                @if (!empty($phone))
+                    @include('penanganan.partials.popup-wa-qr-pesan')
+                    @include('penanganan.partials.popup-wa-qr-call')
+                @endif
             </div>
+
+
         </div>
 
 

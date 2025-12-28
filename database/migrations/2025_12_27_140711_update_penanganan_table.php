@@ -43,7 +43,6 @@ return new class extends Migration {
                 MODIFY status ENUM(
                     'menunggu_respon',
                     'menunggu_tindak_lanjut',
-                    'aktif',
                     'selesai'
                 ) 
                 CHARACTER SET utf8mb4 

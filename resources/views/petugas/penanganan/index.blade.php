@@ -27,7 +27,7 @@
                             <td class="px-4 py-2">{{ $item->siswa->AsramaPondok }} - {{ $item->siswa->KamarPondok }}</td>
                             <td class="px-4 py-2">
                                 <a href="
-                                {{-- {{ route('petugas.penanganan.detail', $item->siswa->id) }} --}}
+                                {{ route('penanganan.siswa', $item->siswa->id) }}
                                  "
                                     class="px-3 py-1.5 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
                                     Detail

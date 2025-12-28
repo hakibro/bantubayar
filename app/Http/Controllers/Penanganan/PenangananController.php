@@ -12,12 +12,28 @@ class PenangananController extends Controller
 {
     public function index()
     {
+        $lembagaUser = auth()->user()->lembaga;
+
         $data = Penanganan::with(['siswa', 'petugas'])
+            ->whereIn('id', function ($query) {
+                $query->selectRaw('MAX(id)')
+                    ->from('penanganan')
+                    ->whereNull('deleted_at')
+                    ->groupBy('id_siswa');
+            })
+            ->whereHas('siswa', function ($q) use ($lembagaUser) {
+                $q->where(function ($sub) use ($lembagaUser) {
+                    $sub->where('UnitFormal', $lembagaUser)
+                        ->orWhere('AsramaPondok', $lembagaUser)
+                        ->orWhere('TingkatDiniyah', $lembagaUser);
+                });
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
         return view('penanganan.index', compact('data'));
     }
+
     public function indexSiswa($id_siswa)
     {
         $siswa = Siswa::findOrFail($id_siswa);
@@ -27,12 +43,35 @@ class PenangananController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('penanganan.index-siswa', compact('siswa', 'penanganan'));
+        // Ambil penanganan terakhir
+        $penangananTerakhir = $penanganan->first();
+
+        // Boleh buat penanganan baru jika:
+        // - belum pernah ada penanganan
+        // - atau status terakhir = selesai
+        $bolehBuatPenanganan =
+            is_null($penangananTerakhir) ||
+            $penangananTerakhir->status === 'selesai';
+
+        return view(
+            'penanganan.index-siswa',
+            compact('siswa', 'penanganan', 'bolehBuatPenanganan', 'penangananTerakhir')
+        );
     }
 
 
     public function create($siswa_id)
     {
+        $penangananTerakhir = Penanganan::where('id_siswa', $siswa_id)
+            ->latest()
+            ->first();
+
+        if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') {
+            return redirect()
+                ->route('penanganan.index-siswa', $$siswa_id)
+                ->with('error', 'Masih ada penanganan yang belum selesai.');
+        }
+
         $siswa = Siswa::with('pembayaran')->findOrFail($siswa_id);
 
         $kategoriBelumLunas = $siswa->getKategoriBelumLunas();
@@ -62,7 +101,23 @@ class PenangananController extends Controller
 
 
         // TODO tambahkan auto set status berdasarkan jenis penanganan dan hasil
+        $status = 'menunggu_respon'; // default saat penanganan dibuat
 
+        if ($request->filled('hasil')) {
+            switch ($request->hasil) {
+                case 'lunas':
+                case 'tidak_ada_respon':
+                    $status = 'selesai';
+                    break;
+
+                case 'rekom_isi_saldo':
+                    $status = 'menunggu_tindak_lanjut';
+                    break;
+                case 'rekom_tidak_isi_saldo':
+                    $status = 'menunggu_tindak_lanjut';
+                    break;
+            }
+        }
 
         Penanganan::create([
             'id_siswa' => $siswa->id,
@@ -72,7 +127,7 @@ class PenangananController extends Controller
             'catatan' => $request->catatan ?? Null,
             'hasil' => $request->hasil ?? Null,
             'tanggal_rekom' => $request->tanggal_rekom ?? Null,
-            'status' => $request->status ?? Null,
+            'status' => $status,
         ]);
 
         return redirect()->route('penanganan.index')->with('success', 'Penanganan siswa berhasil disimpan.');
