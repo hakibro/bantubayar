@@ -41,6 +41,10 @@ class PenangananController extends Controller
             return redirect()->back()->with('error', 'Tidak ada tunggakan.');
         }
 
+        // TODO tambahkan pengecekan apakah sudah ada penanganan aktif?
+        // TODO batasi akses hanya untuk petugas yang ditugaskan ke siswa ini
+        // TODO tambahkan QR code wa untuk menghubungi wali siswa
+
         return view('penanganan.create', compact('siswa', 'kategoriBelumLunas'));
     }
 
@@ -56,15 +60,19 @@ class PenangananController extends Controller
         // Ambil semua kategori belum lunas otomatis
         $jenisPembayaran = $siswa->getKategoriBelumLunas();
 
+
+        // TODO tambahkan auto set status berdasarkan jenis penanganan dan hasil
+
+
         Penanganan::create([
             'id_siswa' => $siswa->id,
             'id_petugas' => Auth::id(),
             'jenis_pembayaran' => $jenisPembayaran, // AUTO
             'jenis_penanganan' => $request->jenis_penanganan,
-            'catatan' => $request->catatan,
-            'hasil' => $request->hasil,
-            'tanggal_rekom' => $request->tanggal_rekom,
-            'status' => $request->status ?? 'belum',
+            'catatan' => $request->catatan ?? Null,
+            'hasil' => $request->hasil ?? Null,
+            'tanggal_rekom' => $request->tanggal_rekom ?? Null,
+            'status' => $request->status ?? Null,
         ]);
 
         return redirect()->route('penanganan.index')->with('success', 'Penanganan siswa berhasil disimpan.');

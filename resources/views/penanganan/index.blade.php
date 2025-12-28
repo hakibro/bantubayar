@@ -23,7 +23,7 @@
                         <td class="border p-2">{{ ucfirst($row->jenis_penanganan) }}</td>
                         <td class="border p-2">{{ ucfirst($row->status) }}</td>
                         <td class="border p-2">
-                            <a href="#" class="text-blue-600">Detail</a>
+                            <a href="{{ route('penanganan.siswa', $row->siswa->id) }}" class="text-blue-600">Detail</a>
                         </td>
                     </tr>
                 @endforeach
