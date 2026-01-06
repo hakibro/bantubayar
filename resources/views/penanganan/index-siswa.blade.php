@@ -3,9 +3,32 @@
 @section('content')
     <div class="p-6">
 
-        <h2 class="text-xl font-bold mb-2">
-            Riwayat Penanganan – {{ $siswa->nama }}
-        </h2>
+
+
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-bold mb-2">
+                Riwayat Penanganan – {{ $siswa->nama }}
+                <a href="{{ route('bendahara.siswa.show', $siswa->id) }}"
+                    class="inline-flex items-center gap-2 text-sm font-medium
+          text-indigo-600 hover:text-indigo-700
+          bg-indigo-50 hover:bg-indigo-100
+          px-4 py-2 rounded-lg
+          transition">
+                    <i class="fa-solid fa-eye"></i>
+                    Detail Siswa
+                </a>
+            </h2>
+
+            <a href="{{ route('penanganan.index') }}"
+                class="inline-flex items-center gap-2 text-sm font-medium
+          text-indigo-600 hover:text-indigo-700
+          bg-indigo-50 hover:bg-indigo-100
+          px-4 py-2 rounded-lg
+          transition">
+                <i class="fa-solid fa-arrow-left"></i>
+                Daftar Penanganan Siswa
+            </a>
+        </div>
 
         @if ($bolehBuatPenanganan)
             <a href="{{ route('penanganan.create', $siswa->id) }}"

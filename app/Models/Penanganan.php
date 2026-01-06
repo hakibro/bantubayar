@@ -21,7 +21,8 @@ class Penanganan extends Model
         'rating',
         'hasil',
         'tanggal_rekom',
-        'status'
+        'status',
+        'bukti_pembayaran',
     ];
 
     protected $casts = [

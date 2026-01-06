@@ -7,6 +7,8 @@ use App\Models\Penanganan;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+
 
 class PenangananController extends Controller
 {
@@ -68,7 +70,7 @@ class PenangananController extends Controller
 
         if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') {
             return redirect()
-                ->route('penanganan.index-siswa', $$siswa_id)
+                ->route('penanganan.index-siswa', $siswa_id)
                 ->with('error', 'Masih ada penanganan yang belum selesai.');
         }
 
@@ -79,10 +81,6 @@ class PenangananController extends Controller
         if (count($kategoriBelumLunas) == 0) {
             return redirect()->back()->with('error', 'Tidak ada tunggakan.');
         }
-
-        // TODO tambahkan pengecekan apakah sudah ada penanganan aktif?
-        // TODO batasi akses hanya untuk petugas yang ditugaskan ke siswa ini
-        // TODO tambahkan QR code wa untuk menghubungi wali siswa
 
         return view('penanganan.create', compact('siswa', 'kategoriBelumLunas'));
     }
@@ -101,23 +99,26 @@ class PenangananController extends Controller
 
 
         // TODO tambahkan auto set status berdasarkan jenis penanganan dan hasil
-        $status = 'menunggu_respon'; // default saat penanganan dibuat
+        $status = 'menunggu_respon';
 
-        if ($request->filled('hasil')) {
-            switch ($request->hasil) {
-                case 'lunas':
-                case 'tidak_ada_respon':
-                    $status = 'selesai';
-                    break;
+        switch ($request->hasil) {
+            case 'lunas':
+                $status = 'selesai';
+                break;
 
-                case 'rekom_isi_saldo':
-                    $status = 'menunggu_tindak_lanjut';
-                    break;
-                case 'rekom_tidak_isi_saldo':
-                    $status = 'menunggu_tindak_lanjut';
-                    break;
-            }
+            case 'isi_saldo':
+                $status = 'selesai';
+                break;
+
+            case 'rekomendasi':
+                $status = 'menunggu_tindak_lanjut';
+                break;
+
+            case 'tidak_ada_respon':
+                $status = 'selesai';
+                break;
         }
+
 
         Penanganan::create([
             'id_siswa' => $siswa->id,
@@ -183,40 +184,89 @@ class PenangananController extends Controller
 
         $request->validate([
             'jenis_penanganan' => 'required',
-            'hasil' => 'nullable',
+            'hasil' => 'nullable|in:lunas,isi_saldo,rekomendasi,tidak_ada_respon',
             'tanggal_rekom' => 'nullable|date',
             'catatan' => 'nullable|string',
+            'bukti_pembayaran' => 'nullable|image|max:2048',
         ]);
+
 
         // =============================
         // AUTO SET STATUS (SAMA DENGAN STORE)
         // =============================
-        $status = $penanganan->status; // default
+        $status = 'menunggu_respon';
 
-        if ($request->filled('hasil')) {
-            switch ($request->hasil) {
-                case 'lunas':
-                case 'tidak_ada_respon':
-                    $status = 'selesai';
-                    break;
+        switch ($request->hasil) {
+            case 'lunas':
+                $status = 'selesai';
+                break;
 
-                case 'rekom_isi_saldo':
-                case 'rekom_tidak_isi_saldo':
-                    $status = 'menunggu_tindak_lanjut';
-                    break;
+            case 'isi_saldo':
+                $status = 'selesai';
+                break;
 
-                default:
-                    $status = 'menunggu_respon';
-            }
+            case 'rekomendasi':
+                $status = 'menunggu_tindak_lanjut';
+                break;
+
+            case 'tidak_ada_respon':
+                $status = 'selesai';
+                break;
         }
+
+        // Validasi: jika hasil lunas / isi saldo, wajib ada bukti pembayaran
+        if (in_array($request->hasil, ['lunas', 'isi_saldo']) && !$request->hasFile('bukti_pembayaran') && !$penanganan->bukti_pembayaran) {
+            return back()
+                ->withInput()
+                ->with('error', 'Bukti pembayaran wajib diunggah untuk hasil lunas / isi saldo.');
+        }
+
+
+        $buktiPath = $penanganan->bukti_pembayaran;
+
+        if (in_array($request->hasil, ['lunas', 'isi_saldo'])) {
+
+            if ($request->hasFile('bukti_pembayaran')) {
+
+                // hapus file lama
+                if (
+                    !empty($penanganan->bukti_pembayaran) &&
+                    Storage::disk('public')->exists($penanganan->bukti_pembayaran)
+                ) {
+                    Storage::disk('public')->delete($penanganan->bukti_pembayaran);
+                }
+
+                // upload baru
+                $buktiPath = $request->file('bukti_pembayaran')
+                    ->store('bukti-pembayaran', 'public');
+            }
+
+        } else {
+            // hasil bukan lunas / isi saldo → hapus bukti
+            if (
+                !empty($penanganan->bukti_pembayaran) &&
+                Storage::disk('public')->exists($penanganan->bukti_pembayaran)
+            ) {
+                Storage::disk('public')->delete($penanganan->bukti_pembayaran);
+            }
+
+            $buktiPath = null;
+        }
+
+
 
         $penanganan->update([
             'jenis_penanganan' => $request->jenis_penanganan,
             'catatan' => $request->catatan,
             'hasil' => $request->hasil,
-            'tanggal_rekom' => $request->tanggal_rekom,
+            'tanggal_rekom' => $request->hasil === 'rekomendasi'
+                ? $request->tanggal_rekom
+                : null,
             'status' => $status,
+            'bukti_pembayaran' => $buktiPath,
         ]);
+
+
 
         return redirect()
             ->route('penanganan.siswa', $penanganan->id_siswa)

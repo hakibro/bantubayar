@@ -5,7 +5,16 @@
 @section('content')
     <div class="max-w-5xl mx-auto space-y-6">
 
-        {{-- DATA SISWA --}}
+        {{-- DATA SISWA --}}<a href="{{ route('penanganan.siswa', $siswa->id) }}"
+            class="inline-flex items-center gap-2 text-sm font-medium
+          text-gray-600 hover:text-blue-700
+          bg-gray-50 hover:bg-blue-100
+          px-4 py-2 rounded-lg
+          transition">
+
+            <i class="fa-solid fa-arrow-left"></i>
+            Kembali ke Riwayat Penanganan
+        </a>
         <div class="bg-white rounded-lg shadow p-5">
             <h2 class="text-lg font-semibold mb-3">Data Siswa</h2>
 

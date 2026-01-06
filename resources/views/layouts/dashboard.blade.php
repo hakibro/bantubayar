@@ -92,6 +92,63 @@
 
             <!-- Page Content -->
             <main class="flex-1 overflow-y-auto p-6">
+
+                {{-- ERROR --}}
+                @if (session('error'))
+                    <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3000)" x-show="show"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center">
+                        <div
+                            class="flex items-start gap-3 bg-red-600 text-white px-5 py-4 rounded-xl shadow-xl max-w-sm w-full mx-4">
+                            <!-- Icon Error -->
+                            <svg class="w-6 h-6 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+                            </svg>
+
+                            <div class="flex-1 text-sm">
+                                {{ session('error') }}
+                            </div>
+
+                            <button @click="show = false" class="text-white/80 hover:text-white">
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
+
+                {{-- SUCCESS --}}
+                @if (session('success'))
+                    <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 2000)" x-show="show"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center">
+                        <div
+                            class="flex items-start gap-3 bg-green-600 text-white px-5 py-4 rounded-xl shadow-xl max-w-sm w-full mx-4">
+                            <!-- Icon Success -->
+                            <svg class="w-6 h-6 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+
+                            <div class="flex-1 text-sm">
+                                {{ session('success') }}
+                            </div>
+
+                            <button @click="show = false" class="text-white/80 hover:text-white">
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
+
+
                 @yield('content')
             </main>
         </div>
