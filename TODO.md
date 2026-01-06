@@ -1,5 +1,9 @@
 ### Todo:
 
+Siswa:
+
+-   detailkan sync siswa: update/delete siapa, field apa yang di update.
+
 Petugas:
 
 -   filter yg belum bayar :
