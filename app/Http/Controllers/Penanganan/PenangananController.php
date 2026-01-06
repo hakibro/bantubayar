@@ -133,4 +133,97 @@ class PenangananController extends Controller
         return redirect()->route('penanganan.index')->with('success', 'Penanganan siswa berhasil disimpan.');
     }
 
+    public function edit($id)
+    {
+        $penanganan = Penanganan::with(['siswa', 'petugas'])->findOrFail($id);
+        // hanya petugas yang membuat penanganan yang boleh mengupdate
+        if ($penanganan->id_petugas !== Auth::id()) {
+            return redirect()
+                ->back()
+                ->with('error', 'Hanya petugas yang membuat penanganan yang boleh mengupdate.');
+        }
+
+        // 🔒 Opsional: cegah update jika sudah selesai
+        if ($penanganan->status === 'selesai') {
+            return redirect()
+                ->back()
+                ->with('error', 'Penanganan yang sudah selesai tidak dapat diubah.');
+        }
+
+        // Hanya penanganan terakhir siswa yang boleh di update
+        $terakhir = Penanganan::where('id_siswa', $penanganan->id_siswa)
+            ->latest()
+            ->first();
+
+        if ($terakhir->id !== $penanganan->id) {
+            return back()->with('error', 'Hanya penanganan terakhir yang dapat diedit.');
+        }
+        // 🔒 Opsional: cegah edit jika sudah selesai
+        if ($penanganan->status === 'selesai') {
+            return redirect()
+                ->back()
+                ->with('error', 'Penanganan yang sudah selesai tidak dapat diedit.');
+        }
+
+        $siswa = Siswa::with('pembayaran')->findOrFail($penanganan->id_siswa);
+
+        // Ambil kategori belum lunas (jika masih relevan)
+        $kategoriBelumLunas = $siswa->getKategoriBelumLunas();
+
+        return view('penanganan.edit', compact(
+            'penanganan',
+            'siswa',
+            'kategoriBelumLunas'
+        ));
+    }
+    public function update(Request $request, $id)
+    {
+        $penanganan = Penanganan::findOrFail($id);
+
+
+        $request->validate([
+            'jenis_penanganan' => 'required',
+            'hasil' => 'nullable',
+            'tanggal_rekom' => 'nullable|date',
+            'catatan' => 'nullable|string',
+        ]);
+
+        // =============================
+        // AUTO SET STATUS (SAMA DENGAN STORE)
+        // =============================
+        $status = $penanganan->status; // default
+
+        if ($request->filled('hasil')) {
+            switch ($request->hasil) {
+                case 'lunas':
+                case 'tidak_ada_respon':
+                    $status = 'selesai';
+                    break;
+
+                case 'rekom_isi_saldo':
+                case 'rekom_tidak_isi_saldo':
+                    $status = 'menunggu_tindak_lanjut';
+                    break;
+
+                default:
+                    $status = 'menunggu_respon';
+            }
+        }
+
+        $penanganan->update([
+            'jenis_penanganan' => $request->jenis_penanganan,
+            'catatan' => $request->catatan,
+            'hasil' => $request->hasil,
+            'tanggal_rekom' => $request->tanggal_rekom,
+            'status' => $status,
+        ]);
+
+        return redirect()
+            ->route('penanganan.siswa', $penanganan->id_siswa)
+            ->with('success', 'Penanganan berhasil diperbarui.');
+    }
+
+
+
+
 }

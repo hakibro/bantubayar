@@ -125,8 +125,8 @@
                             Petugas: <strong class="text-gray-800">{{ $p->petugas->name }}</strong>
                         </span>
 
-                        <a href="#" class="text-blue-600 hover:underline">
-                            Detail
+                        <a href="{{ route('penanganan.edit', $p->id) }}" class="text-blue-600 hover:underline">
+                            Edit Penanganan
                         </a>
                     </div>
                 </div>

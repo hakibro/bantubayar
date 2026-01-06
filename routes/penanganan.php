@@ -11,4 +11,10 @@ Route::middleware(['auth:web', 'role:bendahara|petugas'])->prefix('penanganan')-
 
     Route::get('/create/{siswa}', [PenangananController::class, 'create'])->name('create');
     Route::post('/store', [PenangananController::class, 'store'])->name('store');
+    Route::get('/edit/{siswa}', [PenangananController::class, 'edit'])
+        ->name('edit');
+
+    Route::put('/update/{siswa}', [PenangananController::class, 'update'])
+        ->name('update');
+
 });
