@@ -33,10 +33,17 @@ class Siswa extends Model
     /**
      * Scope pencarian sederhana berdasarkan nama atau idperson
      */
+    // public function scopeSearch($query, $keyword)
+    // {
+    //     return $query->where('nama', 'like', "%{$keyword}%")
+    //         ->orWhere('idperson', 'like', "%{$keyword}%");
+    // }
     public function scopeSearch($query, $keyword)
     {
-        return $query->where('nama', 'like', "%{$keyword}%")
-            ->orWhere('idperson', 'like', "%{$keyword}%");
+        return $query->where(function ($q) use ($keyword) {
+            $q->where('nama', 'like', "%{$keyword}%")
+                ->orWhere('idperson', 'like', "%{$keyword}%");
+        });
     }
 
     public function petugas()
