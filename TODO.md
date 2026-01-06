@@ -1,9 +1,5 @@
 ### Todo:
 
-Siswa:
-
--   tambahkan soft-delete dan update sistem singkronisasi
-
 Petugas:
 
 -   filter yg belum bayar :
