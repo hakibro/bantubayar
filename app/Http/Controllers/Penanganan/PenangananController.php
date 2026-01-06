@@ -236,22 +236,7 @@ class PenangananController extends Controller
                 try {
                     $file = $request->file('bukti_pembayaran');
 
-                    // Validasi file size
-                    if (!$file || $file->getSize() === 0) {
-                        return back()
-                            ->withInput()
-                            ->with('error', 'File bukti pembayaran kosong atau tidak valid. Silakan coba upload ulang.');
-                    }
-
-                    // Validasi MIME type
-                    $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
-                    if (!in_array($file->getMimeType(), $allowedMimes)) {
-                        return back()
-                            ->withInput()
-                            ->with('error', 'Format file tidak didukung. Gunakan JPG, PNG, atau WebP.');
-                    }
-
-                    // hapus file lama
+                    // hapus file lama jika ada
                     if (
                         !empty($penanganan->bukti_pembayaran) &&
                         Storage::disk('public')->exists($penanganan->bukti_pembayaran)
@@ -259,20 +244,28 @@ class PenangananController extends Controller
                         Storage::disk('public')->delete($penanganan->bukti_pembayaran);
                     }
 
-                    // Dapatkan extension dari MIME type jika extension kosong
+                    // tentukan extension aman
                     $ext = $file->extension();
-                    if (empty($ext)) {
-                        $mimeToExt = [
+                    if (!$ext) {
+                        $mimeMap = [
                             'image/jpeg' => 'jpg',
                             'image/png' => 'png',
                             'image/webp' => 'webp',
                         ];
-                        $ext = $mimeToExt[$file->getMimeType()] ?? 'jpg';
+                        $ext = $mimeMap[$file->getMimeType()] ?? 'png';
                     }
 
-                    // upload baru dengan nama yang lebih unique
+                    // nama file
                     $filename = 'bukti_' . $penanganan->id . '_' . time() . '.' . $ext;
-                    $buktiPath = $file->storeAs('bukti-pembayaran', $filename, 'public');
+
+                    Storage::disk('public')->put(
+                        'bukti-pembayaran/' . $filename,
+                        file_get_contents($file->getPathname())
+                    );
+
+                    $buktiPath = 'bukti-pembayaran/' . $filename;
+
+
 
                     if (empty($buktiPath)) {
                         throw new \Exception('Gagal menyimpan file ke storage.');
