@@ -215,10 +215,12 @@ class PenangananController extends Controller
         }
 
         // Validasi: jika hasil lunas / isi saldo, wajib ada bukti pembayaran
-        if (in_array($request->hasil, ['lunas', 'isi_saldo']) && !$request->hasFile('bukti_pembayaran') && !$penanganan->bukti_pembayaran) {
-            return back()
-                ->withInput()
-                ->with('error', 'Bukti pembayaran wajib diunggah untuk hasil lunas / isi saldo.');
+        if (in_array($request->hasil, ['lunas', 'isi_saldo'])) {
+            if (!$request->hasFile('bukti_pembayaran') && !$penanganan->bukti_pembayaran) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Bukti pembayaran wajib diunggah untuk hasil lunas / isi saldo.');
+            }
         }
 
 
@@ -226,22 +228,64 @@ class PenangananController extends Controller
 
         if (in_array($request->hasil, ['lunas', 'isi_saldo'])) {
 
-            if ($request->hasFile('bukti_pembayaran')) {
+            if (
+                $request->hasFile('bukti_pembayaran') &&
+                $request->file('bukti_pembayaran')->isValid()
+            ) {
 
-                // hapus file lama
-                if (
-                    !empty($penanganan->bukti_pembayaran) &&
-                    Storage::disk('public')->exists($penanganan->bukti_pembayaran)
-                ) {
-                    Storage::disk('public')->delete($penanganan->bukti_pembayaran);
+                try {
+                    $file = $request->file('bukti_pembayaran');
+
+                    // Validasi file size
+                    if (!$file || $file->getSize() === 0) {
+                        return back()
+                            ->withInput()
+                            ->with('error', 'File bukti pembayaran kosong atau tidak valid. Silakan coba upload ulang.');
+                    }
+
+                    // Validasi MIME type
+                    $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+                    if (!in_array($file->getMimeType(), $allowedMimes)) {
+                        return back()
+                            ->withInput()
+                            ->with('error', 'Format file tidak didukung. Gunakan JPG, PNG, atau WebP.');
+                    }
+
+                    // hapus file lama
+                    if (
+                        !empty($penanganan->bukti_pembayaran) &&
+                        Storage::disk('public')->exists($penanganan->bukti_pembayaran)
+                    ) {
+                        Storage::disk('public')->delete($penanganan->bukti_pembayaran);
+                    }
+
+                    // Dapatkan extension dari MIME type jika extension kosong
+                    $ext = $file->extension();
+                    if (empty($ext)) {
+                        $mimeToExt = [
+                            'image/jpeg' => 'jpg',
+                            'image/png' => 'png',
+                            'image/webp' => 'webp',
+                        ];
+                        $ext = $mimeToExt[$file->getMimeType()] ?? 'jpg';
+                    }
+
+                    // upload baru dengan nama yang lebih unique
+                    $filename = 'bukti_' . $penanganan->id . '_' . time() . '.' . $ext;
+                    $buktiPath = $file->storeAs('bukti-pembayaran', $filename, 'public');
+
+                    if (empty($buktiPath)) {
+                        throw new \Exception('Gagal menyimpan file ke storage.');
+                    }
+                } catch (\Exception $e) {
+                    return back()
+                        ->withInput()
+                        ->with('error', 'Gagal mengupload file: ' . $e->getMessage());
                 }
-
-                // upload baru
-                $buktiPath = $request->file('bukti_pembayaran')
-                    ->store('bukti-pembayaran', 'public');
             }
 
         } else {
+
             // hasil bukan lunas / isi saldo → hapus bukti
             if (
                 !empty($penanganan->bukti_pembayaran) &&

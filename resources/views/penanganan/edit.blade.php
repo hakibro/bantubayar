@@ -158,8 +158,14 @@
         <form action="{{ route('penanganan.update', $penanganan->id) }}" method="POST" enctype="multipart/form-data"
             x-data="{
                 hasil: '{{ old('hasil', $penanganan->hasil) }}',
-                preview: '{{ $penanganan->bukti_pembayaran ? asset('storage/' . $penanganan->bukti_pembayaran) : '' }}'
-            }" x-init="$watch('hasil', value => {
+                preview: '{{ $penanganan->bukti_pembayaran ? asset('storage/' . $penanganan->bukti_pembayaran) : '' }}',
+                fileSelected: false,
+                filePasted: false
+            }" x-init="$nextTick(() => ready = true);
+            
+            $watch('hasil', value => {
+                if (!ready) return;
+            
                 if (value !== 'lunas' && value !== 'isi_saldo') {
                     preview = '';
                     if ($refs.file) $refs.file.value = null;
@@ -209,57 +215,87 @@
                         <option value="tidak_ada_respon">Tidak Ada Respon</option>
                     </select>
                 </div>
+
                 {{-- BUKTI PEMBAYARAN --}}
-                <div x-show="hasil === 'lunas' || hasil === 'isi_saldo'" x-transition x-cloak>
-                    <label class="block text-sm font-medium mb-1">
-                        Bukti Pembayaran
-                    </label>
+                <template x-if="hasil === 'lunas' || hasil === 'isi_saldo'">
+                    <div class="relative">
 
-                    <div class="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50"
-                        @click="$refs.file.click()"
-                        @paste.prevent="
-    const items = $event.clipboardData.items;
-    for (const item of items) {
-        if (item.type.startsWith('image/')) {
-            const file = item.getAsFile();
-            if (!file) return;
+                        <label class="block text-sm font-medium mb-1">
+                            Bukti Pembayaran <span class="text-red-500">*</span>
+                        </label>
 
-            const dt = new DataTransfer();
-            dt.items.add(file);
-            $refs.file.files = dt.files;
-            preview = URL.createObjectURL(file);
-            break;
-        }
-    }
-">
+                        {{-- HIDDEN INPUT FOR PASTE --}}
                         <input type="file" name="bukti_pembayaran" accept="image/png,image/jpeg,image/webp"
                             class="hidden" x-ref="file"
                             @change="
-           if ($event.target.files[0]) {
-               preview = URL.createObjectURL($event.target.files[0])
-           }
-       ">
+    if ($event.target.files.length) {
+        fileSelected = true;
+        filePasted = true;
+        preview = URL.createObjectURL($event.target.files[0]);
+    }
+">
 
+                        {{-- AREA UI WITH PASTE SUPPORT --}}
+                        <div class="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50"
+                            @click="$refs.file.click()"
+                            @dragover.prevent="$el.classList.add('bg-blue-50')"
+                            @dragleave.prevent="$el.classList.remove('bg-blue-50')"
+                            @drop.prevent="
+        $el.classList.remove('bg-blue-50');
+        const files = $event.dataTransfer.files;
+        if (files.length > 0) {
+            $refs.file.files = files;
+            const event = new Event('change', { bubbles: true });
+            $refs.file.dispatchEvent(event);
+        }
+    "
+                            @paste.prevent="
+        const items = $event.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+                const file = items[i].getAsFile();
+                if (file && file.size > 0) {
+                    try {
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        $refs.file.files = dt.files;
+                    } catch (e) {
+                        console.warn('DataTransfer failed, using fallback');
+                    }
+                    const event = new Event('change', { bubbles: true });
+                    $refs.file.dispatchEvent(event);
+                    break;
+                }
+            }
+        }
+    ">
 
-                        <template x-if="!preview">
-                            <p class="text-sm text-gray-500">
-                                Klik atau <b>Ctrl + V</b> untuk paste bukti pembayaran
+                            <template x-if="!preview">
+                                <div class="text-sm text-gray-500">
+                                    <p><b>Klik</b> untuk upload</p>
+                                    <p class="text-xs mt-1">atau <b>Ctrl + V</b> untuk paste</p>
+                                </div>
+                            </template>
+
+                            <template x-if="preview">
+                                <img :src="preview"
+                                    class="mx-auto max-h-48 max-w-full object-contain rounded-lg shadow">
+                            </template>
+                        </div>
+
+                        <template x-if="filePasted && preview">
+                            <p class="text-xs text-green-600 mt-2 font-semibold">
+                                ✓ File siap disimpan
                             </p>
                         </template>
 
-                        <template x-if="preview">
-                            <img :src="preview" class="mx-auto max-h-48 rounded-lg shadow">
-                        </template>
-
-
+                        @if ($penanganan->bukti_pembayaran)
+                            <p class="text-xs text-gray-500 mt-2">
+                                Bukti lama akan diganti jika upload baru
+                            </p>
+                        @endif
                     </div>
-
-                    @if ($penanganan->bukti_pembayaran)
-                        <p class="text-xs text-gray-500 mt-2">
-                            Bukti lama akan diganti jika upload baru
-                        </p>
-                    @endif
-                </div>
+                </template>
 
 
                 {{-- TANGGAL REKOMENDASI --}}
@@ -289,7 +325,8 @@
                         Kembali
                     </a>
 
-                    <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <button type="submit"
+                        class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                         Update Penanganan
                     </button>
                 </div>
