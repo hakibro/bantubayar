@@ -13,7 +13,6 @@ Petugas:
 -   form rekom (isi saldo / bayar nanti)
 -   update no. hp via api?
 -   form visit
--   tambahkan field bukti pembayaran jika hasil = lunas/isi saldo.
 
 kendala:
 
@@ -22,4 +21,5 @@ kendala:
 
 ### Done:
 
+tambahkan field bukti pembayaran jika hasil = lunas/isi saldo.
 Sync data siswa error

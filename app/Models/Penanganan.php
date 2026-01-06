@@ -27,7 +27,9 @@ class Penanganan extends Model
 
     protected $casts = [
         'jenis_pembayaran' => 'array',
-        'rating' => 'array',
+        'rating' => 'integer',
+        'tanggal_rekom' => 'date',
+
     ];
 
     public function siswa()

@@ -1,4 +1,5 @@
 @extends('layouts.dashboard')
+@section('title', 'Riwayat Penanganan')
 
 @section('content')
     <div class="p-6">
@@ -7,7 +8,7 @@
 
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-bold mb-2">
-                Riwayat Penanganan – {{ $siswa->nama }}
+                {{ $siswa->nama }}
                 <a href="{{ route('bendahara.siswa.show', $siswa->id) }}"
                     class="inline-flex items-center gap-2 text-sm font-medium
           text-indigo-600 hover:text-indigo-700
@@ -58,18 +59,56 @@
                             <h3 class="font-semibold text-gray-800">
                                 Penanganan via {{ ucfirst($p->jenis_penanganan) }}
                             </h3>
+                            @if ($p->rating)
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <span class="{{ $i <= $p->rating ? 'text-yellow-400' : 'text-gray-300' }}">★</span>
+                                @endfor
+                            @else
+                                <span class="text-sm text-gray-500">Tidak ada Rating</span>
+                            @endif
+
+                            @if ($p->catatan)
+                                <div class="mt-1 text-sm text-gray-600">
+                                    Catatan: {{ $p->catatan }}
+                                </div>
+                            @endif
+                            <br>
+
                             <span
                                 class="px-2 py-1 rounded text-xs font-medium
                     @if ($p->status === 'selesai') bg-green-100 text-green-700
                     @else ($p->status !== 'selesai') bg-yellow-100 text-yellow-700 @endif">
                                 {{ ucfirst($p->status) }}
                             </span>
+                            <span
+                                class="px-2 py-1 rounded text-xs font-medium
+                    @if ($p->hasil === 'lunas') bg-green-100 text-green-700
+                    @elseif ($p->hasil === 'isi_saldo') bg-blue-100 text-blue-700 @elseif ($p->hasil === 'rekomendasi') bg-yellow-100 text-yellow-700 @elseif ($p->hasil === 'tidak_ada_respon') bg-red-100 text-red-700 @endif">
+                                {{ ucfirst($p->hasil) }}
+                            </span>
+
+                            {{-- tampilkan bukti pembayaran jika ada --}}
+                            @if ($p->bukti_pembayaran)
+                                <div class="mt-1">
+                                    <a href="{{ Storage::url($p->bukti_pembayaran) }}" target="_blank"
+                                        class="text-sm text-blue-600 hover:underline">
+                                        Lihat Bukti Pembayaran
+                                    </a>
+                                </div>
+                            @endif
+
+                            {{-- tampilkan tanggal rekomendasi jika ada --}}
+                            @if ($p->tanggal_rekom)
+                                <div class="mt-1 text-sm text-gray-600">
+                                    Tanggal Rekomendasi: {{ \Carbon\Carbon::parse($p->tanggal_rekom)->format('d M Y') }}
+                                </div>
+                            @endif
 
                         </div>
                         <p class="text-xs text-gray-500">
-                            {{ $p->created_at->format('d M Y H:i') }}
+                            Dibuat {{ $p->created_at->diffForHumans() }}
                             <br>
-                            {{ $p->created_at->diffForHumans() }}
+                            Diperbarui {{ $p->updated_at->diffForHumans() }}
                         </p>
 
                     </div>

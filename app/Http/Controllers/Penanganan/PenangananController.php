@@ -131,7 +131,7 @@ class PenangananController extends Controller
             'status' => $status,
         ]);
 
-        return redirect()->route('penanganan.index')->with('success', 'Penanganan siswa berhasil disimpan.');
+        return redirect()->route('penanganan.siswa', $siswa->id)->with('success', 'Penanganan siswa berhasil disimpan.');
     }
 
     public function edit($id)
@@ -185,9 +185,10 @@ class PenangananController extends Controller
         $request->validate([
             'jenis_penanganan' => 'required',
             'hasil' => 'nullable|in:lunas,isi_saldo,rekomendasi,tidak_ada_respon',
-            'tanggal_rekom' => 'nullable|date',
+            'tanggal_rekom' => 'required_if:hasil,rekomendasi|date',
             'catatan' => 'nullable|string',
             'bukti_pembayaran' => 'nullable|image|max:2048',
+            'rating' => 'nullable|integer|min:0|max:5',
         ]);
 
 
@@ -290,17 +291,14 @@ class PenangananController extends Controller
             $buktiPath = null;
         }
 
-
-
         $penanganan->update([
             'jenis_penanganan' => $request->jenis_penanganan,
             'catatan' => $request->catatan,
             'hasil' => $request->hasil,
-            'tanggal_rekom' => $request->hasil === 'rekomendasi'
-                ? $request->tanggal_rekom
-                : null,
+            'tanggal_rekom' => $request->hasil === 'rekomendasi' ? $request->tanggal_rekom : null,
             'status' => $status,
             'bukti_pembayaran' => $buktiPath,
+            'rating' => $request->rating,
         ]);
 
 
@@ -309,8 +307,5 @@ class PenangananController extends Controller
             ->route('penanganan.siswa', $penanganan->id_siswa)
             ->with('success', 'Penanganan berhasil diperbarui.');
     }
-
-
-
 
 }

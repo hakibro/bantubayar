@@ -216,6 +216,49 @@
                     </select>
                 </div>
 
+                {{-- TANGGAL REKOMENDASI --}}
+                <div x-show="hasil === 'rekomendasi'" x-transition x-cloak>
+                    <label class="block text-sm font-medium mb-1">
+                        Tanggal Rekomendasi
+                    </label>
+                    @php
+                        $defaultDate = old(
+                            'tanggal_rekom',
+                            $penanganan->tanggal_rekom ?? now()->addDays(7)->format('Y-m-d'),
+                        );
+                    @endphp
+
+                    <input type="date" name="tanggal_rekom" value="{{ $defaultDate }}"
+                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring focus:ring-blue-200">
+                </div>
+
+                <!-- TODO: kirim surat pernyataan rekomendasi ke wali -->
+
+                {{-- RATING WALI MURID --}}
+                <div x-show="hasil === 'lunas' || hasil === 'isi_saldo' || hasil === 'tidak_ada_respon'"
+                    x-data="{ rating: {{ old('rating', $penanganan->rating ?? 0) }} }">
+                    <label class="block text-sm font-medium mb-1">
+                        Rating Wali Murid
+                    </label>
+
+                    <div class="flex items-center gap-1">
+                        <template x-for="star in 5" :key="star">
+                            <svg @click="rating = star" :class="star <= rating ? 'text-yellow-400' : 'text-gray-300'"
+                                class="w-8 h-8 cursor-pointer transition" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.286 3.967c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.175 0l-3.38 2.455c-.784.57-1.838-.197-1.539-1.118l1.285-3.967a1 1 0 00-.364-1.118L2.049 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+                            </svg>
+                        </template>
+                    </div>
+
+                    {{-- nilai asli yang dikirim ke backend --}}
+                    <input type="hidden" name="rating" :value="rating">
+
+                    <p class="text-xs text-gray-500 mt-1" x-show="rating">
+                        Rating dipilih: <span x-text="rating"></span> / 5
+                    </p>
+                </div>
+
                 {{-- BUKTI PEMBAYARAN --}}
                 <template x-if="hasil === 'lunas' || hasil === 'isi_saldo'">
                     <div class="relative">
@@ -237,8 +280,7 @@
 
                         {{-- AREA UI WITH PASTE SUPPORT --}}
                         <div class="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50"
-                            @click="$refs.file.click()"
-                            @dragover.prevent="$el.classList.add('bg-blue-50')"
+                            @click="$refs.file.click()" @dragover.prevent="$el.classList.add('bg-blue-50')"
                             @dragleave.prevent="$el.classList.remove('bg-blue-50')"
                             @drop.prevent="
         $el.classList.remove('bg-blue-50');
@@ -296,17 +338,6 @@
                         @endif
                     </div>
                 </template>
-
-
-                {{-- TANGGAL REKOMENDASI --}}
-                <div x-show="hasil === 'rekomendasi'" x-transition x-cloak>
-                    <label class="block text-sm font-medium mb-1">
-                        Tanggal Rekomendasi
-                    </label>
-                    <input type="date" name="tanggal_rekom"
-                        value="{{ old('tanggal_rekom', $penanganan->tanggal_rekom) }}"
-                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring focus:ring-blue-200">
-                </div>
 
 
                 {{-- STATUS (READ ONLY) --}}
