@@ -112,6 +112,7 @@
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Lembaga</th>
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Asrama</th>
                         <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Diniyah</th>
+                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Status</th>
                         <th class="px-4 py-3 text-center text-gray-600 text-sm font-semibold">Aksi</th>
                     </tr>
                 </thead>
@@ -131,6 +132,13 @@
                                 {{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}
                             </td>
                             <td class="px-4 py-3">{{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '-' }}
+                            </td>
+                            <td class="px-4 py-3">
+                                @if (count($item->getKategoriBelumLunas()) > 0)
+                                    <span class="text-red-500 px-2 py-1 rounded">Belum Lunas</span>
+                                @else
+                                    <span class="text-green-500 px-2 py-1 rounded">Lunas</span>
+                                @endif
                             </td>
 
                             <td class="px-4 py-3 text-center">
