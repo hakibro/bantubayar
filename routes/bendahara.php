@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\Bendahara\BendaharaController;
+use App\Http\Controllers\Bendahara\DashboardController;
 use App\Http\Controllers\Admin\SiswaSyncController;
 
 
@@ -7,9 +8,7 @@ use App\Http\Controllers\Admin\SiswaSyncController;
 Route::middleware(['auth', 'role:bendahara'])->prefix('bendahara')->name('bendahara.')->group(function () {
 
     // Dashboard Bendahara
-    Route::get('bendahara/dashboard', function () {
-        return view('bendahara.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/', [BendaharaController::class, 'index'])->name('penanganan.index');
     Route::get('/siswa/{id}', [BendaharaController::class, 'show'])->name('siswa.show');

@@ -8,7 +8,6 @@ Petugas:
 
 -   filter yg belum bayar :
     -   menambahkan cron job auto sync all malam hari
--   format pesan chat wa
 -   format telepon
 -   form rekom (isi saldo / bayar nanti)
 -   update no. hp via api?
@@ -26,3 +25,4 @@ tambahkan field bukti pembayaran jika hasil = lunas/isi saldo.
 Siswa:
 
 -   detailkan sync siswa: update/delete siapa, field apa yang di update.
+-   format pesan chat wa

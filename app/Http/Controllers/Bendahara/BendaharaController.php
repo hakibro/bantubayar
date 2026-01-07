@@ -123,9 +123,6 @@ class BendaharaController extends Controller
     }
 
 
-
-
-
     public function show($id)
     {
         $siswa = Siswa::with([
