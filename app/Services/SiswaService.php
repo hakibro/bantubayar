@@ -210,11 +210,13 @@ class SiswaService
                     ];
 
                     $insertCount++;
+                    $detail['inserted_ids'][] = $id;
                     continue;
                 }
 
                 // -------------- UPDATE --------------
                 $changes = false;
+                $fieldChanges = [];
 
                 foreach ($fields as $f) {
 
@@ -228,6 +230,10 @@ class SiswaService
 
                     if ((string) $localValue !== (string) $apiValue) {
                         $changes = true;
+                        $fieldChanges[$f] = [
+                            'before' => $localValue,
+                            'after' => $apiValue,
+                        ];
                         break;
                     }
                 }
@@ -250,6 +256,11 @@ class SiswaService
                     ];
 
                     $updatedCount++;
+                    $detail['updated_ids'][] = $id;
+                    // simpan perubahan (opsional)
+                    $detail['updated_changes'][$id] = $fieldChanges;
+                } else {
+                    $detail['skipped_ids'][] = $id;
                 }
             }
 
@@ -272,6 +283,9 @@ class SiswaService
             }
 
             // 6. Delete siswa yang tidak ada di API
+            $detail['deleted_ids'] = Siswa::whereNotIn('idperson', $apiIds)
+                ->pluck('idperson')
+                ->toArray();
             $deleteCount = Siswa::whereNotIn('idperson', $apiIds)->delete();
 
             // 7. Hitung skipped
@@ -286,6 +300,7 @@ class SiswaService
                 'skipped' => $skipped,
                 'deleted' => $deleteCount,
                 'total_api' => $totalApi,
+                'detail' => $detail,
                 'total_local' => Siswa::count()
             ];
 

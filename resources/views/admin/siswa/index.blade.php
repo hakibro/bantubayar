@@ -102,7 +102,6 @@
         <script>
             function syncSiswa(url) {
 
-                // Tampilkan loading
                 $('#loadingModal').removeClass('hidden');
 
                 $.ajax({
@@ -111,32 +110,94 @@
 
                     success: function(data) {
 
-                        // Tutup loading
                         $('#loadingModal').addClass('hidden');
 
-                        // Set judul
                         $('#notifTitle').text(data.status ? 'Sukses' : 'Gagal');
                         $('#notifMessage').text(data.message);
 
-                        // Detail
-                        let details =
-                            `<li>Inserted: ${data.inserted}</li>
-        <li>Updated: ${data.updated}</li>
-        <li>Deleted: ${data.deleted}</li>
-        <li>Skipped: ${data.skipped}</li>
-        <li>Total API: ${data.total_api}</li>
-        <li>Total Local: ${data.total_local}</li>`;
+                        let details = `
+                    <li><strong>Inserted:</strong> ${data.summary?.inserted ?? data.inserted}</li>
+                    <li><strong>Updated:</strong> ${data.summary?.updated ?? data.updated}</li>
+                    <li><strong>Deleted:</strong> ${data.summary?.deleted ?? data.deleted}</li>
+                    <li><strong>Skipped:</strong> ${data.summary?.skipped ?? data.skipped}</li>
+                    <li><strong>Total API:</strong> ${data.summary?.total_api ?? data.total_api}</li>
+                    <li><strong>Total Local:</strong> ${data.summary?.total_local ?? data.total_local}</li>
+                `;
+
+                        // ==========================
+                        // DETAIL JSON (OPSIONAL)
+                        // ==========================
+                        if (data.detail) {
+
+                            // INSERTED IDS
+                            if (data.detail.inserted_ids?.length) {
+                                details += `
+                            <li class="mt-3">
+                                <strong>Inserted IDs:</strong>
+                                <div class="text-xs text-gray-500 break-words">
+                                    ${data.detail.inserted_ids.join(', ')}
+                                </div>
+                            </li>
+                        `;
+                            }
+
+                            // UPDATED IDS
+                            if (data.detail.updated_ids?.length) {
+                                details += `
+                            <li class="mt-3">
+                                <strong>Updated IDs:</strong>
+                                <div class="text-xs text-gray-500 break-words">
+                                    ${data.detail.updated_ids.join(', ')}
+                                </div>
+                            </li>
+                        `;
+                            }
+
+                            // DELETED IDS
+                            if (data.detail.deleted_ids?.length) {
+                                details += `
+                            <li class="mt-3">
+                                <strong>Deleted IDs:</strong>
+                                <div class="text-xs text-gray-500 break-words">
+                                    ${data.detail.deleted_ids.join(', ')}
+                                </div>
+                            </li>
+                        `;
+                            }
+
+                            // UPDATED CHANGES
+                            if (data.detail.updated_changes && Object.keys(data.detail.updated_changes).length) {
+                                details += `<li class="mt-3"><strong>Detail Perubahan:</strong></li>`;
+
+                                Object.entries(data.detail.updated_changes).forEach(([id, fields]) => {
+                                    details += `
+                                <li class="ml-3 mt-2">
+                                    <div class="font-semibold text-sm">ID ${id}</div>
+                                    <ul class="ml-4 text-xs text-gray-600 list-disc">
+                            `;
+
+                                    Object.entries(fields).forEach(([field, change]) => {
+                                        details += `
+                                    <li>
+                                        ${field} :
+                                        <span class="text-red-500">${change.before ?? '-'}</span>
+                                        →
+                                        <span class="text-green-600">${change.after ?? '-'}</span>
+                                    </li>
+                                `;
+                                    });
+
+                                    details += `</ul></li>`;
+                                });
+                            }
+                        }
 
                         $('#notifDetails').html(details);
-
-                        // Tampilkan modal notif
                         $('#notifModal').removeClass('hidden');
                     },
 
                     error: function() {
-                        // Tutup loading
                         $('#loadingModal').addClass('hidden');
-
                         $('#notifTitle').text('Error');
                         $('#notifMessage').text('Terjadi kesalahan saat sinkronisasi.');
                         $('#notifDetails').html('');
@@ -145,7 +206,6 @@
                 });
             }
 
-            // Tutup modal notifikasi
             $('#closeModal, #okModal').click(function() {
                 $('#notifModal').addClass('hidden');
             });

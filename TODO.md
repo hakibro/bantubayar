@@ -22,4 +22,7 @@ kendala:
 ### Done:
 
 tambahkan field bukti pembayaran jika hasil = lunas/isi saldo.
-Sync data siswa error
+
+Siswa:
+
+-   detailkan sync siswa: update/delete siapa, field apa yang di update.
