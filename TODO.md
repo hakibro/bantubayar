@@ -1,5 +1,7 @@
 ### Todo:
 
+--> --> --> COBA LARAVEL BOOST!
+
 Admin:
 
 Petugas/Bendahara:
@@ -10,11 +12,40 @@ Petugas/Bendahara:
 
 Penanganan:
 
--   tambah history jenis penanganan
--   hapus bukti pembayaran
--   update view penanganan: bandingkan tagihan + saldo awal <-> tagihan + saldo saat ini
+-   tambah history jenis penanganan:
+    -   chat -> tunggu -> telepon -> tunggu -> telepon ulang ->
+-   hapus bukti pembayaran krn sudah digantikan oleh validasi sistem.
+-   bandingkan [tagihan awal, saldo awal] <-> [tagihan awal, saldo sekarang]
+-   set auto hasil:
+
+    -   lunas: jika semua tagihan sudah dibayar (api sync sekarang)
+    -   cicilan: jika ada beberapa tagihan yang dilunasi
+    -   isi saldo: jika saldo sekarang > saldo awal
+    -   rekomendasi: jika [tagihan awal, saldo awal] tetap
+        -   status: menunggu_tindak_lanjut
+        -   set tanggal rekomendasi
+        -   kirim link pernyataan rekomendasi ke wali berisi tanggal rekomendasi
+        -   wali input biaya rekomendasi dan menyetujui pernyataan rekomendasi
+    -   tidak_ada_respon:
+
+        -   status: selesai
+        -   disable jika jenis penanganan belum sampai telepon ulang
+        -   jika tidak ada respon wali dari chat / telepon, tapi wa masuk centang 2 / telepon wa terhubung.
+
+    -   hp_tidak_aktif:
+
+        -   status: menunggu_tindak_lanjut
+        -   jika tidak ada no. hp di data siswa:
+
+            -   tampilkan view update no. hp
+
+        -   jika ada no.hp di data siswa:
+            -   disable jika jenis penanganan belum sampai telepon ulang
+            -   jika wa tidak masuk centang 1 & telepon wa tidak terhubung.
+            -   set catatan no. hp tidak aktif
+            -   tampilkan view update no. hp
+
 -   ringkaskan form wa
--   jika tidak ada no. hp, update nomor hp via api. status = menunggu_tindak_lanjut.
 -   filter yg belum bayar :
     -   menambahkan cron job auto sync all malam hari
 -   format telepon
@@ -24,8 +55,9 @@ Penanganan:
 
 Siswa:
 
+-   Pindah (refactor) bendahara index & show ke siswa agar bisa digunakan juga oleh petugas cs, dan agar rapi
 -   List siswa = lunas/belum
--   Detail siswa: pembayaran saat ini + history penanganan
+-   Detail/show siswa: pembayaran saat ini + history penanganan
 
 Admin:
 
