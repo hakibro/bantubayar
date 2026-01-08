@@ -1,9 +1,8 @@
 <?php
 
-
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\PenangananController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -53,5 +52,15 @@ Route::get('/sync/pembayaran/progress', function () {
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
 require __DIR__ . '/petugas.php';
-require __DIR__ . '/bendahara.php';
 require __DIR__ . '/penanganan.php';
+
+
+
+Route::get('/force-logout', function () {
+    Auth::logout();
+
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect()->route('login');
+})->name('force.logout');

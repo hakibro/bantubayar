@@ -57,27 +57,52 @@ class Siswa extends Model
         return $this->hasMany(Penanganan::class, 'id_siswa');
     }
 
+    public function penangananAktif()
+    {
+        return $this->penanganan()
+            ->where('status', '!=', 'selesai')
+            ->latest()
+            ->first();
+    }
+
+    public function sedangDitangani(): bool
+    {
+        return $this->penanganan()
+            ->where('status', '!=', 'selesai')
+            ->exists();
+    }
+
+    public function petugasPenangananAktif(): ?string
+    {
+        return optional($this->penangananAktif()?->petugas)->name;
+    }
+
+
     public function pembayaran()
     {
         return $this->hasMany(SiswaPembayaran::class, 'siswa_id');
     }
 
-    public function getKategoriBelumLunas()
+    public function getKategoriBelumLunas(): ?array
     {
+        if (!$this->pembayaran()->exists()) {
+            return null; // BELUM SYNC
+        }
+
         $belumLunas = [];
 
         foreach ($this->pembayaran as $pay) {
-
             $data = $pay->data ?? [];
 
             foreach ($data['categories'] ?? [] as $category) {
-
                 if (($category['summary']['fully_paid'] ?? true) === false) {
 
-                    $unpaidItems = array_filter($category['items'] ?? [], function ($item) {
-                        return ($item['payment_status'] ?? '') === 'unpaid'
-                            || ($item['remaining_balance'] ?? 0) != 0;
-                    });
+                    $unpaidItems = array_filter(
+                        $category['items'] ?? [],
+                        fn($item) =>
+                        ($item['payment_status'] ?? '') === 'unpaid'
+                        || ($item['remaining_balance'] ?? 0) != 0
+                    );
 
                     $belumLunas[] = [
                         'periode' => $pay->periode,
@@ -89,8 +114,9 @@ class Siswa extends Model
             }
         }
 
-        return $belumLunas;
+        return $belumLunas; // bisa [] atau berisi
     }
+
 
 
 

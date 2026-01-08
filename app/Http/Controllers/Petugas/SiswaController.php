@@ -1,28 +1,43 @@
 <?php
 
-namespace App\Http\Controllers\Bendahara;
+namespace App\Http\Controllers\Petugas;
 
 use App\Http\Controllers\Controller;
+use App\Services\SiswaService;
 use App\Models\User;
 use App\Models\Siswa;
+use App\Models\PetugasSiswa;
+use Illuminate\Support\Facades\Auth;
+
+
 use Illuminate\Http\Request;
 
-class BendaharaController extends Controller
+class SiswaController extends Controller
 {
     public function index(Request $request)
     {
         $lembagaUser = auth()->user()->lembaga;
 
         // ================================================
-        // 1) Tentukan scope siswa sesuai lembaga user
+        // 1) Tentukan scope siswa sesuai role user
         // ================================================
-        $scope = Siswa::query()
-            ->where(function ($q) use ($lembagaUser) {
+        $scope = Siswa::query();
+
+        if (Auth::user()->hasRole('petugas')) {
+
+            $scope->whereHas('petugas', function ($q) {
+                $q->where('users.id', Auth::id());
+            });
+
+        } else {
+
+            $scope->where(function ($q) use ($lembagaUser) {
                 $q->where('UnitFormal', $lembagaUser)
                     ->orWhere('AsramaPondok', $lembagaUser)
                     ->orWhere('TingkatDiniyah', $lembagaUser);
             });
 
+        }
 
         // ================================================
         // 2) Filter dropdown (hanya data dalam scope)
@@ -114,7 +129,7 @@ class BendaharaController extends Controller
 
         $siswa = $query->paginate(40)->appends($request->query());
 
-        return view('bendahara.siswa.index', compact(
+        return view('petugas.siswa.index', compact(
             'siswa',
             'filterOptions',
             'lock',
@@ -123,7 +138,7 @@ class BendaharaController extends Controller
     }
 
 
-    public function show($id)
+    public function show($id, SiswaService $siswaService)
     {
         $siswa = Siswa::with([
             'pembayaran' => function ($q) {
@@ -131,6 +146,6 @@ class BendaharaController extends Controller
             }
         ])->findOrFail($id);
 
-        return view('bendahara.siswa.show', compact('siswa'));
+        return view('petugas.siswa.show', compact('siswa'));
     }
 }

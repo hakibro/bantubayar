@@ -9,12 +9,12 @@ Route::middleware(['auth:web', 'role:bendahara|petugas'])->prefix('penanganan')-
     Route::get('/siswa/{id_siswa}', [PenangananController::class, 'indexSiswa'])
         ->name('siswa');
 
-    Route::get('/create/{siswa}', [PenangananController::class, 'create'])->name('create');
+    Route::get('/create/{penanganan}', [PenangananController::class, 'create'])->name('create');
     Route::post('/store', [PenangananController::class, 'store'])->name('store');
-    Route::get('/edit/{siswa}', [PenangananController::class, 'edit'])
+    Route::get('/edit/{penanganan}', [PenangananController::class, 'edit'])
         ->name('edit');
 
-    Route::put('/update/{siswa}', [PenangananController::class, 'update'])
+    Route::put('/update/{penanganan}', [PenangananController::class, 'update'])
         ->name('update');
 
 });

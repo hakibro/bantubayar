@@ -121,7 +121,21 @@
                     @forelse ($siswa as $item)
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3">{{ $item->idperson }}</td>
-                            <td class="px-4 py-3 font-medium">{{ $item->nama }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-col gap-1">
+                                    <span class="font-medium text-gray-900">
+                                        {{ $item->nama }}
+                                    </span>
+
+                                    @if ($item->sedangDitangani())
+                                        <span class="text-xs text-blue-600">
+                                            Sedang ditangani oleh {{ $item->petugasPenangananAktif() }}
+                                        </span>
+                                    @endif
+
+                                </div>
+                            </td>
+
 
 
                             <td class="px-4 py-3">
@@ -134,15 +148,28 @@
                             <td class="px-4 py-3">{{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '-' }}
                             </td>
                             <td class="px-4 py-3">
-                                @if (count($item->getKategoriBelumLunas()) > 0)
-                                    <span class="text-red-500 px-2 py-1 rounded">Belum Lunas</span>
+                                @php
+                                    $belumLunas = $item->getKategoriBelumLunas();
+                                @endphp
+
+                                @if (is_null($belumLunas))
+                                    <span class="text-yellow-500 px-2 py-1 rounded">
+                                        Belum Sinkron
+                                    </span>
+                                @elseif (count($belumLunas) > 0)
+                                    <span class="text-red-500 px-2 py-1 rounded">
+                                        Belum Lunas
+                                    </span>
                                 @else
-                                    <span class="text-green-500 px-2 py-1 rounded">Lunas</span>
+                                    <span class="text-green-500 px-2 py-1 rounded">
+                                        Lunas
+                                    </span>
                                 @endif
+
                             </td>
 
                             <td class="px-4 py-3 text-center">
-                                <a href="{{ route('bendahara.siswa.show', $item->id) }}"
+                                <a href="{{ route('petugas.siswa.show', $item->id) }}"
                                     class="text-blue-600 hover:underline">
                                     <i class="fas fa-eye"></i> Detail
                                 </a>

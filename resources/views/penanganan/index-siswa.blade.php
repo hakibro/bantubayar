@@ -9,7 +9,7 @@
         <div class="flex items-center justify-between">
             <h2 class="text-xl font-bold mb-2">
                 {{ $siswa->nama }}
-                <a href="{{ route('bendahara.siswa.show', $siswa->id) }}"
+                <a href="{{ route('petugas.siswa.show', $siswa->id) }}"
                     class="inline-flex items-center gap-2 text-sm font-medium
           text-indigo-600 hover:text-indigo-700
           bg-indigo-50 hover:bg-indigo-100

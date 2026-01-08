@@ -55,6 +55,7 @@ Penanganan:
 
 Siswa:
 
+-   tambah saldo: buat tabel siswa_saldo, sync ikutkan dengan pembayaran
 -   Pindah (refactor) bendahara index & show ke siswa agar bisa digunakan juga oleh petugas cs, dan agar rapi
 -   List siswa = lunas/belum
 -   Detail/show siswa: pembayaran saat ini + history penanganan

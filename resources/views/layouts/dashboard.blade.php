@@ -47,28 +47,18 @@
                     </a>
                 @endrole
 
-                @role('bendahara')
-                    <a href="{{ route('bendahara.dashboard') }}"
-                        class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
-                        <i class="fas fa-home mr-2"></i> Dashboard
-                    </a>
-                    <a href="{{ route('bendahara.penanganan.index') }}"
-                        class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
-                        <i class="fas fa-users mr-2"></i> Data Siswa
-                    </a>
-                    <a href="{{ route('penanganan.index') }}"
-                        class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
-                        <i class="fas fa-users mr-2"></i> Data Penanganan
-                    </a>
-                @endrole
-                @role('petugas')
+                @role(['bendahara', 'petugas'])
                     <a href="{{ route('petugas.dashboard') }}"
                         class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
                         <i class="fas fa-home mr-2"></i> Dashboard
                     </a>
-                    <a href="{{ route('petugas.penanganan.index') }}"
+                    <a href="{{ route(name: 'petugas.siswa') }}"
                         class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
-                        <i class="fas fa-users mr-2"></i> Data Penanganan
+                        <i class="fas fa-users mr-2"></i> Siswa
+                    </a>
+                    <a href="{{ route('penanganan.index') }}"
+                        class="block px-6 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
+                        <i class="fas fa-users mr-2"></i> Penanganan
                     </a>
                 @endrole
 

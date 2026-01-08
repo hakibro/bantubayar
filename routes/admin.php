@@ -12,7 +12,7 @@ use App\Http\Controllers\Admin\PembayaranSiswaController;
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Dashboard Admin
-    Route::get('admin/dashboard', function () {
+    Route::get('/dashboard', function () {
         return view('admin.dashboard');
     })->name('dashboard');
 

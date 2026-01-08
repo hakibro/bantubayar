@@ -1,16 +1,28 @@
 <?php
-use App\Http\Controllers\Petugas\PetugasController;
+use App\Http\Controllers\Petugas\SiswaController;
+use App\Http\Controllers\Petugas\DashboardController;
+use App\Http\Controllers\Admin\SiswaSyncController;
 
-// Group route khusus Petugas
-Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
+
+
+// Group route khusus Bendahara dan Petugas
+Route::middleware(['auth', 'role:bendahara|petugas'])->prefix('petugas')->name('petugas.')->group(function () {
 
     // Dashboard Petugas
-    Route::get('/dashboard', function () {
-        return view('petugas.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Penanganan (misalnya: menangani siswa, laporan, atau pembayaran)
-    Route::get('/penanganan', [PetugasController::class, 'index'])->name('penanganan.index');
-    Route::get('/penanganan/{id}', [PetugasController::class, 'show'])->name('penanganan.show');
-    Route::post('/penanganan/{id}/update', [PetugasController::class, 'update'])->name('penanganan.update');
+
+    // Data Siswa dan Penanganan
+    Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa');
+    Route::get('/siswa/{id}', [SiswaController::class, 'show'])->name('siswa.show');
+    Route::post('/siswa/{id}/update', [SiswaController::class, 'update'])->name('siswa.update');
+
+    // Sync Single Pembayaran Siswa
+    Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
+    Route::get('/siswa/{id}/pembayaran-partial', function ($id) {
+        $siswa = \App\Models\Siswa::with('pembayaran')->findOrFail($id);
+
+        return view('petugas.siswa.partials.pembayaran', compact('siswa'))->render();
+    });
+
 });
