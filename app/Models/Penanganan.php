@@ -16,20 +16,20 @@ class Penanganan extends Model
         'id_siswa',
         'id_petugas',
         'jenis_pembayaran',
+        'saldo',
         'jenis_penanganan',
         'catatan',
         'rating',
         'hasil',
         'tanggal_rekom',
+        'kesanggupan',
         'status',
-        'bukti_pembayaran',
     ];
 
     protected $casts = [
         'jenis_pembayaran' => 'array',
         'rating' => 'integer',
         'tanggal_rekom' => 'date',
-
     ];
 
     public function siswa()

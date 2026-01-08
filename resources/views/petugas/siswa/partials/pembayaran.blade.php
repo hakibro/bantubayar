@@ -1,6 +1,10 @@
 <div class="bg-white shadow p-5 rounded">
     <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold mb-4">Riwayat Pembayaran</h2>
+        <div class="flex flex-col gap-2">
+            <h2 class="text-lg font-semibold mb-4">Riwayat Pembayaran</h2>
+            <span>Rp {{ number_format(optional($siswa->saldo)->saldo ?? 0, 0, ',', '.') }}
+            </span>
+        </div>
         @php
             $belumLunas = $siswa->getKategoriBelumLunas();
         @endphp

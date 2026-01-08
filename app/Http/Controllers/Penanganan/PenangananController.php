@@ -112,6 +112,7 @@ class PenangananController extends Controller
 
         // Ambil semua kategori belum lunas otomatis
         $jenisPembayaran = $siswa->getKategoriBelumLunas();
+        $saldo = $siswa->saldo->saldo ?? 0;
 
 
         // TODO tambahkan auto set status berdasarkan jenis penanganan dan hasil
@@ -140,6 +141,7 @@ class PenangananController extends Controller
             'id_siswa' => $siswa->id,
             'id_petugas' => Auth::id(),
             'jenis_pembayaran' => $jenisPembayaran, // AUTO
+            'saldo' => $saldo, // AUTO
             'jenis_penanganan' => $request->jenis_penanganan,
             'catatan' => $request->catatan ?? Null,
             'hasil' => $request->hasil ?? Null,
@@ -203,7 +205,6 @@ class PenangananController extends Controller
             'hasil' => 'nullable|in:lunas,isi_saldo,rekomendasi,tidak_ada_respon',
             'tanggal_rekom' => 'required_if:hasil,rekomendasi|date',
             'catatan' => 'nullable|string',
-            'bukti_pembayaran' => 'nullable|image|max:2048',
             'rating' => 'nullable|integer|min:0|max:5',
         ]);
 
@@ -231,81 +232,6 @@ class PenangananController extends Controller
                 break;
         }
 
-        // Validasi: jika hasil lunas / isi saldo, wajib ada bukti pembayaran
-        if (in_array($request->hasil, ['lunas', 'isi_saldo'])) {
-            if (!$request->hasFile('bukti_pembayaran') && !$penanganan->bukti_pembayaran) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Bukti pembayaran wajib diunggah untuk hasil lunas / isi saldo.');
-            }
-        }
-
-
-        $buktiPath = $penanganan->bukti_pembayaran;
-
-        if (in_array($request->hasil, ['lunas', 'isi_saldo'])) {
-
-            if (
-                $request->hasFile('bukti_pembayaran') &&
-                $request->file('bukti_pembayaran')->isValid()
-            ) {
-
-                try {
-                    $file = $request->file('bukti_pembayaran');
-
-                    // hapus file lama jika ada
-                    if (
-                        !empty($penanganan->bukti_pembayaran) &&
-                        Storage::disk('public')->exists($penanganan->bukti_pembayaran)
-                    ) {
-                        Storage::disk('public')->delete($penanganan->bukti_pembayaran);
-                    }
-
-                    // tentukan extension aman
-                    $ext = $file->extension();
-                    if (!$ext) {
-                        $mimeMap = [
-                            'image/jpeg' => 'jpg',
-                            'image/png' => 'png',
-                            'image/webp' => 'webp',
-                        ];
-                        $ext = $mimeMap[$file->getMimeType()] ?? 'png';
-                    }
-
-                    // nama file
-                    $filename = 'bukti_' . $penanganan->id . '_' . time() . '.' . $ext;
-
-                    Storage::disk('public')->put(
-                        'bukti-pembayaran/' . $filename,
-                        file_get_contents($file->getPathname())
-                    );
-
-                    $buktiPath = 'bukti-pembayaran/' . $filename;
-
-
-
-                    if (empty($buktiPath)) {
-                        throw new \Exception('Gagal menyimpan file ke storage.');
-                    }
-                } catch (\Exception $e) {
-                    return back()
-                        ->withInput()
-                        ->with('error', 'Gagal mengupload file: ' . $e->getMessage());
-                }
-            }
-
-        } else {
-
-            // hasil bukan lunas / isi saldo → hapus bukti
-            if (
-                !empty($penanganan->bukti_pembayaran) &&
-                Storage::disk('public')->exists($penanganan->bukti_pembayaran)
-            ) {
-                Storage::disk('public')->delete($penanganan->bukti_pembayaran);
-            }
-
-            $buktiPath = null;
-        }
 
         $penanganan->update([
             'jenis_penanganan' => $request->jenis_penanganan,
@@ -313,7 +239,6 @@ class PenangananController extends Controller
             'hasil' => $request->hasil,
             'tanggal_rekom' => $request->hasil === 'rekomendasi' ? $request->tanggal_rekom : null,
             'status' => $status,
-            'bukti_pembayaran' => $buktiPath,
             'rating' => $request->rating,
         ]);
 

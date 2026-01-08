@@ -36,6 +36,12 @@
 
         {{-- TUNGGAKAN --}}
         <div class="bg-white rounded-lg shadow p-5">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold mb-4">Saldo saat ini</h2>
+                <p class="text-xl font-bold">
+                    Rp {{ number_format($siswa->saldo->saldo ?? 0, 0, ',', '.') }}
+                </p>
+            </div>
             <h2 class="text-lg font-semibold mb-4">Tunggakan Pembayaran</h2>
 
             @php

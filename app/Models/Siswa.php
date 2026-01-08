@@ -77,6 +77,17 @@ class Siswa extends Model
         return optional($this->penangananAktif()?->petugas)->name;
     }
 
+    public function saldo()
+    {
+        return $this->hasOne(SiswaSaldo::class);
+    }
+
+    public function getSaldoNominalAttribute()
+    {
+        return $this->saldo?->saldo ?? 0;
+    }
+
+
 
     public function pembayaran()
     {

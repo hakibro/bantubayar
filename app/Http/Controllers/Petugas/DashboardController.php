@@ -4,33 +4,25 @@ namespace App\Http\Controllers\Petugas;
 
 use App\Http\Controllers\Controller;
 use App\Models\Penanganan;
-use App\Models\Siswa;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
 
     public function index()
     {
+        $user = Auth::user();
         $lembagaUser = auth()->user()->lembaga;
 
-        $scope = Siswa::query();
 
-        if (Auth::user()->hasRole('petugas')) {
-            $scope = Penanganan::whereHas('petugas', function ($q) {
-                $q->where('users.id', Auth::id());
-            });
-        } else {
-            $scope = Penanganan::whereHas('siswa', function ($q) use ($lembagaUser) {
-                $q->where('UnitFormal', $lembagaUser)
-                    ->orWhere('AsramaPondok', $lembagaUser)
-                    ->orWhere('TingkatDiniyah', $lembagaUser);
+        // BASE QUERY: SELALU Penanganan
+        if ($user->hasRole(['petugas', 'bendahara'])) {
+            // HANYA penanganan milik petugas login
+            $scope = Penanganan::whereHas('petugas', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
             });
         }
-
-
         $summary = [
             'total' => (clone $scope)->count(),
 

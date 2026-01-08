@@ -13,14 +13,19 @@ Petugas/Bendahara:
 Penanganan:
 
 -   tambah history jenis penanganan:
-    -   chat -> tunggu -> telepon -> tunggu -> telepon ulang ->
--   hapus bukti pembayaran krn sudah digantikan oleh validasi sistem.
+    -   chat -> tunggu -> telepon -> tunggu -> telepon ulang -> update penanganan
 -   bandingkan [tagihan awal, saldo awal] <-> [tagihan awal, saldo sekarang]
 -   set auto hasil:
 
-    -   lunas: jika semua tagihan sudah dibayar (api sync sekarang)
-    -   cicilan: jika ada beberapa tagihan yang dilunasi
-    -   isi saldo: jika saldo sekarang > saldo awal
+    -   lunas:
+        -   status: selesai
+        -   jika semua tagihan sudah dibayar (api sync sekarang)
+    -   cicilan:
+        -   status: selesai
+        -   jika ada beberapa tagihan yang dilunasi
+    -   isi saldo:
+        -   status: selesai
+        -   jika saldo sekarang > saldo awal
     -   rekomendasi: jika [tagihan awal, saldo awal] tetap
         -   status: menunggu_tindak_lanjut
         -   set tanggal rekomendasi
@@ -37,13 +42,13 @@ Penanganan:
         -   status: menunggu_tindak_lanjut
         -   jika tidak ada no. hp di data siswa:
 
-            -   tampilkan view update no. hp
+            -   tampilkan view update no. hp via api
 
         -   jika ada no.hp di data siswa:
             -   disable jika jenis penanganan belum sampai telepon ulang
             -   jika wa tidak masuk centang 1 & telepon wa tidak terhubung.
             -   set catatan no. hp tidak aktif
-            -   tampilkan view update no. hp
+            -   tampilkan view update no. hp via api
 
 -   ringkaskan form wa
 -   filter yg belum bayar :
@@ -81,3 +86,7 @@ Siswa:
 
 -   detailkan sync siswa: update/delete siapa, field apa yang di update.
 -   format pesan chat wa
+
+Petugas:
+
+-   hapus bukti pembayaran krn sudah digantikan oleh validasi sistem.

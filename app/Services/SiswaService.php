@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use App\Models\SiswaPembayaran;
+use App\Models\SiswaSaldo;
 use App\Jobs\DispatchSyncPembayaranJob;
 use App\Models\Siswa;
 
@@ -350,7 +351,7 @@ class SiswaService
         // 1. Ambil data siswa
         $siswa = Siswa::findOrFail($id);
 
-        // 2. Ambil pembayaran lewat API (gunakan helper getPembayaranSiswa)
+        // 2. Ambil pembayaran lewat API
         $result = $this->getPembayaranSiswa($siswa->idperson);
 
         if (!$result['status']) {
@@ -369,10 +370,22 @@ class SiswaService
             ];
         }
 
-        // 3. Hapus pembayaran lama untuk siswa ini
+        // 3. SYNC SALDO SISWA
+        $saldoApi = isset($data[0]['saldo'])
+            ? (float) $data[0]['saldo']
+            : null;
+
+        if ($saldoApi !== null) {
+            SiswaSaldo::updateOrCreate(
+                ['siswa_id' => $siswa->id],
+                ['saldo' => $saldoApi]
+            );
+        }
+
+        // 4. Hapus pembayaran lama
         SiswaPembayaran::where('siswa_id', $siswa->id)->delete();
 
-        // 4. Insert pembayaran per periode
+        // 5. Insert pembayaran per periode
         foreach ($data[0]['periods'] as $periode) {
             SiswaPembayaran::create([
                 'siswa_id' => $siswa->id,
@@ -383,12 +396,9 @@ class SiswaService
 
         return [
             'status' => true,
-            'message' => 'Sync pembayaran siswa berhasil.',
+            'message' => 'Sync pembayaran & saldo siswa berhasil.',
         ];
     }
-
-
-
 
 
 }

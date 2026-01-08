@@ -73,6 +73,12 @@
                                 </div>
                             @endif
                             <br>
+                            @if ($p->saldo)
+                                <div class="mt-1 text-sm text-gray-600">
+                                    Saldo sebelumnya: Rp {{ number_format($p->saldo, 0, ',', '.') }}
+                                </div>
+                            @endif
+                            <br>
 
                             <span
                                 class="px-2 py-1 rounded text-xs font-medium
