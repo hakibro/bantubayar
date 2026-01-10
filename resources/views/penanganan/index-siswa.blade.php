@@ -194,9 +194,9 @@
                         <span class="font-bold text-sm text-gray-700 flex items-center gap-2">
                             <i class="fas fa-file-signature text-primary"></i> Kesanggupan
                         </span>
-                        <i id="iconKesanggupan" class="fas fa-chevron-down text-gray-400 text-sm transition-transform"></i>
+                        <i id="iconkesanggupan" class="fas fa-chevron-down text-gray-400 text-sm transition-transform"></i>
                     </button>
-                    <div id="contentKesanggupan" class="accordion-content bg-white">
+                    <div id="contentkesanggupan" class="accordion-content bg-white">
                         <div class="p-4 space-y-4 border-t border-gray-100">
                             <div
                                 class="bg-blue-50 p-3 rounded-lg border border-blue-100 flex items-start gap-2 text-xs text-blue-800">
@@ -476,14 +476,7 @@
                 }
             }
 
-            function toggleAccordion(id) {
-                console.log(id);
-                const content = document.getElementById(`content${id.charAt(0).toUpperCase() + id.slice(1)}`);
-                const icon = document.getElementById(`icon${id.charAt(0).toUpperCase() + id.slice(1)}`);
-                console.log(content, icon);
-                content.classList.toggle('active');
-                icon.classList.toggle('rotate-180');
-            }
+
 
             function sendWhatsapp(isWithDebt) {
                 const phone = "6281234567890";
@@ -585,6 +578,7 @@
                 }
 
                 // --- RENDER KATEGORI ---
+                // TODO: fix accordion detail pembayaran
                 categoriesList.innerHTML = '';
                 // PENTING: Mengakses categories melalui path 'data.categories'
                 const categories = period.data ? period.data.categories : [];
@@ -607,7 +601,7 @@
                     const header = document.createElement('div');
                     header.className =
                         'flex justify-between items-center p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 transition';
-                    header.onclick = () => toggleAccordion(`catBody-${catIndex}`);
+                    header.onclick = () => toggleAccordion(`catBody${catIndex}`);
 
                     header.innerHTML = `
                 <div class="flex items-center gap-3">
@@ -619,18 +613,21 @@
                         <p class="text-xs text-gray-500">Tagih: ${formatCurrency(cat.summary.total_billed)}  </p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="font-bold text-sm ${cat.summary.total_remaining > 0 ? 'text-red-500' : 'text-gray-800'}">
+                <div class="text-right flex items-center gap-4">
+                    <div class='flex flex-col'><p class="font-bold text-sm ${cat.summary.total_remaining > 0 ? 'text-red-500' : 'text-gray-800'}">
                         ${formatCurrency(cat.summary.total_remaining)}
                     </p>
-                    <p class="text-[10px] text-gray-500">Sisa</p>
+                    <p class="text-[10px] text-gray-500">Sisa</p></div>
+                        <i id="iconcatBody${catIndex}" class="fas fa-chevron-down text-gray-400 text-sm transition-transform"></i>
+
                 </div>
+
             `;
 
                     // Body Isi (Items)
                     const body = document.createElement('div');
-                    body.id = `catBody-${catIndex}`;
-                    body.className = 'accordion-content bg-white divide-y divide-gray-100 hidden'; // Hidden by default
+                    body.id = `contentcatBody${catIndex}`;
+                    body.className = 'accordion-content bg-white divide-y divide-gray-100'; // Hidden by default
 
                     let itemsHtml = '';
                     if (cat.items && cat.items.length > 0) {
@@ -684,6 +681,15 @@
                     contentInfo.classList.add('hidden');
                     renderPaymentTab();
                 }
+            }
+
+            function toggleAccordion(id) {
+                console.log(id);
+                const content = document.getElementById(`content${id}`);
+                const icon = document.getElementById(`icon${id}`);
+                console.log(content, icon);
+                content.classList.toggle('active');
+                icon.classList.toggle('rotate-180');
             }
         </script>
     @endpush
