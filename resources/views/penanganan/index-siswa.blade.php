@@ -94,11 +94,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="flex flex-col md:flex-row gap-6">
-                {{ $siswa->pembayaran }}
-            </div>
-
             <!-- 2. Recent Activity (Payments) -->
             <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100">
                 <div class="flex justify-between items-center mb-6">
@@ -380,13 +375,15 @@
                     <div class="flex gap-2 overflow-x-auto no-scrollbar py-2" id="periodTabsContainer">
                         <!-- Period Tabs -->
                     </div>
-                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5 text-white shadow-lg">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-700 rounded-2xl p-5 text-white shadow-lg">
                         <div class="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 md:gap-8">
 
                             <!-- Bagian Kiri: Sisa (Highlight Utama) -->
                             <div class="flex flex-col items-center md:items-start w-full md:w-auto">
                                 <p class="text-blue-200 text-xs font-semibold uppercase tracking-wider mb-1">Sisa</p>
-                                <h3 id="summaryRemaining" class="text-4xl font-extrabold leading-tight">Rp 0</h3>
+                                <h3 id="summaryRemaining"
+                                    class="text-4xl md:text-xl font-extrabold leading-tight whitespace-nowrap">Rp 0
+                                </h3>
                             </div>
 
                             <!-- Bagian Kanan: Total Tagihan & Total Bayar -->
@@ -394,12 +391,12 @@
 
                                 <div class="flex flex-col text-center md:text-left">
                                     <p class="text-blue-200 text-xs font-medium mb-1">Total Tagihan</p>
-                                    <h3 id="summaryTotalBilled" class="text-xl font-bold">Rp 0</h3>
+                                    <h3 id="summaryTotalPaid" class="text-xl font-bold">Rp 0</h3>
                                 </div>
 
                                 <div class="flex flex-col text-center md:text-left">
                                     <p class="text-blue-200 text-xs font-medium mb-1">Total Bayar</p>
-                                    <h3 id="summaryTotalPaid" class="text-xl font-bold">Rp 0</h3>
+                                    <h3 id="summaryTotalBilled" class="text-xl font-bold">Rp 0</h3>
                                 </div>
 
                             </div>
@@ -570,7 +567,7 @@
                 // Nol (Lunas) -> Putih
                 // Plus (Hutang) -> Kuning/Merah
                 if (rem < 0) {
-                    remEl.className = 'text-2xl font-bold text-green-300';
+                    remEl.className = 'text-2xl font-bold text-yellow-400';
                 } else if (rem > 0) {
                     remEl.className = 'text-2xl font-bold text-yellow-300';
                 } else {
@@ -578,7 +575,6 @@
                 }
 
                 // --- RENDER KATEGORI ---
-                // TODO: fix accordion detail pembayaran
                 categoriesList.innerHTML = '';
                 // PENTING: Mengakses categories melalui path 'data.categories'
                 const categories = period.data ? period.data.categories : [];
@@ -590,9 +586,9 @@
 
                 categories.forEach((cat, catIndex) => {
                     // Logika Icon berdasarkan sisa pembayaran kategori
-                    const isPaid = cat.summary.total_remaining <= 0;
-                    const iconColor = isPaid ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50';
-                    const iconClass = isPaid ? 'fa-check-circle' : 'fa-exclamation-circle';
+                    const isFullyPaid = cat.summary.fully_paid;
+                    const iconColor = isFullyPaid ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50';
+                    const iconClass = isFullyPaid ? 'fa-check-circle' : 'fa-exclamation-circle';
 
                     const catCard = document.createElement('div');
                     catCard.className = 'bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm';
@@ -610,11 +606,12 @@
                     </div>
                     <div>
                         <h4 class="font-bold text-sm text-gray-800">${cat.category_name}</h4>
-                        <p class="text-xs text-gray-500">Tagih: ${formatCurrency(cat.summary.total_billed)}  </p>
+                        <p class="text-xs text-gray-500">Tagih: ${formatCurrency(cat.summary.total_paid)} </p>
+                        <p class="text-xs text-gray-500">Bayar: ${formatCurrency(cat.summary.total_billed)}</p>
                     </div>
                 </div>
                 <div class="text-right flex items-center gap-4">
-                    <div class='flex flex-col'><p class="font-bold text-sm ${cat.summary.total_remaining > 0 ? 'text-red-500' : 'text-gray-800'}">
+                    <div class='flex flex-col'><p class="font-bold text-sm ${cat.summary.fully_paid === false ? 'text-red-500' : 'text-gray-800'}">
                         ${formatCurrency(cat.summary.total_remaining)}
                     </p>
                     <p class="text-[10px] text-gray-500">Sisa</p></div>
@@ -633,13 +630,13 @@
                     if (cat.items && cat.items.length > 0) {
                         cat.items.forEach(item => {
                             const statusColor = item.remaining_balance === 0 ? 'text-green-600' : (item
-                                .remaining_balance < 0 ? 'text-green-400' : 'text-red-500');
+                                .remaining_balance < 0 ? 'text-red-500' : 'text-gray-800');
                             itemsHtml += `
                         <div class="p-3 flex justify-between items-center text-xs hover:bg-gray-50">
                             <div>
                                 <span class="font-medium text-gray-700 block">${item.unit_name}</span>
                                 <div class="text-[10px] text-gray-400 mt-1">
-                                    Tagih: ${formatCurrency(item.amount_billed)} &bull; Bayar: ${formatCurrency(item.amount_paid)}
+                                    Tagih: ${formatCurrency(item.amount_paid)}  &bull; Bayar:  ${formatCurrency(item.amount_billed)}
                                 </div>
                             </div>
                             <div class="text-right">

@@ -130,8 +130,10 @@
                         class="w-10 h-10 rounded-full border border-gray-200">
                 </div>
             </header>
-
-            @yield('content')
+            <!-- Content -->
+            <div class="max-w-full overflow-auto bg-bgBody">
+                @yield('content')
+            </div>
         </main>
     </div>
 
