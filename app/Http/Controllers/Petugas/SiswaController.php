@@ -137,8 +137,7 @@ class SiswaController extends Controller
         ));
     }
 
-
-    public function show($id, SiswaService $siswaService)
+    public function show($id)
     {
         $siswa = Siswa::with([
             'pembayaran' => function ($q) {

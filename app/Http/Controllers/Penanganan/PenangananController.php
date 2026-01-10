@@ -71,6 +71,7 @@ class PenangananController extends Controller
             is_null($penangananTerakhir) ||
             $penangananTerakhir->status === 'selesai';
 
+
         return view(
             'penanganan.index-siswa',
             compact('siswa', 'penanganan', 'bolehBuatPenanganan', 'penangananTerakhir')

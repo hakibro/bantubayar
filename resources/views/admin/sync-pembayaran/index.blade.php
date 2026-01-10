@@ -31,7 +31,7 @@
                     <div class="mb-6">
                         <div id="statusBadge"
                             class="inline-block px-4 py-2 rounded-full text-white font-semibold
-                            @if ($isRunning) bg-blue-500 @else bg-green-500 @endif">
+                            @if ($isRunning) bg-primary @else bg-green-500 @endif">
                             @if ($isRunning)
                                 🔄 Sedang Berjalan
                             @else
@@ -229,7 +229,7 @@
 
             if (running) {
                 badge.textContent = '🔄 Sedang Berjalan';
-                badge.className = 'inline-block px-4 py-2 rounded-full text-white font-semibold bg-blue-500';
+                badge.className = 'inline-block px-4 py-2 rounded-full text-white font-semibold bg-primary';
                 startBtn.disabled = true;
                 cancelBtn.disabled = false;
             } else {
