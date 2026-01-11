@@ -49,6 +49,7 @@
             /* Amber */
         }
     </style>
+    @stack('styles')
 </head>
 
 <body class="bg-bgBody text-gray-800 font-sans overflow-x-hidden">
@@ -95,7 +96,7 @@
                     class="flex flex-col md:flex-row items-center gap-1 md:gap-4
                   px-4 py-3 rounded-xl
                   {{ request()->routeIs('petugas*') ? $navActive : $navInactive }}">
-                    <i class="fas fa-users text-xl md:w-5"></i>
+                    <i class="fas fa-list text-xl md:w-5"></i>
                     <span>Siswa</span>
                 </a>
 

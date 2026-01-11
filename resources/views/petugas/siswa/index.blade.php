@@ -2,128 +2,168 @@
 
 @section('title', 'Penanganan Siswa')
 
+@push('styles')
+    <style>
+        /* Custom styles for loading and error modals */
+        /* Custom scrollbar agar rapi */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Transisi halus untuk Mobile Filter */
+        .filter-overlay {
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .filter-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .filter-drawer {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(100%);
+        }
+
+        .filter-drawer.open {
+            transform: translateY(0);
+        }
+    </style>
+@endpush
 @section('content')
     <div class="bg-gray-100 p-6 rounded-xl shadow">
-        <div class="flex items-center justify-between mb-4 md:hidden">
-            <h1 class="text-xl font-semibold text-gray-800">
-                Daftar Siswa
-            </h1>
+        <form method="GET">
 
-            <button type="button" onclick="toggleFilter()"
-                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm shadow active:scale-95 transition">
-                <i class="fas fa-filter"></i>
-                Filter
-            </button>
-        </div>
-        <h1 class="text-xl font-semibold text-gray-800 mb-4 hidden md:block">
-            Daftar Siswa
-        </h1>
+            <div class="flex items-center justify-between mb-4 gap-4">
+                {{-- Search --}} <input type="text" name="search" placeholder="Cari nama / ID Person..."
+                    value="{{ request('search') }}"
+                    class="px-3 py-2 border rounded-lg text-sm w-full md:w-48
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
+                <button type="button" onclick="toggleFilter()"
+                    class="md:hidden flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm shadow active:scale-95 transition">
+                    <i class="fas fa-filter"></i>
+                    Filter
+                </button>
+            </div>
 
-        {{-- FILTER BAR --}}
-        <form method="GET" id="filterBox"
-            class="hidden md:flex flex-wrap items-center gap-3 mb-6
+            {{-- FILTER BAR --}}
+
+            <div id="filterBox"
+                class="hidden md:flex flex-wrap items-center gap-3 mb-6
            bg-white p-4 rounded-xl shadow border border-gray-200
            md:static fixed inset-x-0 bottom-0 z-40
            md:rounded-xl rounded-t-3xl">
 
-            {{-- Search --}}
-            <input type="text" name="search" placeholder="Cari nama / ID Person..." value="{{ request('search') }}"
-                class="px-3 py-2 border rounded-lg text-sm w-full md:w-48
-               focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
 
-            {{-- FORMAL --}}
-            <select name="UnitFormal"
-                class="px-3 py-2 border rounded-lg text-sm bg-white
+                {{-- FORMAL --}}
+                <select name="UnitFormal"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white
            w-full md:w-40 focus:ring-2 focus:ring-blue-500"
-                {{ $lock['UnitFormal'] ? 'disabled' : '' }}>
-                <option value="">Lembaga</option>
-                @foreach ($filterOptions['UnitFormal'] as $item)
-                    <option value="{{ $item }}"
-                        {{ request('UnitFormal', $selected['UnitFormal']) == $item ? 'selected' : '' }}>
-                        {{ $item }}
-                    </option>
-                @endforeach
-            </select>
+                    {{ $lock['UnitFormal'] ? 'disabled' : '' }}>
+                    <option value="">Lembaga</option>
+                    @foreach ($filterOptions['UnitFormal'] as $item)
+                        <option value="{{ $item }}"
+                            {{ request('UnitFormal', $selected['UnitFormal']) == $item ? 'selected' : '' }}>
+                            {{ $item }}
+                        </option>
+                    @endforeach
+                </select>
 
-            <select name="KelasFormal"
-                class="px-3 py-2 border rounded-lg text-sm bg-white
+                <select name="KelasFormal"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white
            w-full md:w-40 focus:ring-2 focus:ring-blue-500">
-                <option value="">Kelas</option>
-                @foreach ($filterOptions['KelasFormal'] as $item)
-                    <option value="{{ $item }}" {{ request('KelasFormal') == $item ? 'selected' : '' }}>
-                        {{ $item }}
-                    </option>
-                @endforeach
-            </select>
+                    <option value="">Kelas</option>
+                    @foreach ($filterOptions['KelasFormal'] as $item)
+                        <option value="{{ $item }}" {{ request('KelasFormal') == $item ? 'selected' : '' }}>
+                            {{ $item }}
+                        </option>
+                    @endforeach
+                </select>
 
 
-            {{-- PONDOK --}}
-            <select name="AsramaPondok"
-                class="px-3 py-2 border rounded-lg text-sm bg-white
+                {{-- PONDOK --}}
+                <select name="AsramaPondok"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white
            w-full md:w-40 focus:ring-2 focus:ring-blue-500"
-                {{ $lock['AsramaPondok'] ? 'disabled' : '' }}>
-                <option value="">Asrama</option>
-                @foreach ($filterOptions['AsramaPondok'] as $item)
-                    <option value="{{ $item }}"
-                        {{ request('AsramaPondok', $selected['AsramaPondok']) == $item ? 'selected' : '' }}>
-                        {{ $item }}
-                    </option>
-                @endforeach
-            </select>
+                    {{ $lock['AsramaPondok'] ? 'disabled' : '' }}>
+                    <option value="">Asrama</option>
+                    @foreach ($filterOptions['AsramaPondok'] as $item)
+                        <option value="{{ $item }}"
+                            {{ request('AsramaPondok', $selected['AsramaPondok']) == $item ? 'selected' : '' }}>
+                            {{ $item }}
+                        </option>
+                    @endforeach
+                </select>
 
-            <select name="KamarPondok"
-                class="px-3 py-2 border rounded-lg text-sm bg-white
+                <select name="KamarPondok"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white
            w-full md:w-40 focus:ring-2 focus:ring-blue-500">
-                <option value="">Kamar</option>
-                @foreach ($filterOptions['KamarPondok'] as $item)
-                    <option value="{{ $item }}" {{ request('KamarPondok') == $item ? 'selected' : '' }}>
-                        {{ $item }}
-                    </option>
-                @endforeach
-            </select>
+                    <option value="">Kamar</option>
+                    @foreach ($filterOptions['KamarPondok'] as $item)
+                        <option value="{{ $item }}" {{ request('KamarPondok') == $item ? 'selected' : '' }}>
+                            {{ $item }}
+                        </option>
+                    @endforeach
+                </select>
 
 
-            {{-- DINIYAH --}}
-            <select name="TingkatDiniyah"
-                class="px-3 py-2 border rounded-lg text-sm bg-white
+                {{-- DINIYAH --}}
+                <select name="TingkatDiniyah"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white
            w-full md:w-40 focus:ring-2 focus:ring-blue-500"
-                {{ $lock['TingkatDiniyah'] ? 'disabled' : '' }}>
-                <option value="">Diniyah</option>
-                @foreach ($filterOptions['TingkatDiniyah'] as $item)
-                    <option value="{{ $item }}"
-                        {{ request('TingkatDiniyah', $selected['TingkatDiniyah']) == $item ? 'selected' : '' }}>
-                        {{ $item }}
-                    </option>
-                @endforeach
-            </select>
+                    {{ $lock['TingkatDiniyah'] ? 'disabled' : '' }}>
+                    <option value="">Diniyah</option>
+                    @foreach ($filterOptions['TingkatDiniyah'] as $item)
+                        <option value="{{ $item }}"
+                            {{ request('TingkatDiniyah', $selected['TingkatDiniyah']) == $item ? 'selected' : '' }}>
+                            {{ $item }}
+                        </option>
+                    @endforeach
+                </select>
 
-            <select name="KelasDiniyah"
-                class="px-3 py-2 border rounded-lg text-sm bg-white
+                <select name="KelasDiniyah"
+                    class="px-3 py-2 border rounded-lg text-sm bg-white
            w-full md:w-40 focus:ring-2 focus:ring-blue-500">
-                <option value="">Kelas Diniyah</option>
-                @foreach ($filterOptions['KelasDiniyah'] as $item)
-                    <option value="{{ $item }}" {{ request('KelasDiniyah') == $item ? 'selected' : '' }}>
-                        {{ $item }}
-                    </option>
-                @endforeach
-            </select>
+                    <option value="">Kelas Diniyah</option>
+                    @foreach ($filterOptions['KelasDiniyah'] as $item)
+                        <option value="{{ $item }}" {{ request('KelasDiniyah') == $item ? 'selected' : '' }}>
+                            {{ $item }}
+                        </option>
+                    @endforeach
+                </select>
 
-            {{-- Tombol --}}
-            <div class="w-full flex gap-2 mt-2">
-                <button
-                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg
+                {{-- Tombol --}}
+                <div class="w-full flex gap-2 mt-2">
+                    <button
+                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg
                hover:bg-blue-700 active:scale-95 transition-all shadow-sm">
-                    Terapkan Filter
-                </button>
+                        Terapkan Filter
+                    </button>
 
-                <button type="button" onclick="toggleFilter()"
-                    class="md:hidden flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">
-                    Tutup
-                </button>
+                    <button type="button" onclick="toggleFilter()"
+                        class="md:hidden flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">
+                        Tutup
+                    </button>
+                </div>
             </div>
-
         </form>
 
 
