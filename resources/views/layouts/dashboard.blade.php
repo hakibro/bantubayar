@@ -54,6 +54,11 @@
 <body class="bg-bgBody text-gray-800 font-sans overflow-x-hidden">
 
     <div class="flex h-screen">
+        @php
+            $navActive = 'bg-primaryLight text-primary font-semibold';
+            $navInactive = 'hover:bg-gray-50 hover:text-primary transition';
+        @endphp
+
         <nav
             class="fixed z-40 bg-white border-gray-100
            md:inset-y-0 md:left-0 md:w-64 md:border-r
@@ -79,8 +84,8 @@
                 <!-- Beranda -->
                 <a href="{{ route('dashboard') }}"
                     class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                   px-4 py-3 rounded-xl
-                   hover:bg-gray-50 hover:text-primary transition">
+                  px-4 py-3 rounded-xl
+                  {{ request()->routeIs('dashboard') ? $navActive : $navInactive }}">
                     <i class="fas fa-home text-xl md:w-5"></i>
                     <span>Beranda</span>
                 </a>
@@ -88,34 +93,33 @@
                 <!-- Siswa -->
                 <a href="{{ route('petugas.siswa') }}"
                     class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                   px-4 py-3 rounded-xl
-                   hover:bg-gray-50 hover:text-primary transition">
+                  px-4 py-3 rounded-xl
+                  {{ request()->routeIs('petugas*') ? $navActive : $navInactive }}">
                     <i class="fas fa-users text-xl md:w-5"></i>
                     <span>Siswa</span>
                 </a>
 
                 <!-- Penanganan -->
-                <a href="#"
+                <a href="{{ route('penanganan.index') }}"
                     class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                   px-4 py-3 rounded-xl
-                   bg-primaryLight text-primary font-semibold">
+                  px-4 py-3 rounded-xl
+                  {{ request()->routeIs('penanganan*') ? $navActive : $navInactive }}">
                     <i class="fas fa-credit-card text-xl md:w-5"></i>
                     <span>Penanganan</span>
                 </a>
 
-
-
                 <!-- Akun -->
                 <a href="#"
                     class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                   px-4 py-3 rounded-xl
-                   hover:bg-gray-50 hover:text-primary transition">
+                  px-4 py-3 rounded-xl
+                  {{ request()->routeIs('akun*') ? $navActive : $navInactive }}">
                     <i class="fas fa-user text-xl md:w-5"></i>
                     <span>Akun</span>
                 </a>
 
             </div>
         </nav>
+
 
 
         <!-- Main Content -->

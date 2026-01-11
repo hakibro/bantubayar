@@ -567,11 +567,11 @@
                 // Nol (Lunas) -> Putih
                 // Plus (Hutang) -> Kuning/Merah
                 if (rem < 0) {
-                    remEl.className = 'text-2xl font-bold text-yellow-400';
+                    remEl.className = 'text-2xl font-bold whitespace-nowrap text-yellow-400';
                 } else if (rem > 0) {
-                    remEl.className = 'text-2xl font-bold text-yellow-300';
+                    remEl.className = 'text-2xl font-bold whitespace-nowrap text-yellow-300';
                 } else {
-                    remEl.className = 'text-2xl font-bold text-white';
+                    remEl.className = 'text-2xl font-bold whitespace-nowrap text-white';
                 }
 
                 // --- RENDER KATEGORI ---
