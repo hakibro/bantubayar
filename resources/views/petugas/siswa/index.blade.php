@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Penanganan Siswa')
+@section('title', 'Daftar Siswa')
 
 @push('styles')
     <style>
@@ -47,6 +47,7 @@
     </style>
 @endpush
 @section('content')
+
     <div class="bg-gray-100 p-6 rounded-xl shadow">
         <form method="GET">
 
@@ -70,9 +71,6 @@
            bg-white p-4 rounded-xl shadow border border-gray-200
            md:static fixed inset-x-0 bottom-0 z-40
            md:rounded-xl rounded-t-3xl">
-
-
-
                 {{-- FORMAL --}}
                 <select name="UnitFormal"
                     class="px-3 py-2 border rounded-lg text-sm bg-white
@@ -185,6 +183,8 @@
 
                 <tbody>
                     @forelse ($siswa as $item)
+                        @php $belumLunas = $item->getKategoriBelumLunas(); @endphp
+
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3">{{ $item->idperson }}</td>
 
@@ -213,7 +213,6 @@
                             </td>
 
                             <td class="px-4 py-3">
-                                @php $belumLunas = $item->getKategoriBelumLunas(); @endphp
                                 @include('petugas.siswa.partials.status-siswa')
                             </td>
 
@@ -377,9 +376,10 @@
                 })
                 .finally(() => {
                     document.getElementById("loadingModal").classList.add("hidden");
-                    // Reload halaman setelah sync
                     location.reload();
+
                 });
+
         }
 
         function closeError() {

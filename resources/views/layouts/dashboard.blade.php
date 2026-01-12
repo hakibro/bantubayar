@@ -82,49 +82,84 @@
                md:text-base
                md:mt-4">
 
-                <!-- Beranda -->
-                <a href="{{ route('dashboard') }}"
-                    class="flex flex-col md:flex-row items-center gap-1 md:gap-4
+                @role('admin')
+                    <!-- Beranda -->
+                    <a href="{{ route('dashboard') }}"
+                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
                   px-4 py-3 rounded-xl
-                  {{ request()->routeIs('dashboard') ? $navActive : $navInactive }}">
-                    <i class="fas fa-home text-xl md:w-5"></i>
-                    <span>Beranda</span>
-                </a>
-
-                <!-- Siswa -->
-                <a href="{{ route('petugas.siswa') }}"
-                    class="flex flex-col md:flex-row items-center gap-1 md:gap-4
+                  {{ request()->routeIs('admin.dashboard') ? $navActive : $navInactive }}">
+                        <i class="fas fa-home text-xl md:w-5"></i>
+                        <span>Beranda</span>
+                    </a>
+                    <!-- Manage Petugas -->
+                    <a href="{{ route('admin.petugas.index') }}"
+                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
                   px-4 py-3 rounded-xl
-                  {{ request()->routeIs('petugas*') ? $navActive : $navInactive }}">
-                    <i class="fas fa-list text-xl md:w-5"></i>
-                    <span>Siswa</span>
-                </a>
+                  {{ request()->routeIs('admin.petugas*') ? $navActive : $navInactive }}">
+                        <i class="fas fa-user text-xl md:w-5"></i>
+                        <span>Manage Petugas</span>
+                    </a>
+                    <!-- Siswa -->
+                    <a href="{{ route('admin.siswa.index') }}"
+                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
+                  px-4 py-3 rounded-xl
+                  {{ request()->routeIs('admin.siswa*') ? $navActive : $navInactive }}">
+                        <i class="fas fa-list text-xl md:w-5"></i>
+                        <span>Siswa</span>
+                    </a>
+                    <!-- Assign Siswa -->
+                    <a href="{{ route('admin.assign.index') }}"
+                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
+                  px-4 py-3 rounded-xl
+                  {{ request()->routeIs('admin.assign*') ? $navActive : $navInactive }}">
+                        <i class="fas fa-check text-xl md:w-5"></i>
+                        <span>Assign Siswa</span>
+                    </a>
+                @endrole
 
-                <!-- Penanganan -->
-                <a href="{{ route('penanganan.index') }}"
-                    class="flex flex-col md:flex-row items-center gap-1 md:gap-4
+                @role(['petugas', 'bendahara'])
+                    <!-- Beranda -->
+                    <a href="{{ route('dashboard') }}"
+                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
+                  px-4 py-3 rounded-xl
+                  {{ request()->routeIs('petugas.dashboard') ? $navActive : $navInactive }}">
+                        <i class="fas fa-home text-xl md:w-5"></i>
+                        <span>Beranda</span>
+                    </a>
+                    <!-- Siswa -->
+                    <a href="{{ route('petugas.siswa') }}"
+                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
+                  px-4 py-3 rounded-xl
+                  {{ request()->routeIs('petugas.siswa*') ? $navActive : $navInactive }}">
+                        <i class="fas fa-list text-xl md:w-5"></i>
+                        <span>Siswa</span>
+                    </a>
+
+                    <!-- Penanganan -->
+                    <a href="{{ route('penanganan.index') }}"
+                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
                   px-4 py-3 rounded-xl
                   {{ request()->routeIs('penanganan*') ? $navActive : $navInactive }}">
-                    <i class="fas fa-credit-card text-xl md:w-5"></i>
-                    <span>Penanganan</span>
-                </a>
+                        <i class="fas fa-credit-card text-xl md:w-5"></i>
+                        <span>Penanganan</span>
+                    </a>
 
-                <!-- Akun -->
-                <a href="#"
-                    class="flex flex-col md:flex-row items-center gap-1 md:gap-4
+                    <!-- Akun -->
+                    <a href="#"
+                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
                   px-4 py-3 rounded-xl
                   {{ request()->routeIs('akun*') ? $navActive : $navInactive }}">
-                    <i class="fas fa-user text-xl md:w-5"></i>
-                    <span>Akun</span>
-                </a>
-
+                        <i class="fas fa-user text-xl md:w-5"></i>
+                        <span>Akun</span>
+                    </a>
+                @endrole
             </div>
         </nav>
 
 
 
         <!-- Main Content -->
-        <main class="flex-1 md:ml-64 flex flex-col h-full overflow-hidden relative">
+        <main class="flex-1 md:ml-64 pb-24 md:pb-2 flex flex-col h-full overflow-hidden relative">
             <!-- Header -->
             <header class="flex justify-between items-center p-4 md:p-6 bg-white shadow-sm z-10">
                 <div>
@@ -142,10 +177,6 @@
         </main>
     </div>
 
-
-
-
-
     <!-- Toast Notification -->
     <div id="toast"
         class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg z-[100] transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none flex items-center gap-3">
@@ -154,6 +185,8 @@
     </div>
 
     <!-- Script -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     @stack('scripts')
     <script>
         function showToast(msg) {

@@ -18,9 +18,6 @@ export default {
                 bgBody: "#F3F4F6",
                 textMuted: "#6B7280",
             },
-            fontFamily: {
-                sans: ["Poppins", ...defaultTheme.fontFamily.sans],
-            },
         },
     },
 

@@ -64,3 +64,7 @@ Route::get('/force-logout', function () {
 
     return redirect()->route('login');
 })->name('force.logout');
+
+Route::get('/viewfilter', function () {
+    return view('petugas.siswa.partials.filter');
+});

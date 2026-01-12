@@ -83,7 +83,7 @@
             </button>
             <h3 class="text-lg font-semibold mb-4" id="notifTitle">Notifikasi</h3>
             <p class="text-gray-700" id="notifMessage"></p>
-            <ul class="mt-4 text-sm text-gray-600" id="notifDetails"></ul>
+            <ul class="mt-4 text-sm text-gray-600 overflow-auto h-24" id="notifDetails"></ul>
             <div class="mt-6 text-right">
                 <button id="okModal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
             </div>
@@ -209,93 +209,92 @@
             $('#closeModal, #okModal').click(function() {
                 $('#notifModal').addClass('hidden');
             });
+
+            document.addEventListener("DOMContentLoaded", function() {
+                // ===== ELEMENTS =====
+                const searchInput = document.getElementById('searchInput');
+                const filterLembaga = document.getElementById('filterLembaga');
+                const filterKelas = document.getElementById('filterKelas');
+                const filterAsrama = document.getElementById('filterAsrama');
+                const filterKamar = document.getElementById('filterKamar');
+                const filterPetugas = document.getElementById('filterPetugas');
+                const tableContainer = document.getElementById('tableContainer');
+
+
+                // ===== UTILITY FUNCTIONS =====
+                function debounce(fn, ms) {
+                    let t;
+                    return (...args) => {
+                        clearTimeout(t);
+                        t = setTimeout(() => fn.apply(this, args), ms);
+                    };
+                }
+
+                // ===== FETCH TABLE =====
+                function fetchSiswa() {
+                    const params = new URLSearchParams({
+                        search: searchInput.value,
+                        lembaga: filterLembaga.value,
+                        kelas: filterKelas.value,
+                        asrama: filterAsrama.value,
+                        kamar: filterKamar.value,
+                        petugas_id: filterPetugas.value
+                    });
+
+                    fetch(`{{ route('admin.siswa.index') }}?${params.toString()}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(res => res.text())
+                        .then(html => {
+                            tableContainer.innerHTML = html;
+                        })
+                        .catch(err => {
+                            console.error('Error loading table:', err);
+                        });
+                }
+
+                // ===== FILTER EVENTS =====
+                filterLembaga.addEventListener('change', () => {
+                    fetch(`{{ route('admin.siswa.kelas') }}?lembaga=${filterLembaga.value}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(r => r.json())
+                        .then(kelas => {
+                            filterKelas.innerHTML = `<option value="">Semua Kelas</option>`;
+                            kelas.forEach(k => {
+                                filterKelas.innerHTML += `<option value="${k}">${k}</option>`;
+                            });
+                            fetchSiswa();
+                        });
+                });
+
+                filterAsrama.addEventListener('change', () => {
+                    fetch(`{{ route('admin.siswa.kamar') }}?asrama=${filterAsrama.value}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(r => r.json())
+                        .then(kamar => {
+                            filterKamar.innerHTML = `<option value="">Semua Kamar</option>`;
+                            kamar.forEach(k => {
+                                filterKamar.innerHTML += `<option value="${k}">${k}</option>`;
+                            });
+                            fetchSiswa();
+                        });
+                });
+
+                searchInput.addEventListener('keyup', debounce(fetchSiswa, 300));
+                filterKelas.addEventListener('change', fetchSiswa);
+                filterKamar.addEventListener('change', fetchSiswa);
+                filterPetugas.addEventListener('change', fetchSiswa);
+
+            });
         </script>
     @endpush
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // ===== ELEMENTS =====
-            const searchInput = document.getElementById('searchInput');
-            const filterLembaga = document.getElementById('filterLembaga');
-            const filterKelas = document.getElementById('filterKelas');
-            const filterAsrama = document.getElementById('filterAsrama');
-            const filterKamar = document.getElementById('filterKamar');
-            const filterPetugas = document.getElementById('filterPetugas');
-            const tableContainer = document.getElementById('tableContainer');
-
-
-            // ===== UTILITY FUNCTIONS =====
-            function debounce(fn, ms) {
-                let t;
-                return (...args) => {
-                    clearTimeout(t);
-                    t = setTimeout(() => fn.apply(this, args), ms);
-                };
-            }
-
-            // ===== FETCH TABLE =====
-            function fetchSiswa() {
-                const params = new URLSearchParams({
-                    search: searchInput.value,
-                    lembaga: filterLembaga.value,
-                    kelas: filterKelas.value,
-                    asrama: filterAsrama.value,
-                    kamar: filterKamar.value,
-                    petugas_id: filterPetugas.value
-                });
-
-                fetch(`{{ route('admin.siswa.index') }}?${params.toString()}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(res => res.text())
-                    .then(html => {
-                        tableContainer.innerHTML = html;
-                    })
-                    .catch(err => {
-                        console.error('Error loading table:', err);
-                    });
-            }
-
-            // ===== FILTER EVENTS =====
-            filterLembaga.addEventListener('change', () => {
-                fetch(`{{ route('admin.siswa.kelas') }}?lembaga=${filterLembaga.value}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(r => r.json())
-                    .then(kelas => {
-                        filterKelas.innerHTML = `<option value="">Semua Kelas</option>`;
-                        kelas.forEach(k => {
-                            filterKelas.innerHTML += `<option value="${k}">${k}</option>`;
-                        });
-                        fetchSiswa();
-                    });
-            });
-
-            filterAsrama.addEventListener('change', () => {
-                fetch(`{{ route('admin.siswa.kamar') }}?asrama=${filterAsrama.value}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(r => r.json())
-                    .then(kamar => {
-                        filterKamar.innerHTML = `<option value="">Semua Kamar</option>`;
-                        kamar.forEach(k => {
-                            filterKamar.innerHTML += `<option value="${k}">${k}</option>`;
-                        });
-                        fetchSiswa();
-                    });
-            });
-
-            searchInput.addEventListener('keyup', debounce(fetchSiswa, 300));
-            filterKelas.addEventListener('change', fetchSiswa);
-            filterKamar.addEventListener('change', fetchSiswa);
-            filterPetugas.addEventListener('change', fetchSiswa);
-
-        });
-    </script>
 @endsection
