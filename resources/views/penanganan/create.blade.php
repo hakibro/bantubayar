@@ -5,7 +5,7 @@
 @section('content')
     <div class="max-w-5xl mx-auto space-y-6">
 
-        {{-- DATA SISWA --}}<a href="{{ route('penanganan.siswa', $siswa->id) }}"
+        {{-- DATA SISWA --}}<a href="{{ route('penanganan.show', $siswa->id) }}"
             class="inline-flex items-center gap-2 text-sm font-medium
           text-gray-600 hover:text-blue-700
           bg-gray-50 hover:bg-blue-100

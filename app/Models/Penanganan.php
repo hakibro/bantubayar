@@ -21,15 +21,12 @@ class Penanganan extends Model
         'catatan',
         'rating',
         'hasil',
-        'tanggal_rekom',
-        'kesanggupan',
         'status',
     ];
 
     protected $casts = [
         'jenis_pembayaran' => 'array',
         'rating' => 'integer',
-        'tanggal_rekom' => 'date',
     ];
 
     public function siswa()
@@ -40,5 +37,14 @@ class Penanganan extends Model
     public function petugas()
     {
         return $this->belongsTo(User::class, 'id_petugas');
+    }
+
+    public function kesanggupan()
+    {
+        return $this->hasMany(PenangananKesanggupan::class);
+    }
+    public function histories()
+    {
+        return $this->hasMany(PenangananHistory::class);
     }
 }

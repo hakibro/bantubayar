@@ -14,6 +14,13 @@
 
                 <div class="flex justify-between items-start mb-6 relative z-10">
                     <div class="flex-1">
+                        @if ($siswa->petugasPenangananAktif())
+                            <p class="mb-4 bg-yellow-300 inline-flex px-3 py-1 text-xs rounded-full font-bold text-gray-500">
+                                Sedang
+                                ditangani oleh:
+                                {{ $siswa->petugasPenangananAktif() }}
+                            </p>
+                        @endif
                         <h1 class="text-xl md:text-3xl font-bold flex flex-col   items-start gap-2 mb-4">
                             {{ $siswa->nama }}
                             <button onclick="openModal('detail')"
@@ -36,11 +43,17 @@
                                 }
                             }
                         @endphp
-                        <h2 class="text-4xl font-bold text-accent tracking-tight">
+                        <h2
+                            class="text-4xl font-bold text-accent tracking-tight
+                        {{ $totalBelumLunas < 0 ? 'text-accent' : 'text-success' }}">
 
-
-                            Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}
+                            @if ($totalBelumLunas < 0)
+                                Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}
+                            @else
+                                Lunas
+                            @endif
                         </h2>
+
                         <div class="mt-3 flex items-center gap-2 text-textMuted text-sm">
                             <i class="fas fa-wallet text-gray-400"></i>
                             <span>Saldo saat ini:</span>
@@ -48,6 +61,8 @@
                                 {{ number_format($siswa->saldo?->saldo, 0, ',', '.') }}
                             </span>
                         </div>
+
+
                     </div>
                 </div>
 
@@ -97,7 +112,7 @@
             <!-- 2. Recent Activity (Payments) -->
             <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-bold">Riwayat Tagihan</h3>
+                    <h3 class="text-lg font-bold">Riwayat Penanganan</h3>
                     <button onclick="openModal('detail')" class="text-xs text-primary font-semibold hover:underline">Lihat
                         Semua</button>
                 </div>
@@ -143,271 +158,9 @@
 
     <!-- --- MODALS --- -->
 
-    <!-- 1. Modal Tindak Lanjut (Action) -->
-    <div id="modalAction"
-        class="fixed inset-0 bg-black/50 z-50 hidden flex items-end md:items-center justify-center transition-opacity">
-        <div class="bg-white w-full md:w-[500px] md:rounded-3xl rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 max-h-[90vh] md:h-auto overflow-y-auto"
-            id="cardAction">
-            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6 md:hidden"></div>
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">Tindak Lanjut</h3>
-                <button onclick="closeModal('action')" class="text-gray-400 hover:text-gray-600"><i
-                        class="fas fa-times text-xl"></i></button>
-            </div>
-
-            <div class="space-y-6">
-                <!-- Jenis Tindakan -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Jenis
-                        Tindakan</label>
-                    <div class="bg-gray-100 p-1 rounded-xl flex">
-                        <button id="btnChat" onclick="toggleActionType('chat')"
-                            class="flex-1 py-2 rounded-lg text-sm font-bold bg-white text-primary shadow-sm transition">Chat</button>
-                        <button id="btnPhone" onclick="toggleActionType('phone')"
-                            class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-white hover:shadow-sm transition">Telepon</button>
-                    </div>
-                </div>
-
-                <!-- Tombol Hubungi Wali -->
-                <button id="btnContactAction" onclick="sendWhatsapp(true)"
-                    class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200">
-                    <i class="fab fa-whatsapp text-xl"></i> Hubungi Wali
-                </button>
-
-                <!-- Catatan -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Catatan</label>
-                    <textarea
-                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primaryLight outline-none"
-                        rows="3" placeholder="Tuliskan hasil komunikasi..."></textarea>
-                </div>
-
-                <!-- Kesanggupan (Collapsible) - UPDATED -->
-                <div class="border border-gray-200 rounded-xl overflow-hidden">
-                    <button onclick="toggleAccordion('kesanggupan')"
-                        class="w-full flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition text-left">
-                        <span class="font-bold text-sm text-gray-700 flex items-center gap-2">
-                            <i class="fas fa-file-signature text-primary"></i> Kesanggupan
-                        </span>
-                        <i id="iconkesanggupan" class="fas fa-chevron-down text-gray-400 text-sm transition-transform"></i>
-                    </button>
-                    <div id="contentkesanggupan" class="accordion-content bg-white">
-                        <div class="p-4 space-y-4 border-t border-gray-100">
-                            <div
-                                class="bg-blue-50 p-3 rounded-lg border border-blue-100 flex items-start gap-2 text-xs text-blue-800">
-                                <i class="fas fa-info-circle mt-0.5"></i>
-                                <p>Kirimkan surat pernyataan kesanggupan ke wali murid.</p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1">Tanggal Kesanggupan</label>
-                                <input type="date"
-                                    class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-primaryLight outline-none">
-                            </div>
-                            <button onclick="sendAgreement()"
-                                class="w-full bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition">
-                                <i class="fas fa-paper-plane"></i> Kirim Pernyataan Kesanggupan
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Simpan -->
-                <button onclick="saveAction()"
-                    class="w-full bg-primary text-white py-3 rounded-xl font-bold shadow-md hover:bg-blue-700 transition mt-2">Simpan
-                    Catatan</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Modal Hasil (Result) -->
-    <div id="modalResult"
-        class="fixed inset-0 bg-black/50 z-50 hidden flex items-end md:items-center justify-center transition-opacity">
-        <div class="bg-white w-full md:w-[500px] md:rounded-3xl rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300"
-            id="cardResult">
-            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6 md:hidden"></div>
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">Hasil Penanganan</h3>
-                <button onclick="closeModal('result')" class="text-gray-400 hover:text-gray-600"><i
-                        class="fas fa-times text-xl"></i></button>
-            </div>
-
-            <div class="space-y-6">
-                <!-- Toggle Hasil -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Hasil</label>
-                    <select
-                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primaryLight outline-none font-medium">
-                        <option>Lunas</option>
-                        <option>Isi Saldo</option>
-                        <option>Cicilan</option>
-                        <option>Tidak Ada Respon</option>
-                        <option>HP Tidak Aktif</option>
-                    </select>
-                </div>
-
-                <!-- Catatan -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Catatan
-                        Hasil</label>
-                    <textarea
-                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primaryLight outline-none"
-                        rows="3" placeholder="Detail hasil..."></textarea>
-                </div>
-
-                <!-- Rating Wali -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Rating Wali
-                        Murid</label>
-                    <div class="flex gap-2 text-2xl text-gray-200 star-rating justify-center py-2" id="starContainer">
-                        <i class="fas fa-star" onclick="rate(1)"></i>
-                        <i class="fas fa-star" onclick="rate(2)"></i>
-                        <i class="fas fa-star" onclick="rate(3)"></i>
-                        <i class="fas fa-star" onclick="rate(4)"></i>
-                        <i class="fas fa-star" onclick="rate(5)"></i>
-                    </div>
-                </div>
-
-                <!-- Simpan -->
-                <button onclick="saveResult()"
-                    class="w-full bg-primary text-white py-3 rounded-xl font-bold shadow-md hover:bg-blue-700 transition mt-2">Simpan
-                    Status</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. Modal Detail Siswa (Big Modal with Payment Data) -->
-    <div id="modalDetail"
-        class="fixed inset-0 bg-black/50 z-50 hidden flex flex-col md:flex-row items-end md:items-center justify-center transition-opacity">
-        <div class="bg-white w-full md:w-[700px] md:rounded-3xl rounded-t-3xl p-0 md:p-6 transform translate-y-full transition-transform duration-300 h-[90vh] md:h-auto md:max-h-[90vh] overflow-hidden flex flex-col"
-            id="cardDetail">
-
-            <div
-                class="p-5 border-b border-gray-100 flex justify-between items-center bg-white md:bg-transparent shrink-0">
-                <h3 class="text-xl font-bold">Info Siswa & Pembayaran</h3>
-                <button onclick="closeModal('detail')"
-                    class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
-            </div>
-
-            <div class="flex border-b border-gray-100 px-6 pt-2 shrink-0">
-                <button onclick="switchTab('info')" id="tabInfo"
-                    class="pb-3 px-4 text-sm font-bold border-b-2 border-primary text-primary transition">Info
-                    Siswa</button>
-                <button onclick="switchTab('payment')" id="tabPayment"
-                    class="pb-3 px-4 text-sm font-bold border-b-2 border-transparent text-textMuted hover:text-gray-600 transition">Pembayaran</button>
-            </div>
-
-            <div class="p-6 overflow-y-auto flex-1">
-                <div id="contentInfo" class="space-y-6">
-                    <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-
-                        <!-- Header -->
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h2 class="text-xl font-bold text-gray-900">
-                                    {{ $siswa->nama }}
-                                </h2>
-                                <p class="text-sm text-textMuted mt-1">
-                                    ID: {{ $siswa->idperson }} • {{ $siswa->phone ?? 'Tidak ada No. HP' }}
-                                </p>
-                            </div>
-
-                            <!-- Badge Status (opsional statis dulu) -->
-                            <span class="text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700">
-                                Aktif
-                            </span>
-                        </div>
-
-                        <!-- Divider -->
-                        <div class="border-t border-gray-100 my-4"></div>
-
-                        <!-- Informasi Pendidikan -->
-                        <div class="space-y-3 text-sm">
-
-                            <!-- Unit Formal -->
-                            <div class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-full bg-blue-50 text-primary flex items-center justify-center">
-                                    <i class="fas fa-school text-sm"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-800">Pendidikan Formal</p>
-                                    <p class="text-textMuted">
-                                        {{ $siswa->UnitFormal ?? '-' }} • Kelas {{ $siswa->KelasFormal ?? '-' }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Asrama / Pondok -->
-                            <div class="flex items-start gap-3">
-                                <div
-                                    class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
-                                    <i class="fas fa-bed text-sm"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-800">Asrama / Pondok</p>
-                                    <p class="text-textMuted">
-                                        {{ $siswa->AsramaPondok ?? '-' }} • Kamar {{ $siswa->KamarPondok ?? '-' }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Diniyah -->
-                            <div class="flex items-start gap-3">
-                                <div
-                                    class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
-                                    <i class="fas fa-mosque text-sm"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-800">Pendidikan Diniyah</p>
-                                    <p class="text-textMuted">
-                                        {{ $siswa->TingkatDiniyah ?? '-' }} • Kelas {{ $siswa->KelasDiniyah ?? '-' }}
-                                    </p>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-
-                <div id="contentPayment" class="hidden space-y-6">
-                    <div class="flex gap-2 overflow-x-auto no-scrollbar py-2" id="periodTabsContainer">
-                        <!-- Period Tabs -->
-                    </div>
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-700 rounded-2xl p-5 text-white shadow-lg">
-                        <div class="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 md:gap-8">
-
-                            <!-- Bagian Kiri: Sisa (Highlight Utama) -->
-                            <div class="flex flex-col items-center md:items-start w-full md:w-auto">
-                                <p class="text-blue-200 text-xs font-semibold uppercase tracking-wider mb-1">Sisa</p>
-                                <h3 id="summaryRemaining"
-                                    class="text-4xl md:text-xl font-extrabold leading-tight whitespace-nowrap">Rp 0
-                                </h3>
-                            </div>
-
-                            <!-- Bagian Kanan: Total Tagihan & Total Bayar -->
-                            <div class="flex flex-row justify-between w-full md:justify-end md:gap-12">
-
-                                <div class="flex flex-col text-center md:text-left">
-                                    <p class="text-blue-200 text-xs font-medium mb-1">Total Tagihan</p>
-                                    <h3 id="summaryTotalPaid" class="text-xl font-bold">Rp 0</h3>
-                                </div>
-
-                                <div class="flex flex-col text-center md:text-left">
-                                    <p class="text-blue-200 text-xs font-medium mb-1">Total Bayar</p>
-                                    <h3 id="summaryTotalBilled" class="text-xl font-bold">Rp 0</h3>
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-                    <div id="categoriesList" class="space-y-3"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('penanganan.partials.modal-tindaklanjut')
+    @include('penanganan.partials.modal-hasil')
+    @include('penanganan.partials.modal-detail')
     @push('scripts')
         <script>
             const formatCurrency = (num) => new Intl.NumberFormat('id-ID', {

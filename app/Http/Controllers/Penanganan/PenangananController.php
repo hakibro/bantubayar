@@ -15,44 +15,36 @@ class PenangananController extends Controller
     public function index()
     {
         $lembagaUser = auth()->user()->lembaga;
+        $query = Penanganan::with(['siswa', 'petugas'])
+            ->whereIn('id', function ($query) {
+                $query->selectRaw('MAX(id)')
+                    ->from('penanganan')
+                    ->whereNull('deleted_at')
+                    ->groupBy('id_siswa');
+            });
 
         if (Auth::user()->hasRole('petugas')) {
-            $data = Penanganan::with(['siswa', 'petugas'])
-                ->whereIn('id', function ($query) {
-                    $query->selectRaw('MAX(id)')
-                        ->from('penanganan')
-                        ->whereNull('deleted_at')
-                        ->groupBy('id_siswa');
-                })
-                ->whereHas('siswa.petugas', function ($q) {
-                    $q->where('users.id', Auth::id());
-                })
+            $data = $query->whereHas('siswa.petugas', function ($q) {
+                $q->where('users.id', Auth::id());
+            })
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
 
         } else {
-
-            $data = Penanganan::with(['siswa', 'petugas'])
-                ->whereIn('id', function ($query) {
-                    $query->selectRaw('MAX(id)')
-                        ->from('penanganan')
-                        ->whereNull('deleted_at')
-                        ->groupBy('id_siswa');
-                })
-                ->whereHas('siswa', function ($q) use ($lembagaUser) {
-                    $q->where(function ($sub) use ($lembagaUser) {
-                        $sub->where('UnitFormal', $lembagaUser)
-                            ->orWhere('AsramaPondok', $lembagaUser)
-                            ->orWhere('TingkatDiniyah', $lembagaUser);
-                    });
-                })
+            $data = $query->whereHas('siswa', function ($q) use ($lembagaUser) {
+                $q->where(function ($sub) use ($lembagaUser) {
+                    $sub->where('UnitFormal', $lembagaUser)
+                        ->orWhere('AsramaPondok', $lembagaUser)
+                        ->orWhere('TingkatDiniyah', $lembagaUser);
+                });
+            })
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
         }
         return view('penanganan.index', compact('data'));
     }
 
-    public function indexSiswa($id_siswa)
+    public function show($id_siswa)
     {
         $siswa = Siswa::findOrFail($id_siswa);
 
@@ -150,7 +142,7 @@ class PenangananController extends Controller
             'status' => $status,
         ]);
 
-        return redirect()->route('penanganan.siswa', $siswa->id)->with('success', 'Penanganan siswa berhasil disimpan.');
+        return redirect()->route('penanganan.show', $siswa->id)->with('success', 'Penanganan siswa berhasil disimpan.');
     }
 
     public function edit($id)
@@ -246,7 +238,7 @@ class PenangananController extends Controller
 
 
         return redirect()
-            ->route('penanganan.siswa', $penanganan->id_siswa)
+            ->route('penanganan.show', $penanganan->id_siswa)
             ->with('success', 'Penanganan berhasil diperbarui.');
     }
 

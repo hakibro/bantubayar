@@ -10,7 +10,7 @@
         @endphp
 
         @if (is_array($belumLunas) && count($belumLunas) > 0)
-            <a href="{{ route('penanganan.siswa', $siswa->id) }}" class="px-3 py-1 bg-red-500 text-white rounded">
+            <a href="{{ route('penanganan.show', $siswa->id) }}" class="px-3 py-1 bg-red-500 text-white rounded">
                 Penanganan
             </a>
         @endif

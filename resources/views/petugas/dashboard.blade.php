@@ -98,7 +98,7 @@
                                     {{ $item->lama_menunggu }}
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('penanganan.siswa', $item->siswa->id) }}"
+                                    <a href="{{ route('penanganan.show', $item->siswa->id) }}"
                                         class="text-blue-600 hover:underline">
                                         Lanjutkan
                                     </a>
@@ -134,7 +134,7 @@
                                     {{ str_replace('_', ' ', $item->status) }}
                                 </div>
                             </div>
-                            <a href="{{ route('penanganan.siswa', $item->id) }}" class="text-red-600 hover:underline">
+                            <a href="{{ route('penanganan.show', $item->id) }}" class="text-red-600 hover:underline">
                                 Tindak Lanjuti
                             </a>
                         </div>

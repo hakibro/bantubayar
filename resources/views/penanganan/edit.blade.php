@@ -351,7 +351,7 @@
 
                 {{-- ACTION --}}
                 <div class="flex justify-between items-center pt-4">
-                    <a href="{{ route('penanganan.siswa', $siswa->id) }}"
+                    <a href="{{ route('penanganan.show', $siswa->id) }}"
                         class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition">
                         Kembali
                     </a>
