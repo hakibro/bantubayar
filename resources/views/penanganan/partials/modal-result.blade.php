@@ -53,3 +53,25 @@
         </div>
     </div>
 </div>
+
+@push('scritps')
+    <script>
+        // --- Hasil Logic ---
+        let currentRating = 0;
+
+        function rate(n) {
+            currentRating = n;
+            const stars = document.getElementById('starContainer').children;
+            for (let i = 0; i < 5; i++) {
+                if (i < n) stars[i].classList.add('active');
+                else stars[i].classList.remove('active');
+            }
+        }
+
+        function saveResult() {
+            console.log(currentRating);
+            closeModal('result');
+            showToast('Status penanganan disimpan');
+        }
+    </script>
+@endpush

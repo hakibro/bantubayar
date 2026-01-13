@@ -65,7 +65,7 @@ class PenangananController extends Controller
 
 
         return view(
-            'penanganan.index-siswa',
+            'penanganan.show',
             compact('siswa', 'penanganan', 'bolehBuatPenanganan', 'penangananTerakhir')
         );
     }
@@ -79,7 +79,7 @@ class PenangananController extends Controller
 
         if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') {
             return redirect()
-                ->route('penanganan.index-siswa', $siswa_id)
+                ->route('penanganan.show', $siswa_id)
                 ->with('error', 'Masih ada penanganan yang belum selesai.');
         }
 

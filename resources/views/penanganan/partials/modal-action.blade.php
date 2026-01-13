@@ -25,7 +25,7 @@
 
             <!-- Tombol Hubungi Wali -->
             <div class="flex items-center justify-between gap-4">
-                <button id="btnContactAction" onclick="sendWhatsapp(true)"
+                <button id="btnContactAction" onclick="sendWhatsapp()"
                     class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200">
                     <i class="fab fa-whatsapp text-xl"></i> Hubungi Wali
                 </button>
@@ -35,7 +35,7 @@
             <!-- Catatan -->
             <div>
                 <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Catatan</label>
-                <textarea
+                <textarea name="notes" id="actionNotes"
                     class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primaryLight outline-none"
                     rows="3" placeholder="Tuliskan hasil komunikasi..."></textarea>
             </div>
@@ -58,7 +58,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">Tanggal Kesanggupan</label>
-                            <input type="date"
+                            <input type="date" name="tanggal_kesanggupan" id="tanggal_kesanggupan"
                                 class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-primaryLight outline-none">
                         </div>
                         <button onclick="sendAgreement()"
@@ -76,3 +76,72 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    <script>
+        // --- Tindak Lanjut Logic ---
+        let currentActionType = 'chat';
+
+        function toggleActionType(type) {
+            currentActionType = type;
+            const btnChat = document.getElementById('btnChat');
+            const btnPhone = document.getElementById('btnPhone');
+            const btnContact = document.getElementById('btnContactAction');
+
+            if (type === 'chat') {
+                btnChat.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-white text-primary shadow-sm transition";
+                btnPhone.className =
+                    "flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-white hover:shadow-sm transition";
+                btnContact.innerHTML = '<i class="fab fa-whatsapp text-xl"></i> Hubungi Wali';
+                btnContact.className =
+                    "w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200";
+            } else {
+                btnPhone.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-white text-primary shadow-sm transition";
+                btnChat.className =
+                    "flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-white hover:shadow-sm transition";
+                btnContact.innerHTML = '<i class="fas fa-phone-alt text-xl"></i> Hubungi Wali';
+                btnContact.className =
+                    "w-full bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-gray-300";
+            }
+        }
+
+
+        function getPhoneNumber(text) {
+            let phone = text.replace(/[^0-9]/g, '');
+            if (phone.startsWith('0')) {
+                phone = '62' + phone.slice(1);
+            }
+            if (phone.startsWith('62')) {
+                return phone;
+            }
+            return null; // bukan nomor valid
+        }
+
+        function sendWhatsapp(content = '') {
+
+            const phone = getPhoneNumber("{{ $siswa->phone }}");
+            console.log(phone, content);
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(content)}`, '_blank');
+        }
+
+        function saveAction() {
+            console.log(currentActionType, document.getElementById('actionNotes').value);
+
+            closeModal('action');
+            showToast('Catatan tindakan disimpan');
+        }
+
+        function sendAgreement() {
+            const tanggal_kesanggupan = document.getElementById('tanggal_kesanggupan').value;
+            if (!tanggal_kesanggupan) {
+                showToast('Tanggal kesanggupan harus diisi', 'error');
+                return;
+            }
+            console.log(tanggal_kesanggupan);
+            showToast('Pernyataan kesanggupan dikirim');
+            const linkKesanggupan = "https://example.com/kesanggupan";
+            const pesan = 'Halo Wali, berikut link kesanggupan: ' + tanggal_kesanggupan + linkKesanggupan + '';
+            sendWhatsapp(pesan);
+        }
+    </script>
+@endpush

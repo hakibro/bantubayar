@@ -130,3 +130,180 @@
         </div>
     </div>
 </div>
+
+
+@push('scripts')
+    <script>
+        // 1. Inject Data Real dari PHP ke Javascript
+        // Mengambil array pembayaran dari data JSON asli
+        const paymentData = @json($siswa->pembayaran ?? []);
+
+        let activePeriodIndex = 0;
+
+        // --- Payment Tab Logic (Disesuaikan untuk Data Asli) ---
+        function renderPaymentTab() {
+            const tabsContainer = document.getElementById('periodTabsContainer');
+            const categoriesList = document.getElementById('categoriesList');
+
+            // Cek jika data kosong
+            if (!paymentData || paymentData.length === 0) {
+                tabsContainer.innerHTML = '';
+                categoriesList.innerHTML =
+                    '<div class="text-center p-6 text-gray-500 bg-white rounded-xl">Tidak ada data pembayaran.</div>';
+                document.getElementById('summaryTotalBilled').innerText = 'Rp 0';
+                document.getElementById('summaryTotalPaid').innerText = 'Rp 0';
+                document.getElementById('summaryRemaining').innerText = 'Rp 0';
+                return;
+            }
+
+            // Ambil data periode yang aktif
+            const period = paymentData[activePeriodIndex];
+
+            // --- RENDER TABS ---
+            tabsContainer.innerHTML = '';
+            paymentData.forEach((data, index) => {
+                const btn = document.createElement('button');
+                // PENTING: Mengambil 'periode' dari level utama object
+                const periodName = data.periode;
+                const isActive = index === activePeriodIndex;
+
+                btn.className =
+                    `shrink-0 px-4 py-2 rounded-full text-xs font-bold border transition duration-200 ${isActive ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`;
+                btn.innerText = periodName;
+                btn.onclick = () => {
+                    activePeriodIndex = index;
+                    renderPaymentTab();
+                };
+                tabsContainer.appendChild(btn);
+            });
+
+            // --- RENDER SUMMARY ---
+            // PENTING: Mengakses summary melalui path 'data.summary'
+            const summaryData = period.data ? period.data.summary : {};
+
+            document.getElementById('summaryTotalBilled').innerText = formatCurrency(summaryData.total_billed || 0);
+            document.getElementById('summaryTotalPaid').innerText = formatCurrency(summaryData.total_paid || 0);
+
+            const rem = summaryData.total_remaining || 0;
+            const remEl = document.getElementById('summaryRemaining');
+            remEl.innerText = formatCurrency(rem);
+
+            // Logika Warna Sisa:
+            // Minus (Overpaid/Kurang Bayar) -> Hijau
+            // Nol (Lunas) -> Putih
+            // Plus (Hutang) -> Kuning/Merah
+            if (rem < 0) {
+                remEl.className = 'text-2xl font-bold whitespace-nowrap text-yellow-400';
+            } else if (rem > 0) {
+                remEl.className = 'text-2xl font-bold whitespace-nowrap text-yellow-300';
+            } else {
+                remEl.className = 'text-2xl font-bold whitespace-nowrap text-white';
+            }
+
+            // --- RENDER KATEGORI ---
+            categoriesList.innerHTML = '';
+            // PENTING: Mengakses categories melalui path 'data.categories'
+            const categories = period.data ? period.data.categories : [];
+
+            if (categories.length === 0) {
+                categoriesList.innerHTML =
+                    '<div class="text-center p-4 text-gray-400 text-sm bg-white rounded-xl">Tidak ada kategori periode ini.</div>';
+            }
+
+            categories.forEach((cat, catIndex) => {
+                // Logika Icon berdasarkan sisa pembayaran kategori
+                const isFullyPaid = cat.summary.fully_paid;
+                const iconColor = isFullyPaid ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50';
+                const iconClass = isFullyPaid ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+                const catCard = document.createElement('div');
+                catCard.className = 'bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm';
+
+                // Header Accordion
+                const header = document.createElement('div');
+                header.className =
+                    'flex justify-between items-center p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 transition';
+                header.onclick = () => toggleAccordion(`catBody${catIndex}`);
+
+                header.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full ${iconColor} flex items-center justify-center text-sm">
+                        <i class="fas ${iconClass}"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-800">${cat.category_name}</h4>
+                        <p class="text-xs text-gray-500">Tagih: ${formatCurrency(cat.summary.total_paid)} </p>
+                        <p class="text-xs text-gray-500">Bayar: ${formatCurrency(cat.summary.total_billed)}</p>
+                    </div>
+                </div>
+                <div class="text-right flex items-center gap-4">
+                    <div class='flex flex-col'><p class="font-bold text-sm ${cat.summary.fully_paid === false ? 'text-red-500' : 'text-gray-800'}">
+                        ${formatCurrency(cat.summary.total_remaining)}
+                    </p>
+                    <p class="text-[10px] text-gray-500">Sisa</p></div>
+                        <i id="iconcatBody${catIndex}" class="fas fa-chevron-down text-gray-400 text-sm transition-transform"></i>
+
+                </div>
+
+            `;
+
+                // Body Isi (Items)
+                const body = document.createElement('div');
+                body.id = `contentcatBody${catIndex}`;
+                body.className = 'accordion-content bg-white divide-y divide-gray-100'; // Hidden by default
+
+                let itemsHtml = '';
+                if (cat.items && cat.items.length > 0) {
+                    cat.items.forEach(item => {
+                        const statusColor = item.remaining_balance === 0 ? 'text-green-600' : (item
+                            .remaining_balance < 0 ? 'text-red-500' : 'text-gray-800');
+                        itemsHtml += `
+                        <div class="p-3 flex justify-between items-center text-xs hover:bg-gray-50">
+                            <div>
+                                <span class="font-medium text-gray-700 block">${item.unit_name}</span>
+                                <div class="text-[10px] text-gray-400 mt-1">
+                                    Tagih: ${formatCurrency(item.amount_paid)}  &bull; Bayar:  ${formatCurrency(item.amount_billed)}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold ${statusColor}">${formatCurrency(item.remaining_balance)}</span>
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    itemsHtml =
+                        '<div class="p-3 text-xs text-gray-400 text-center">Tidak ada item rincian</div>';
+                }
+
+                body.innerHTML = itemsHtml;
+
+                catCard.appendChild(header);
+                catCard.appendChild(body);
+                categoriesList.appendChild(catCard);
+            });
+
+        }
+
+
+        function switchTab(tabName) {
+            const tabInfo = document.getElementById('tabInfo');
+            const tabPayment = document.getElementById('tabPayment');
+            const contentInfo = document.getElementById('contentInfo');
+            const contentPayment = document.getElementById('contentPayment');
+            if (tabName === 'info') {
+                tabInfo.className = "pb-3 px-4 text-sm font-bold border-b-2 border-primary text-primary transition";
+                tabPayment.className =
+                    "pb-3 px-4 text-sm font-bold border-b-2 border-transparent text-textMuted hover:text-gray-600 transition";
+                contentInfo.classList.remove('hidden');
+                contentPayment.classList.add('hidden');
+            } else {
+                tabPayment.className = "pb-3 px-4 text-sm font-bold border-b-2 border-primary text-primary transition";
+                tabInfo.className =
+                    "pb-3 px-4 text-sm font-bold border-b-2 border-transparent text-textMuted hover:text-gray-600 transition";
+                contentPayment.classList.remove('hidden');
+                contentInfo.classList.add('hidden');
+                renderPaymentTab();
+            }
+        }
+    </script>
+@endpush
