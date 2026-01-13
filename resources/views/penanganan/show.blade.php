@@ -210,6 +210,7 @@
     <!-- --- MODALS --- -->
     @include('penanganan.partials.modal-action')
     @include('penanganan.partials.modal-updatehp')
-    @include('penanganan.partials.modal-result')
     @include('penanganan.partials.modal-detail')
+    @include('penanganan.partials.modal-result')
+
 @endsection

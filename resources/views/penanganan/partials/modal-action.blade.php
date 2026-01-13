@@ -24,10 +24,14 @@
             </div>
 
             <!-- Tombol Hubungi Wali -->
-            <div class="flex items-center justify-between gap-4">
-                <button id="btnContactAction" onclick="sendWhatsapp()"
+            <div class="flex items-center justify-between gap-2">
+                <button id="btnContactAction" onclick="hubungiWali()"
                     class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200">
-                    <i class="fab fa-whatsapp text-xl"></i> Hubungi Wali
+                    <i class="fas fa-comment text-xl"></i> Hubungi Wali
+                </button>
+                <button id="btnSendPayment" onclick="kirimTunggakan()"
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200">
+                    <i class="fas fa-paper-plane text-xl"></i> Kirim Tunggakan
                 </button>
 
             </div>
@@ -92,14 +96,14 @@
                 btnChat.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-white text-primary shadow-sm transition";
                 btnPhone.className =
                     "flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-white hover:shadow-sm transition";
-                btnContact.innerHTML = '<i class="fab fa-whatsapp text-xl"></i> Hubungi Wali';
+                btnContact.innerHTML = '<i class="fas fa-comment text-xl"></i> Hubungi Wali';
                 btnContact.className =
                     "w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200";
             } else {
                 btnPhone.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-white text-primary shadow-sm transition";
                 btnChat.className =
                     "flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-white hover:shadow-sm transition";
-                btnContact.innerHTML = '<i class="fas fa-phone-alt text-xl"></i> Hubungi Wali';
+                btnContact.innerHTML = '<i class="fas fa-phone text-xl"></i> Hubungi Wali';
                 btnContact.className =
                     "w-full bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-gray-300";
             }
@@ -118,18 +122,79 @@
         }
 
         function sendWhatsapp(content = '') {
-
             const phone = getPhoneNumber("{{ $siswa->phone }}");
-            console.log(phone, content);
             window.open(`https://wa.me/${phone}?text=${encodeURIComponent(content)}`, '_blank');
         }
 
-        function saveAction() {
-            console.log(currentActionType, document.getElementById('actionNotes').value);
-
-            closeModal('action');
-            showToast('Catatan tindakan disimpan');
+        function hubungiWali() {
+            let pesan = '';
+            if (currentActionType === 'chat') {
+                pesan =
+                    'Assalamu’alaikum Bapak/Ibu, saya ingin menginformasikan mengenai pembayaran ananda {{ $siswa->nama }}. Mohon kesediaan Bapak/Ibu untuk merespon pesan ini. Terima kasih';
+                sendWhatsapp(pesan);
+            } else {
+                sendWhatsapp();
+            }
         }
+
+        function formatTunggakanPerPeriode(tunggakan) {
+            let result = {};
+
+            // Group by periode
+            tunggakan.forEach(category => {
+                if (!result[category.periode]) {
+                    result[category.periode] = [];
+                }
+                result[category.periode].push(category);
+            });
+
+            let text = '';
+
+            Object.keys(result).forEach(periode => {
+                text += `*Periode ${periode}*\n\n`;
+
+                result[periode].forEach(category => {
+                    if (category.summary.total_remaining === 0) return;
+
+                    text += `${category.category_name}\n`;
+
+                    category.items.forEach(item => {
+                        if (item.remaining_balance < 0) {
+                            text +=
+                                `- ${item.unit_name} : ${formatRupiah(item.remaining_balance)}\n`;
+                        }
+                    });
+
+                    text +=
+                        `Total ${category.category_name} : ${formatRupiah(category.summary.total_remaining)}\n`;
+                });
+                text += `______________________________ \n\n`;
+            });
+
+            return text.trim();
+        }
+
+
+        function kirimTunggakan() {
+
+            const detailTunggakan = formatTunggakanPerPeriode(@json($siswa->getKategoriBelumLunas()));
+            const pesan =
+                `Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} \n\n` +
+                `Berikut kami sampaikan rincian *tunggakan pembayaran*:\n\n` +
+                detailTunggakan +
+                `\n\n *Total Keseluruhan: ${formatRupiah({{ $totalBelumLunas }})}*` +
+                `\n\nMohon kesediaan Bapak/Ibu untuk melakukan pembayaran atau konfirmasi kepada kami.\n\n` +
+                `Terima kasih atas perhatian dan kerjasamanya`;
+
+            console.log(pesan);
+            sendWhatsapp(pesan);
+        }
+
+
+        function formatRupiah(number) {
+            return 'Rp ' + Math.abs(number).toLocaleString('id-ID');
+        }
+
 
         function sendAgreement() {
             const tanggal_kesanggupan = document.getElementById('tanggal_kesanggupan').value;
@@ -138,10 +203,25 @@
                 return;
             }
             console.log(tanggal_kesanggupan);
-            showToast('Pernyataan kesanggupan dikirim');
+
+            // Simpan kesanggupan dan tanggal di DB
+
+            // Ambil link form kesanggupan
             const linkKesanggupan = "https://example.com/kesanggupan";
-            const pesan = 'Halo Wali, berikut link kesanggupan: ' + tanggal_kesanggupan + linkKesanggupan + '';
+            const
+                pesan =
+                'Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} 🙏 , mohon kesediaan Bapak/Ibu untuk mengisi Form Kesanggupan pembayaran melalui link berikut: \n\n ' +
+                linkKesanggupan + '\n\n Terima kasih atas perhatian dan kerja samanya 🙏';
             sendWhatsapp(pesan);
+            showToast('Pernyataan kesanggupan dikirim');
+
+        }
+
+        function saveAction() {
+            console.log(currentActionType, document.getElementById('actionNotes').value);
+
+            closeModal('action');
+            showToast('Catatan tindakan disimpan');
         }
     </script>
 @endpush

@@ -54,7 +54,7 @@
     </div>
 </div>
 
-@push('scritps')
+@push('scripts')
     <script>
         // --- Hasil Logic ---
         let currentRating = 0;
