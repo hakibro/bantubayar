@@ -220,7 +220,11 @@
         }
 
         function saveAction() {
-            console.log(currentActionType, document.getElementById('actionNotes').value);
+            const catatan = document.getElementById('actionNotes').value;
+            if (!catatan) {
+                showToast('Catatan tindakan harus diisi', 'error');
+                return;
+            }
             // simpan penanganan ke database
             fetch("{{ route('penanganan.store') }}", {
                 method: 'POST',
@@ -231,19 +235,19 @@
                 body: JSON.stringify({
                     id_siswa: {{ $siswa->id }},
                     jenis_penanganan: currentActionType,
-                    catatan: document.getElementById('actionNotes').value
+                    catatan: catatan
                 })
             }).then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 return response.json();
-            }).then(data => {
-                console.log('Success:', data);
-                location.reload();
 
+            }).then(data => {
+                location.reload();
             }).catch((error) => {
                 console.error('Error:', error);
+                showToast(error.message, 'error');
             });
 
             closeModal('action');

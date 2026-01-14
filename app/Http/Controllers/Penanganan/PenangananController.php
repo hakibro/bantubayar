@@ -163,7 +163,6 @@ class PenangananController extends Controller
         $request->validate([
             'id_siswa' => 'required',
             'jenis_penanganan' => 'required',
-            'catatan' => 'nullable|string',
         ]);
 
         $siswa = Siswa::with('pembayaran')->findOrFail($request->id_siswa);
@@ -192,6 +191,11 @@ class PenangananController extends Controller
             'jenis_penanganan' => $request->jenis_penanganan,
             'catatan' => $request->catatan ?? Null,
         ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Penanganan berhasil disimpan'
+        ]);
+
     }
 
     public function edit($id)
