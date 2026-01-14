@@ -79,14 +79,43 @@
 
 
         function savePhone() {
-            const rawPhone = document.getElementById('phoneInput').value;
+            const phone = document.getElementById('phoneInput').value;
 
             console.log({
+                id_siswa: @json($siswa->id),
                 wali: currentWaliType, // ibu / ayah
-                phone: rawPhone
+                phone: phone
             });
 
             // TODO: kirim ke backend
+            fetch("{{ route('penanganan.update_phone') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document
+                            .querySelector('meta[name="csrf-token"]')
+                            .getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        id_siswa: @json($siswa->id),
+                        wali: currentWaliType,
+                        phone: phone
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error(error);
+                    showToast(error.message, 'error');
+                });
+
+            closeModal('updatehp');
+            showToast('Nomor HP siswa berhasil diperbarui', 'success');
         }
     </script>
 @endpush

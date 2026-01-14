@@ -115,5 +115,24 @@ class PenangananController extends Controller
         ]);
     }
 
+    public function updatePhone(Request $request)
+    {
+        $data = $request->validate([
+            'id_siswa' => 'required|exists:siswa,id',
+            'wali' => 'required|string',
+            'phone' => 'required|string',
+        ]);
+
+        $siswa = Siswa::findOrFail($data['id_siswa']);
+        $siswa->update([
+            'phone' => $data['phone'] . ' - ' . $data['wali'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Nomor HP siswa berhasil diperbarui.",
+        ]);
+    }
+
 
 }
