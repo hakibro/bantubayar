@@ -191,6 +191,23 @@
         <span id="toastMsg" class="text-sm font-medium">Berhasil</span>
     </div>
 
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg flex items-center">
+            <i class="fas fa-spinner fa-spin text-3xl text-blue-600 mr-3"></i>
+            <span class="text-lg font-semibold">Sedang memperbarui data pembayaran...</span>
+        </div>
+    </div>
+    <!-- Error Modal -->
+    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-times-circle text-red-600 text-4xl mb-2"></i>
+            <h2 class="text-xl font-semibold">Gagal!</h2>
+            <p id="errorMessage" class="mt-2"></p>
+            <button onclick="closeError()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded">Tutup</button>
+        </div>
+    </div>
+
     <!-- Script -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -203,6 +220,37 @@
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
             }, 3000);
+        }
+
+        function closeError() {
+            document.getElementById("errorModal").classList.add("hidden");
+        }
+
+        function syncPembayaran(id) {
+            console.log(id);
+
+            document.getElementById("loadingModal").classList.remove("hidden");
+
+            fetch("{{ url('petugas/siswa/sync-pembayaran-siswa') }}/" + id, {
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    if (!data.status) throw new Error(data.message);
+                })
+                .catch(err => {
+                    document.getElementById("errorMessage").innerText = err.message || 'Gagal sync';
+                    document.getElementById("errorModal").classList.remove("hidden");
+                })
+                .finally(() => {
+                    document.getElementById("loadingModal").classList.add("hidden");
+                    location.reload();
+
+                });
+
         }
     </script>
 

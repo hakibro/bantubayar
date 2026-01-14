@@ -52,6 +52,12 @@
                             @else
                                 Lunas
                             @endif
+                            <button onclick="syncPembayaran({{ $siswa->id }})"
+                                class="relative ml-1 mt-2 w-4 h-4 text-lg  text-blue-500 hover:text-blue-800 active:scale-95 transition-all duration-200">
+                                <i class="fas fa-sync absolute bottom-1"></i>
+                            </button>
+
+
                         </h2>
                         @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
                             {{-- tampilkan tunggakan pembayaran di penanganan terkhir --}}
