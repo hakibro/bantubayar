@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Penanganan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Penanganan;
+use App\Models\PenangananHistory;
+use App\Models\PenangananKesanggupan;
 use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +58,8 @@ class PenangananController extends Controller
         // Ambil penanganan terakhir
         $penangananTerakhir = $penanganan->first();
 
+        // dd($penangananTerakhir);
+
         // Boleh buat penanganan baru jika:
         // - belum pernah ada penanganan
         // - atau status terakhir = selesai
@@ -63,42 +67,103 @@ class PenangananController extends Controller
             is_null($penangananTerakhir) ||
             $penangananTerakhir->status === 'selesai';
 
+        $riwayatAksi = PenangananHistory::whereIn('penanganan_id', function ($query) use ($id_siswa) {
+            $query->select('id')
+                ->from('penanganan')
+                ->where('id_siswa', $id_siswa)
+                ->whereNull('deleted_at');
+        })
+            ->with('penanganan.petugas')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view(
             'penanganan.show',
-            compact('siswa', 'penanganan', 'bolehBuatPenanganan', 'penangananTerakhir')
+            compact('siswa', 'penanganan', 'riwayatAksi', 'bolehBuatPenanganan', 'penangananTerakhir')
         );
     }
 
 
-    public function create($siswa_id)
-    {
-        $penangananTerakhir = Penanganan::where('id_siswa', $siswa_id)
-            ->latest()
-            ->first();
+    // public function create($siswa_id)
+    // {
+    //     $penangananTerakhir = Penanganan::where('id_siswa', $siswa_id)
+    //         ->latest()
+    //         ->first();
 
-        if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') {
-            return redirect()
-                ->route('penanganan.show', $siswa_id)
-                ->with('error', 'Masih ada penanganan yang belum selesai.');
-        }
+    //     if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') {
+    //         return redirect()
+    //             ->route('penanganan.show', $siswa_id)
+    //             ->with('error', 'Masih ada penanganan yang belum selesai.');
+    //     }
 
-        $siswa = Siswa::with('pembayaran')->findOrFail($siswa_id);
+    //     $siswa = Siswa::with('pembayaran')->findOrFail($siswa_id);
 
-        $kategoriBelumLunas = $siswa->getKategoriBelumLunas();
+    //     $kategoriBelumLunas = $siswa->getKategoriBelumLunas();
 
-        if (count($kategoriBelumLunas) == 0) {
-            return redirect()->back()->with('error', 'Tidak ada tunggakan.');
-        }
+    //     if (count($kategoriBelumLunas) == 0) {
+    //         return redirect()->back()->with('error', 'Tidak ada tunggakan.');
+    //     }
 
-        return view('penanganan.create', compact('siswa', 'kategoriBelumLunas'));
-    }
+    //     return view('penanganan.create', compact('siswa', 'kategoriBelumLunas'));
+    // }
+
+    // public function store(Request $request)
+    // {
+    //     $request->validate([
+    //         'id_siswa' => 'required',
+    //         'jenis_penanganan' => 'required'
+    //     ]);
+
+    //     $siswa = Siswa::with('pembayaran')->findOrFail($request->id_siswa);
+
+    //     // Ambil semua kategori belum lunas otomatis
+    //     $jenisPembayaran = $siswa->getKategoriBelumLunas();
+    //     $saldo = $siswa->saldo->saldo ?? 0;
+
+
+    //     // TODO tambahkan auto set status berdasarkan jenis penanganan dan hasil
+    //     $status = 'menunggu_respon';
+
+    //     switch ($request->hasil) {
+    //         case 'lunas':
+    //             $status = 'selesai';
+    //             break;
+
+    //         case 'isi_saldo':
+    //             $status = 'selesai';
+    //             break;
+
+    //         case 'rekomendasi':
+    //             $status = 'menunggu_tindak_lanjut';
+    //             break;
+
+    //         case 'tidak_ada_respon':
+    //             $status = 'selesai';
+    //             break;
+    //     }
+
+
+    //     Penanganan::create([
+    //         'id_siswa' => $siswa->id,
+    //         'id_petugas' => Auth::id(),
+    //         'jenis_pembayaran' => $jenisPembayaran, // AUTO
+    //         'saldo' => $saldo, // AUTO
+    //         'jenis_penanganan' => $request->jenis_penanganan,
+    //         'catatan' => $request->catatan ?? Null,
+    //         'hasil' => $request->hasil ?? Null,
+    //         'tanggal_rekom' => $request->tanggal_rekom ?? Null,
+    //         'status' => $status,
+    //     ]);
+
+    //     return redirect()->route('penanganan.show', $siswa->id)->with('success', 'Penanganan siswa berhasil disimpan.');
+    // }
 
     public function store(Request $request)
     {
         $request->validate([
             'id_siswa' => 'required',
-            'jenis_penanganan' => 'required'
+            'jenis_penanganan' => 'required',
+            'catatan' => 'nullable|string',
         ]);
 
         $siswa = Siswa::with('pembayaran')->findOrFail($request->id_siswa);
@@ -107,42 +172,26 @@ class PenangananController extends Controller
         $jenisPembayaran = $siswa->getKategoriBelumLunas();
         $saldo = $siswa->saldo->saldo ?? 0;
 
-
-        // TODO tambahkan auto set status berdasarkan jenis penanganan dan hasil
-        $status = 'menunggu_respon';
-
-        switch ($request->hasil) {
-            case 'lunas':
-                $status = 'selesai';
-                break;
-
-            case 'isi_saldo':
-                $status = 'selesai';
-                break;
-
-            case 'rekomendasi':
-                $status = 'menunggu_tindak_lanjut';
-                break;
-
-            case 'tidak_ada_respon':
-                $status = 'selesai';
-                break;
-        }
-
-
+        // simpan penanganan baru
         Penanganan::create([
             'id_siswa' => $siswa->id,
             'id_petugas' => Auth::id(),
             'jenis_pembayaran' => $jenisPembayaran, // AUTO
             'saldo' => $saldo, // AUTO
-            'jenis_penanganan' => $request->jenis_penanganan,
-            'catatan' => $request->catatan ?? Null,
-            'hasil' => $request->hasil ?? Null,
-            'tanggal_rekom' => $request->tanggal_rekom ?? Null,
-            'status' => $status,
+            'status' => 'menunggu_respon',
         ]);
 
-        return redirect()->route('penanganan.show', $siswa->id)->with('success', 'Penanganan siswa berhasil disimpan.');
+        // ambil id penanganan terakhir yang baru dibuat
+        $penangananTerbaru = Penanganan::where('id_siswa', $siswa->id)
+            ->latest()
+            ->first();
+
+        // simpan history penanganan
+        PenangananHistory::create([
+            'penanganan_id' => $penangananTerbaru->id,
+            'jenis_penanganan' => $request->jenis_penanganan,
+            'catatan' => $request->catatan ?? Null,
+        ]);
     }
 
     public function edit($id)

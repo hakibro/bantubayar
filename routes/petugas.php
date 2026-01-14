@@ -13,6 +13,11 @@ Route::middleware(['auth', 'role:bendahara|petugas'])->prefix('petugas')->name('
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 
+
+
+
+
+    // -------------------------------------------- Route Lama --------------------------------------------
     // Data Siswa dan Penanganan
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa');
     Route::get('/siswa/{id}', [SiswaController::class, 'show'])->name('siswa.show');

@@ -165,8 +165,8 @@
                         }
                     });
 
-                    text +=
-                        `Total ${category.category_name} : ${formatRupiah(category.summary.total_remaining)}\n`;
+                    // text +=
+                    //     `Total ${category.category_name} : ${formatRupiah(category.summary.total_remaining)}\n`;
                 });
                 text += `______________________________ \n\n`;
             });
@@ -176,13 +176,16 @@
 
 
         function kirimTunggakan() {
-
+            // TODO buat link detail tunggakan siswa untuk dilihat oleh wali, menuju penanganan jika petugas
+            // TODO pengembangan selanjutnya link berupa kode acak
+            const linkPembayaran = @json(route('penanganan.show', $siswa->id));
             const detailTunggakan = formatTunggakanPerPeriode(@json($siswa->getKategoriBelumLunas()));
             const pesan =
                 `Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} \n\n` +
-                `Berikut kami sampaikan rincian *tunggakan pembayaran*:\n\n` +
+                `Berikut kami sampaikan rincian pembayaran belum lunas:\n\n` +
                 detailTunggakan +
                 `\n\n *Total Keseluruhan: ${formatRupiah({{ $totalBelumLunas }})}*` +
+                `\n\n Informasi detail: ${linkPembayaran}` +
                 `\n\nMohon kesediaan Bapak/Ibu untuk melakukan pembayaran atau konfirmasi kepada kami.\n\n` +
                 `Terima kasih atas perhatian dan kerjasamanya`;
 
@@ -205,7 +208,6 @@
             console.log(tanggal_kesanggupan);
 
             // Simpan kesanggupan dan tanggal di DB
-
             // Ambil link form kesanggupan
             const linkKesanggupan = "https://example.com/kesanggupan";
             const
@@ -219,6 +221,30 @@
 
         function saveAction() {
             console.log(currentActionType, document.getElementById('actionNotes').value);
+            // simpan penanganan ke database
+            fetch("{{ route('penanganan.store') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    id_siswa: {{ $siswa->id }},
+                    jenis_penanganan: currentActionType,
+                    catatan: document.getElementById('actionNotes').value
+                })
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            }).then(data => {
+                console.log('Success:', data);
+                location.reload();
+
+            }).catch((error) => {
+                console.error('Error:', error);
+            });
 
             closeModal('action');
             showToast('Catatan tindakan disimpan');

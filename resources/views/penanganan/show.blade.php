@@ -53,14 +53,42 @@
                                 Lunas
                             @endif
                         </h2>
+                        @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
+                            {{-- tampilkan tunggakan pembayaran di penanganan terkhir --}}
+                            @php
+                                $totalTunggakanPenanganan = 0;
 
-                        <div class="mt-3 flex items-center gap-2 text-textMuted text-sm">
+                                $penangananBelumLunas = $penangananTerakhir->jenis_pembayaran;
+
+                                if (is_array($penangananBelumLunas)) {
+                                    foreach ($penangananBelumLunas as $kategori) {
+                                        foreach ($kategori['items'] as $item) {
+                                            $totalTunggakanPenanganan += $item['remaining_balance'] ?? 0;
+                                        }
+                                    }
+                                }
+                            @endphp
+                            <p class="text-sm text-gray-500 font-medium mt-2">Saat penanganan: Rp
+                                {{ number_format($totalTunggakanPenanganan, 0, ',', '.') }}</p>
+                        @endif
+
+                        <div class="mt-4 pt-2 flex items-center gap-2 text-textMuted text-sm border-t border-gray-100">
                             <i class="fas fa-wallet text-gray-400"></i>
                             <span>Saldo saat ini:</span>
                             <span class="font-semibold text-gray-700"> Rp
                                 {{ number_format($siswa->saldo?->saldo, 0, ',', '.') }}
                             </span>
+
                         </div>
+                        @if ($penangananTerakhir)
+                            <div class="mt-1 flex items-center gap-2 text-textMuted text-sm">
+                                <span>Saat penanganan:</span>
+                                <span class="font-semibold text-gray-700"> Rp
+                                    {{ number_format($penangananTerakhir?->saldo, 0, ',', '.') }}
+                                </span>
+
+                            </div>
+                        @endif
 
 
                     </div>
@@ -82,30 +110,36 @@
                 <div class="mt-8 pt-4 border-t border-gray-100">
                     <div class="flex justify-between items-center mb-3">
                         <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Riwayat Aksi</h4>
-                        <button onclick="openModal('detail')"
-                            class="text-[10px] text-primary font-semibold hover:underline">Lihat Detail</button>
+                        {{-- <button onclick="openModal('detail')"
+                            class="text-[10px] text-primary font-semibold hover:underline">Lihat Detail</button> --}}
                     </div>
                     <div class="space-y-3">
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px]">
-                                    <i class="fab fa-whatsapp"></i>
-                                </div>
-                                <span class="text-gray-600 font-medium">Dihubungi via WA</span>
-                            </div>
-                            <span class="text-gray-400 text-xs">10 Okt</span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">
-                                    <i class="fas fa-phone"></i>
-                                </div>
-                                <span class="text-gray-600 font-medium">Telepon</span>
-                            </div>
-                            <span class="text-gray-400 text-xs">08 Okt</span>
-                        </div>
+                        @if ($penangananTerakhir)
+                            @if ($riwayatAksi)
+                                @foreach ($riwayatAksi as $aksi)
+                                    <div class="flex items-start justify-between text-sm gap-3">
+                                        <div class="flex items-start justify-center gap-3">
+                                            <i
+                                                class="text-xs mt-2 {{ $aksi->jenis_penanganan === 'chat' ? 'fas fa-comment text-green-500' : 'fas fa-phone text-blue-500' }}"></i>
+                                            <span class="text-gray-600 font-medium leading-relaxed">
+                                                {{ $aksi->catatan }}
+                                            </span>
+                                        </div>
+                                        <span class="text-gray-400 text-xs whitespace-nowrap shrink-0">
+                                            {{ $aksi->created_at->diffForHumans() }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                            @else
+                                <p class="text-sm text-gray-400 italic">Belum ada riwayat aksi.</p>
+                            @endif
+                        @else
+                            <p class="text-sm text-gray-400 italic">Belum ada riwayat penanganan. </p>
+                        @endif
+
+
+
+
                     </div>
                 </div>
             </div>
