@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+
 
 class Penanganan extends Model
 {
@@ -17,7 +19,6 @@ class Penanganan extends Model
         'id_petugas',
         'jenis_pembayaran',
         'saldo',
-        'jenis_penanganan',
         'catatan',
         'rating',
         'hasil',
@@ -47,4 +48,38 @@ class Penanganan extends Model
     {
         return $this->hasMany(PenangananHistory::class);
     }
+
+    /**
+     * Ambil penanganan aktif atau buat baru
+     */
+    public static function getOrCreateForSiswa(Siswa $siswa): self
+    {
+        $penanganan = self::where('id_siswa', $siswa->id)
+            ->latest()
+            ->first();
+
+        if (!$penanganan || $penanganan->status === 'selesai') {
+            $penanganan = self::create([
+                'id_siswa' => $siswa->id,
+                'id_petugas' => Auth::id(),
+                'jenis_pembayaran' => $siswa->getKategoriBelumLunas(),
+                'saldo' => $siswa->saldo->saldo ?? 0,
+                'status' => 'menunggu_respon',
+            ]);
+        }
+
+        return $penanganan;
+    }
+
+    /**
+     * Tambah history penanganan
+     */
+    public function addHistory(string $jenis, ?string $catatan = null): void
+    {
+        $this->histories()->create([
+            'jenis_penanganan' => $jenis,
+            'catatan' => $catatan,
+        ]);
+    }
+
 }

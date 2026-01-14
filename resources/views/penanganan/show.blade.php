@@ -97,23 +97,21 @@
                     <div class="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4 mt-6 md:mt-8">
                         <button onclick="openModal('{{ $siswa->phone ? 'action' : 'updatehp' }}')"
                             class="w-full bg-primary hover:bg-blue-700 text-white
-               py-3 md:py-4 rounded-2xl font-bold
+               py-3 px-6 md:py-4 rounded-2xl font-bold
                shadow-md shadow-blue-200
                transition active:scale-95
                flex items-center justify-center gap-2 text-sm md:text-base">
-                            <i class="fas fa-tasks"></i>
-                            <span class="hidden sm:inline">Tindak Lanjut</span>
-                            <span class="sm:hidden">Tindak</span>
+                            <i class="fas fa-tasks"></i>Tindak Lanjut
                         </button>
 
                         <button onclick="openModal('result')"
                             class="w-full bg-white border-2 border-gray-300 text-gray-700
                hover:border-gray-400 hover:bg-gray-50
-               py-3 md:py-4 rounded-2xl font-bold
+               py-3 px-6 md:py-4 rounded-2xl font-bold
                transition active:scale-95
                flex items-center justify-center gap-2 text-sm md:text-base">
                             <i class="fas fa-check-double"></i>
-                            <span class=" sm:inline">Hasil</span>
+                            Hasil
                         </button>
                     </div>
 

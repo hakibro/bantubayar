@@ -160,42 +160,25 @@ class PenangananController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'id_siswa' => 'required',
-            'jenis_penanganan' => 'required',
+        $data = $request->validate([
+            'id_siswa' => 'required|exists:siswa,id',
+            'jenis_penanganan' => 'required|string',
+            'catatan' => 'nullable|string',
         ]);
 
-        $siswa = Siswa::with('pembayaran')->findOrFail($request->id_siswa);
+        \DB::transaction(function () use ($data) {
+            $siswa = Siswa::findOrFail($data['id_siswa']);
+            $penanganan = Penanganan::getOrCreateForSiswa($siswa);
+            $penanganan->addHistory(
+                $data['jenis_penanganan'],
+                $data['catatan'] ?? null
+            );
+        });
 
-        // Ambil semua kategori belum lunas otomatis
-        $jenisPembayaran = $siswa->getKategoriBelumLunas();
-        $saldo = $siswa->saldo->saldo ?? 0;
-
-        // simpan penanganan baru
-        Penanganan::create([
-            'id_siswa' => $siswa->id,
-            'id_petugas' => Auth::id(),
-            'jenis_pembayaran' => $jenisPembayaran, // AUTO
-            'saldo' => $saldo, // AUTO
-            'status' => 'menunggu_respon',
-        ]);
-
-        // ambil id penanganan terakhir yang baru dibuat
-        $penangananTerbaru = Penanganan::where('id_siswa', $siswa->id)
-            ->latest()
-            ->first();
-
-        // simpan history penanganan
-        PenangananHistory::create([
-            'penanganan_id' => $penangananTerbaru->id,
-            'jenis_penanganan' => $request->jenis_penanganan,
-            'catatan' => $request->catatan ?? Null,
-        ]);
         return response()->json([
             'success' => true,
-            'message' => 'Penanganan berhasil disimpan'
+            'message' => 'Penanganan berhasil disimpan',
         ]);
-
     }
 
     public function edit($id)
