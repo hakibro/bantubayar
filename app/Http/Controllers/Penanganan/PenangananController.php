@@ -67,15 +67,7 @@ class PenangananController extends Controller
             is_null($penangananTerakhir) ||
             $penangananTerakhir->status === 'selesai';
 
-        $riwayatAksi = PenangananHistory::whereIn('penanganan_id', function ($query) use ($id_siswa) {
-            $query->select('id')
-                ->from('penanganan')
-                ->where('id_siswa', $id_siswa)
-                ->whereNull('deleted_at');
-        })
-            ->with('penanganan.petugas')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $riwayatAksi = $penangananTerakhir->histories()->orderBy('created_at', 'desc')->get();
 
         return view(
             'penanganan.show',
