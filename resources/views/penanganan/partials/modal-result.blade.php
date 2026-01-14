@@ -14,13 +14,13 @@
             <!-- Toggle Hasil -->
             <div>
                 <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Hasil</label>
-                <select
+                <select name="hasilPenanganan" id="hasilPenanganan"
                     class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primaryLight outline-none font-medium">
-                    <option>Lunas</option>
-                    <option>Isi Saldo</option>
-                    <option>Cicilan</option>
-                    <option>Tidak Ada Respon</option>
-                    <option>HP Tidak Aktif</option>
+                    <option value="lunas">Lunas</option>
+                    <option value="isi_saldo">Isi Saldo</option>
+                    <option value="cicilan">Cicilan</option>
+                    <option value="tidak_ada_respon">Tidak Ada Respon</option>
+                    <option value="hp_tidak_aktif">HP Tidak Aktif</option>
                 </select>
             </div>
 
@@ -28,7 +28,7 @@
             <div>
                 <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Catatan
                     Hasil</label>
-                <textarea
+                <textarea name="catatanHasil" id="catatanHasil"
                     class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primaryLight outline-none"
                     rows="3" placeholder="Detail hasil..."></textarea>
             </div>
@@ -56,6 +56,8 @@
 
 @push('scripts')
     <script>
+        const hasPenanganan = @json($penangananTerakhir !== null);
+        const penangananId = @json(optional($penangananTerakhir)->id);
         // --- Hasil Logic ---
         let currentRating = 0;
 
@@ -69,9 +71,47 @@
         }
 
         function saveResult() {
-            console.log(currentRating);
+            const catatan = document.getElementById('catatanHasil').value;
+
+            if (!catatan) {
+                showToast('Catatan hasil harus diisi', 'error');
+                return;
+            }
+
+            if (!hasPenanganan || !penangananId) {
+                showToast('Tidak ada penanganan untuk disimpan', 'error');
+                return;
+            }
+
+            fetch("{{ route('penanganan.save_hasil') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document
+                            .querySelector('meta[name="csrf-token"]')
+                            .getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        id_penanganan: penangananId,
+                        hasil: document.getElementById('hasilPenanganan').value,
+                        catatan: catatan,
+                        rating: currentRating
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error(error);
+                    showToast(error.message, 'error');
+                });
+
             closeModal('result');
-            showToast('Status penanganan disimpan');
+            showToast('Hasil penanganan disimpan');
         }
     </script>
 @endpush

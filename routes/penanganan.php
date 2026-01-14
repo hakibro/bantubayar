@@ -10,6 +10,7 @@ Route::middleware(['auth:web', 'role:bendahara|petugas'])->prefix('penanganan')-
         ->name('show');
 
     Route::post('/store', [PenangananController::class, 'store'])->name('store');
+    Route::post('/save-hasil', [PenangananController::class, 'saveHasil'])->name('save_hasil');
 
     Route::put('/update/{penanganan}', [PenangananController::class, 'update'])
         ->name('update');

@@ -17,11 +17,10 @@
                     <!-- Main Info Card -->
                     <div class="flex justify-between items-start mb-6 md:mb-0 relative z-10">
                         <div class="flex-1">
-                            @if ($siswa->petugasPenangananAktif())
+                            @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
                                 <p
                                     class="mb-4 bg-yellow-300 inline-flex px-3 py-1 text-xs rounded-full font-bold text-gray-500">
-                                    Sedang
-                                    ditangani oleh:
+                                    Sedang ditangani oleh:
                                     {{ $siswa->petugasPenangananAktif() }}
                                 </p>
                             @endif
@@ -125,7 +124,7 @@
                             class="text-[10px] text-primary font-semibold hover:underline">Lihat Detail</button> --}}
                     </div>
                     <div class="space-y-3">
-                        @if ($penangananTerakhir)
+                        @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
                             @if ($riwayatAksi)
                                 @foreach ($riwayatAksi as $aksi)
                                     <div class="flex items-start justify-between text-sm gap-3">
