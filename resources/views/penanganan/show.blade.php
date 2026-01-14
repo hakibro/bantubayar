@@ -12,106 +12,111 @@
                 <div class="absolute -right-10 -top-10 w-40 h-40 bg-red-100 rounded-full blur-3xl opacity-50">
                 </div>
 
-                <div class="flex justify-between items-start mb-6 relative z-10">
-                    <div class="flex-1">
-                        @if ($siswa->petugasPenangananAktif())
-                            <p class="mb-4 bg-yellow-300 inline-flex px-3 py-1 text-xs rounded-full font-bold text-gray-500">
-                                Sedang
-                                ditangani oleh:
-                                {{ $siswa->petugasPenangananAktif() }}
-                            </p>
-                        @endif
-                        <h1 class="text-xl md:text-3xl font-bold flex flex-col   items-start gap-2 mb-4">
-                            {{ $siswa->nama }}
-                            <button onclick="openModal('detail')"
-                                class="text-primary text-sm font-normal hover:underline flex items-center  gap-1">
-                                <i class="fas fa-info-circle"></i> Info Siswa dan Pembayaran
-                            </button>
-                        </h1>
-                        <p class="text-sm text-gray-500 font-medium mb-1">Total Tunggakan</p>
-                        <!-- Total Belum Lunas -->
-                        @php
-                            $totalBelumLunas = 0;
-
-                            $belumLunas = $siswa->getKategoriBelumLunas();
-
-                            if (is_array($belumLunas)) {
-                                foreach ($belumLunas as $kategori) {
-                                    foreach ($kategori['items'] as $item) {
-                                        $totalBelumLunas += $item['remaining_balance'] ?? 0;
-                                    }
-                                }
-                            }
-                        @endphp
-                        <h2
-                            class="text-4xl font-bold text-accent tracking-tight
-                        {{ $totalBelumLunas < 0 || $belumLunas === null ? 'text-accent' : 'text-success' }}">
-
-                            @if (is_null($belumLunas))
-                                Belum Sinkron
-                            @elseif ($totalBelumLunas < 0)
-                                Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}
-                            @else
-                                Lunas
+                <!-- Main Card -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between relative z-10">
+                    <!-- Main Info Card -->
+                    <div class="flex justify-between items-start mb-6 md:mb-0 relative z-10">
+                        <div class="flex-1">
+                            @if ($siswa->petugasPenangananAktif())
+                                <p
+                                    class="mb-4 bg-yellow-300 inline-flex px-3 py-1 text-xs rounded-full font-bold text-gray-500">
+                                    Sedang
+                                    ditangani oleh:
+                                    {{ $siswa->petugasPenangananAktif() }}
+                                </p>
                             @endif
-                            <button onclick="syncPembayaran({{ $siswa->id }})"
-                                class="relative ml-1 mt-2 w-4 h-4 text-lg  text-blue-500 hover:text-blue-800 active:scale-95 transition-all duration-200">
-                                <i class="fas fa-sync absolute bottom-1"></i>
-                            </button>
-
-
-                        </h2>
-                        @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
-                            {{-- tampilkan tunggakan pembayaran di penanganan terkhir --}}
+                            <h1 class="text-xl md:text-3xl font-bold flex flex-col   items-start gap-2 mb-4">
+                                {{ $siswa->nama }}
+                                <button onclick="openModal('detail')"
+                                    class="text-primary text-sm font-normal hover:underline flex items-center  gap-1">
+                                    <i class="fas fa-info-circle"></i> Info Siswa dan Pembayaran
+                                </button>
+                            </h1>
+                            <p class="text-sm text-gray-500 font-medium mb-1">Total Tunggakan</p>
+                            <!-- Total Belum Lunas -->
                             @php
-                                $totalTunggakanPenanganan = 0;
-
-                                $penangananBelumLunas = $penangananTerakhir->jenis_pembayaran;
-
-                                if (is_array($penangananBelumLunas)) {
-                                    foreach ($penangananBelumLunas as $kategori) {
+                                $totalBelumLunas = 0;
+                                $belumLunas = $siswa->getKategoriBelumLunas();
+                                if (is_array($belumLunas)) {
+                                    foreach ($belumLunas as $kategori) {
                                         foreach ($kategori['items'] as $item) {
-                                            $totalTunggakanPenanganan += $item['remaining_balance'] ?? 0;
+                                            $totalBelumLunas += $item['remaining_balance'] ?? 0;
                                         }
                                     }
                                 }
                             @endphp
-                            <p class="text-sm text-gray-500 font-medium mt-2">Saat penanganan: Rp
-                                {{ number_format($totalTunggakanPenanganan, 0, ',', '.') }}</p>
-                        @endif
-
-                        <div class="mt-4 pt-2 flex items-center gap-2 text-textMuted text-sm border-t border-gray-100">
-                            <i class="fas fa-wallet text-gray-400"></i>
-                            <span>Saldo saat ini:</span>
-                            <span class="font-semibold text-gray-700"> Rp
-                                {{ number_format($siswa->saldo?->saldo, 0, ',', '.') }}
-                            </span>
-
-                        </div>
-                        @if ($penangananTerakhir)
-                            <div class="mt-1 flex items-center gap-2 text-textMuted text-sm">
-                                <span>Saat penanganan:</span>
+                            <h2
+                                class="text-4xl font-bold text-accent tracking-tight
+                            {{ $totalBelumLunas < 0 || $belumLunas === null ? 'text-accent' : 'text-success' }}">
+                                @if (is_null($belumLunas))
+                                    Belum Sinkron
+                                @elseif ($totalBelumLunas < 0)
+                                    Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}
+                                @else
+                                    Lunas
+                                @endif
+                                <button onclick="syncPembayaran({{ $siswa->id }})"
+                                    class="relative ml-1 mt-2 w-4 h-4 text-lg  text-blue-500 hover:text-blue-800 active:scale-95 transition-all duration-200">
+                                    <i class="fas fa-sync absolute bottom-1"></i>
+                                </button>
+                            </h2>
+                            @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
+                                {{-- tampilkan tunggakan pembayaran di penanganan terkhir --}}
+                                @php
+                                    $totalTunggakanPenanganan = 0;
+                                    $penangananBelumLunas = $penangananTerakhir->jenis_pembayaran;
+                                    if (is_array($penangananBelumLunas)) {
+                                        foreach ($penangananBelumLunas as $kategori) {
+                                            foreach ($kategori['items'] as $item) {
+                                                $totalTunggakanPenanganan += $item['remaining_balance'] ?? 0;
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                <p class="text-sm text-gray-500 font-medium mt-2">Saat penanganan: Rp
+                                    {{ number_format($totalTunggakanPenanganan, 0, ',', '.') }}</p>
+                            @endif
+                            <div class="mt-4 pt-2 flex items-center gap-2 text-textMuted text-sm border-t border-gray-100">
+                                <i class="fas fa-wallet text-gray-400"></i>
+                                <span>Saldo saat ini:</span>
                                 <span class="font-semibold text-gray-700"> Rp
-                                    {{ number_format($penangananTerakhir?->saldo, 0, ',', '.') }}
+                                    {{ number_format($siswa->saldo?->saldo, 0, ',', '.') }}
                                 </span>
-
                             </div>
-                        @endif
-
-
+                            @if ($penangananTerakhir)
+                                <div class="mt-1 flex items-center gap-2 text-textMuted text-sm">
+                                    <span>Saat penanganan:</span>
+                                    <span class="font-semibold text-gray-700"> Rp
+                                        {{ number_format($penangananTerakhir?->saldo, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            @endif
+                        </div>
                     </div>
-                </div>
+                    <!-- Main Action Buttons -->
+                    <div class="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4 mt-6 md:mt-8">
+                        <button onclick="openModal('{{ $siswa->phone ? 'action' : 'updatehp' }}')"
+                            class="w-full bg-primary hover:bg-blue-700 text-white
+               py-3 md:py-4 rounded-2xl font-bold
+               shadow-md shadow-blue-200
+               transition active:scale-95
+               flex items-center justify-center gap-2 text-sm md:text-base">
+                            <i class="fas fa-tasks"></i>
+                            <span class="hidden sm:inline">Tindak Lanjut</span>
+                            <span class="sm:hidden">Tindak</span>
+                        </button>
 
-                <!-- Main Action Buttons -->
-                <div class="grid grid-cols-2 gap-4 mt-8">
-                    <button onclick="openModal('{{ $siswa->phone ? 'action' : 'updatehp' }}')"
-                        class="bg-primary hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-md shadow-blue-200 transition active:scale-95 flex items-center justify-center gap-2">
-                        <i class="fas fa-tasks"></i> Tindak Lanjut
-                    </button>
-                    <button onclick="openModal('result')"
-                        class="bg-white border-2 border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 py-4 rounded-2xl font-bold transition active:scale-95 flex items-center justify-center gap-2">
-                        <i class="fas fa-check-double"></i> Hasil
-                    </button>
+                        <button onclick="openModal('result')"
+                            class="w-full bg-white border-2 border-gray-300 text-gray-700
+               hover:border-gray-400 hover:bg-gray-50
+               py-3 md:py-4 rounded-2xl font-bold
+               transition active:scale-95
+               flex items-center justify-center gap-2 text-sm md:text-base">
+                            <i class="fas fa-check-double"></i>
+                            <span class=" sm:inline">Hasil</span>
+                        </button>
+                    </div>
+
                 </div>
 
                 <!-- Footer: Subtle History -->
