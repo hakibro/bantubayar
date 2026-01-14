@@ -45,9 +45,11 @@
                         @endphp
                         <h2
                             class="text-4xl font-bold text-accent tracking-tight
-                        {{ $totalBelumLunas < 0 ? 'text-accent' : 'text-success' }}">
+                        {{ $totalBelumLunas < 0 || $belumLunas === null ? 'text-accent' : 'text-success' }}">
 
-                            @if ($totalBelumLunas < 0)
+                            @if (is_null($belumLunas))
+                                Belum Sinkron
+                            @elseif ($totalBelumLunas < 0)
                                 Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}
                             @else
                                 Lunas
