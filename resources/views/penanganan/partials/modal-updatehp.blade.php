@@ -102,20 +102,19 @@
                         phone: phone
                     })
                 })
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) throw data;
+                    return data;
                 })
                 .then(data => {
-                    location.reload();
+                    showToast(data.message ?? 'Berhasil', 'success');
+                    closeModal('result');
+                    setTimeout(() => location.reload(), 800);
                 })
                 .catch(error => {
-                    console.error(error);
-                    showToast(error.message, 'error');
+                    showToast(error.message ?? 'Terjadi kesalahan', 'error');
                 });
-
-            closeModal('updatehp');
-            showToast('Nomor HP siswa berhasil diperbarui', 'success');
         }
     </script>
 @endpush

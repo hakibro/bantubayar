@@ -71,6 +71,8 @@ class PenangananController extends Controller
 
     public function store(Request $request)
     {
+
+
         $data = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
             'jenis_penanganan' => 'required|string',
@@ -80,6 +82,13 @@ class PenangananController extends Controller
         \DB::transaction(function () use ($data) {
             $siswa = Siswa::findOrFail($data['id_siswa']);
             $penanganan = Penanganan::getOrCreateForSiswa($siswa);
+            // skip jika bukan petugas yang membuat penanganan
+            if ($penanganan->id_petugas !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sedang ditangani oleh' . Auth::getName(),
+                ]);
+            }
             $penanganan->addHistory(
                 $data['jenis_penanganan'],
                 $data['catatan'] ?? null
@@ -193,6 +202,13 @@ class PenangananController extends Controller
         \DB::transaction(function () use ($data) {
             $siswa = Siswa::findOrFail($data['id_siswa']);
             $penanganan = Penanganan::getOrCreateForSiswa($siswa);
+            // skip jika bukan petugas yang membuat penanganan
+            if ($penanganan->id_petugas !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sedang ditangani oleh' . Auth::getName(),
+                ]);
+            }
             $penanganan->addHistory(
                 'update phone',
                 trim('Update No. HP ke ' . $data['phone'] . ' - ' . ($data['wali'] ?? ''))

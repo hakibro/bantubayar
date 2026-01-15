@@ -227,31 +227,31 @@
             }
             // simpan penanganan ke database
             fetch("{{ route('penanganan.store') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    id_siswa: {{ $siswa->id }},
-                    jenis_penanganan: currentActionType,
-                    catatan: catatan
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        id_siswa: {{ $siswa->id }},
+                        jenis_penanganan: currentActionType,
+                        catatan: catatan
+                    })
+                }).then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) throw data;
+                    return data;
                 })
-            }).then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
+                .then(data => {
+                    showToast(data.message ?? 'Berhasil', 'success');
+                    closeModal('result');
+                    setTimeout(() => location.reload(), 800);
+                })
+                .catch(error => {
+                    showToast(error.message ?? 'Terjadi kesalahan', 'error');
+                });
 
-            }).then(data => {
-                location.reload();
-            }).catch((error) => {
-                console.error('Error:', error);
-                showToast(error.message, 'error');
-            });
 
-            closeModal('action');
-            showToast('Catatan tindakan disimpan');
         }
     </script>
 @endpush

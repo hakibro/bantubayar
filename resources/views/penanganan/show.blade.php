@@ -59,7 +59,7 @@
                                     {{ number_format($siswa->saldo?->saldo, 0, ',', '.') }}
                                 </span>
                             </div>
-                            @if ($penangananTerakhir)
+                            @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
                                 <div class="mt-1 flex items-center gap-2 text-textMuted text-sm">
                                     <span>Saat penanganan:</span>
                                     <span class="font-semibold text-gray-700"> Rp
@@ -72,6 +72,10 @@
                     <!-- Main Action Buttons -->
                     <div class="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4 mt-6 md:mt-8">
                         <button onclick="openModal('{{ $siswa->phone ? 'action' : 'updatehp' }}')"
+                            @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') @if ($penangananTerakhir->id_petugas !== auth()->id()) disabled
+        title="Anda tidak berhak menindaklanjuti"
+        class="opacity-50 cursor-not-allowed" @endif
+                            @endif
                             class="w-full bg-primary hover:bg-blue-700 text-white
                py-3 px-6 md:py-4 rounded-2xl font-bold
                shadow-md shadow-blue-200
@@ -81,6 +85,10 @@
                         </button>
 
                         <button onclick="openModal('result')"
+                            @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') @if ($penangananTerakhir->id_petugas !== auth()->id()) disabled
+        title="Anda tidak berhak menindaklanjuti"
+        class="opacity-50 cursor-not-allowed" @endif
+                            @endif
                             class="w-full bg-white border-2 border-gray-300 text-gray-700
                hover:border-gray-400 hover:bg-gray-50
                py-3 px-6 md:py-4 rounded-2xl font-bold
@@ -121,7 +129,7 @@
                                 <p class="text-sm text-gray-400 italic">Belum ada riwayat aksi.</p>
                             @endif
                         @else
-                            <p class="text-sm text-gray-400 italic">Belum ada riwayat aksi. </p>
+                            <p class="text-sm text-gray-400 italic">Belum ada penanganan. </p>
 
                         @endif
 
@@ -142,16 +150,17 @@
                 <div class="space-y-5" id="historyList">
                     @if ($siswa->penangananSelesai()->isNotEmpty())
                         @foreach ($siswa->penangananSelesai() as $riwayatPenanganan)
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center justify-between border-t border-gray-200 pt-4">
                                 <div class="flex items-center gap-4">
                                     <div>
                                         <p class="text-xs text-textMuted">
-                                            Ditangani oleh: {{ $riwayatPenanganan->petugas->name }}
+                                            Ditangani oleh:
                                         </p>
 
                                         <h4 class="font-bold text-md text-gray-800">
-                                            {{ $riwayatPenanganan->siswa->nama }}
+                                            {{ $riwayatPenanganan->petugas->name }}
                                         </h4>
+
 
                                         {{-- Rating --}}
                                         <div class="flex items-center gap-0.5 mt-2 pt-2 border-t border-gray-200">
@@ -176,9 +185,9 @@
                                     </div>
 
                                 </div>
-                                <div class="flex flex-col gap-3 items-center justify-between text-right ">
+                                <div class="flex flex-col gap-2 items-end justify-between text-right ">
                                     <p
-                                        class="text-[10px] px-2 py-0.5 rounded-full
+                                        class="text-xs px-2 py-0.5 rounded-full
     {{ in_array($riwayatPenanganan->hasil, ['lunas', 'isi_saldo', 'cicilan'])
         ? 'bg-green-100 text-green-600'
         : 'bg-red-100 text-red-600' }}">

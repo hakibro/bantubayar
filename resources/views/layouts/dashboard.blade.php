@@ -172,10 +172,32 @@
                 <div>
                     @yield('title')
                 </div>
-                <div class="flex items-center gap-3">
-                    <img src="https://picsum.photos/seed/admin/100/100"
-                        class="w-10 h-10 rounded-full border border-gray-200">
+                <div class="relative">
+                    <button onclick="toggleLogoutPopup()" class="flex items-center gap-3 focus:outline-none">
+                        <div class="text-right">
+                            <p class="text-sm font-semibold text-gray-800">
+                                {{ auth()->user()->name }}
+                            </p>
+                            <p class="text-xs text-gray-500 capitalize">
+                                {{ auth()->user()->getRoleNames()->first() ?? 'Petugas' }}
+                                {{ auth()->user()->lembaga ?? '-' }}
+                            </p>
+                        </div>
+                    </button>
+
+                    <!-- Popup Logout -->
+                    <div id="logoutPopup"
+                        class="hidden absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-lg border z-50">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-xl">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
                 </div>
+
             </header>
             <!-- Content -->
             <div class="max-w-full overflow-auto bg-bgBody">
@@ -218,6 +240,11 @@
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     @stack('scripts')
     <script>
+        function toggleLogoutPopup() {
+            const popup = document.getElementById('logoutPopup');
+            popup.classList.toggle('hidden');
+        }
+
         function showToast(msg, type = 'success') {
             const toast = document.getElementById('toast');
             const toastMsg = document.getElementById('toastMsg');
