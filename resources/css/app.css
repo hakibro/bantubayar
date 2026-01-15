@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+@source "../views/**/*.blade.php";
+@source "../js/**/*.js";
+@source "../components/**/*.vue";
+
+/* Pindahkan konfigurasi warna dari tailwind.config.js ke sini */
+@theme {
+    --color-primary: #2563eb;
+    --color-accent: #ef4444;
+    --color-success: #10b981;
+    --color-bg-body: #f3f4f6;
+    --color-text-muted: #6b7280;
+}
