@@ -189,7 +189,6 @@
                 `\n\nMohon kesediaan Bapak/Ibu untuk melakukan pembayaran atau konfirmasi kepada kami.\n\n` +
                 `Terima kasih atas perhatian dan kerjasamanya`;
 
-            console.log(pesan);
             sendWhatsapp(pesan);
         }
 
@@ -201,22 +200,49 @@
 
         function sendAgreement() {
             const tanggal_kesanggupan = document.getElementById('tanggal_kesanggupan').value;
+            const bolehKirimKesanggupan = @json($penangananTerakhir && $penangananTerakhir->status !== 'selesai');
             if (!tanggal_kesanggupan) {
                 showToast('Tanggal kesanggupan harus diisi', 'error');
                 return;
             }
-            console.log(tanggal_kesanggupan);
 
-            // Simpan kesanggupan dan tanggal di DB
-            // Ambil link form kesanggupan
-            const linkKesanggupan = "https://example.com/kesanggupan";
-            const
-                pesan =
-                'Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} 🙏 , mohon kesediaan Bapak/Ibu untuk mengisi Form Kesanggupan pembayaran melalui link berikut: \n\n ' +
-                linkKesanggupan + '\n\n Terima kasih atas perhatian dan kerja samanya 🙏';
-            sendWhatsapp(pesan);
-            showToast('Pernyataan kesanggupan dikirim');
+            if (!bolehKirimKesanggupan) {
+                showToast('Follow up wali terlebih dahulu', 'error');
+                return;
+            }
 
+            fetch("{{ route('penanganan.kesanggupan') }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        penanganan_id: {{ $penangananTerakhir->id ?? 'null' }},
+                        tanggal_kesanggupan: tanggal_kesanggupan
+                    })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (!res.success) {
+                        showToast('Gagal mengirim kesanggupan', 'error');
+                        return;
+                    }
+
+                    const pesan = `Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} 🙏
+
+Mohon kesediaan Bapak/Ibu untuk mengisi Form Kesanggupan Pembayaran melalui link berikut:
+
+${res.link}
+
+Terima kasih atas perhatian dan kerja samanya 🙏`;
+
+                    sendWhatsapp(pesan);
+                    showToast('Pernyataan kesanggupan berhasil dikirim', 'success');
+                })
+                .catch(() => {
+                    showToast('Terjadi kesalahan sistem', 'error');
+                });
         }
 
         function saveAction() {

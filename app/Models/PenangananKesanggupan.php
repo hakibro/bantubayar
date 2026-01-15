@@ -12,6 +12,7 @@ class PenangananKesanggupan extends Model
         'penanganan_id',
         'tanggal',
         'nominal',
+        'token',
     ];
 
     public function penanganan()

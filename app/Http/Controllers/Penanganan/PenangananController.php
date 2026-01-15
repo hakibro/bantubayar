@@ -71,8 +71,6 @@ class PenangananController extends Controller
 
     public function store(Request $request)
     {
-
-
         $data = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
             'jenis_penanganan' => 'required|string',
@@ -100,6 +98,8 @@ class PenangananController extends Controller
             'message' => 'Aksi Penanganan berhasil disimpan',
         ]);
     }
+
+
 
     public function saveHasil(Request $request)
     {
@@ -239,5 +239,61 @@ class PenangananController extends Controller
         //         'message' => $e->getMessage(),
         //     ], 500);
         // }
+    }
+
+
+    // Kesanggupan
+    public function kirimKesanggupan(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'penanganan_id' => 'required|exists:penanganan,id',
+                'tanggal_kesanggupan' => 'required|date',
+            ]);
+
+            $kesanggupan = PenangananKesanggupan::create([
+                'penanganan_id' => $data['penanganan_id'],
+                'tanggal' => $data['tanggal_kesanggupan'],
+                'token' => \Str::uuid(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'link' => route('wali.kesanggupan.form', $kesanggupan->token)
+            ]);
+
+        } catch (\Throwable $e) {
+            logger()->error('KESANGGUPAN ERROR', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error'
+            ], 500);
+        }
+    }
+
+
+
+    public function formKesanggupan($token)
+    {
+        $kesanggupan = PenangananKesanggupan::where('token', $token)->firstOrFail();
+        return view('penanganan.kesanggupan', compact('kesanggupan'));
+    }
+
+    public function submitKesanggupan(Request $request, $token)
+    {
+        $data = $request->validate([
+            'nominal' => 'required|numeric|min:0'
+        ]);
+
+        $kesanggupan = PenangananKesanggupan::where('token', $token)->firstOrFail();
+        $kesanggupan->update([
+            'nominal' => $data['nominal']
+        ]);
+
+        return redirect()->back()->with('success', 'Kesanggupan berhasil dikirim');
     }
 }

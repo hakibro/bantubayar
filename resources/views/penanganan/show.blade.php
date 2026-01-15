@@ -259,7 +259,6 @@
             function toggleAccordion(id) {
                 const content = document.getElementById(`content${id}`);
                 const icon = document.getElementById(`icon${id}`);
-                console.log(content, icon);
                 content.classList.toggle('active');
                 icon.classList.toggle('rotate-180');
             }

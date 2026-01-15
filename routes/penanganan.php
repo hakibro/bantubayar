@@ -12,8 +12,24 @@ Route::middleware(['auth:web', 'role:bendahara|petugas'])->prefix('penanganan')-
     Route::post('/store', [PenangananController::class, 'store'])->name('store');
     Route::post('/save-hasil', [PenangananController::class, 'saveHasil'])->name('save_hasil');
     Route::post('/update-phone', [PenangananController::class, 'updatePhone'])->name('update_phone');
+    Route::post('/kesanggupan', [PenangananController::class, 'kirimKesanggupan'])->name('kesanggupan');
 
     Route::put('/update/{penanganan}', [PenangananController::class, 'update'])
         ->name('update');
 
 });
+
+Route::prefix('wali')->name('wali.')->group(function () {
+    Route::get(
+        '/kesanggupan/{token}',
+        [PenangananController::class, 'formKesanggupan']
+    )->name('kesanggupan.form');
+    Route::post(
+        '/kesanggupan/{token}',
+        [PenangananController::class, 'submitKesanggupan']
+    )->name('kesanggupan.submit');
+});
+
+
+
+
