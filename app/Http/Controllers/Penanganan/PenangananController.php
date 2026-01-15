@@ -7,6 +7,7 @@ use App\Models\Penanganan;
 use App\Models\PenangananHistory;
 use App\Models\PenangananKesanggupan;
 use App\Models\Siswa;
+use App\Services\SiswaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -95,12 +96,73 @@ class PenangananController extends Controller
     {
         $data = $request->validate([
             'id_penanganan' => 'required|exists:penanganan,id',
-            'hasil' => 'required|in:lunas,isi_saldo,tidak_ada_respon,hp_tidak_aktif',
+            'hasil' => 'required|in:lunas,isi_saldo,cicilan,tidak_ada_respon,hp_tidak_aktif',
             'catatan' => 'nullable|string',
             'rating' => 'nullable|integer|min:0|max:5',
         ]);
 
         $penanganan = Penanganan::findOrFail($data['id_penanganan']);
+        $siswa = Siswa::findOrFail($penanganan->id_siswa);
+
+        // TODO: Jika hasil penanganan lunas, pastikan tidak ada tunggakan
+        if ($data['hasil'] === 'lunas') {
+            if ($siswa->getTotalTunggakan() < 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Siswa masih memiliki tunggakan sebesar Rp " . number_format($siswa->getTotalTunggakan(), 0, ',', '.'),
+                ], 400);
+            }
+        }
+        // TODO: Jika hasil = cicilan, pastikan total tunggakan saat ini < total tunggakan saat penanganan dibuat, ambil kategori pembayaran yang sudah lunas
+        if ($data['hasil'] === 'cicilan') {
+            if ($siswa->getTotalTunggakan() >= $penanganan->getTotalTunggakan()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Total tunggakan saat ini Rp " . number_format($siswa->getTotalTunggakan(), 0, ',', '.') . " harus lebih kecil dari total tunggakan saat penanganan dibuat Rp " . number_format($penanganan->getTotalTunggakan(), 0, ',', '.'),
+                ], 400);
+            }
+        }
+        // TODO: Jika hasil = isi_saldo, pastikan saldo saat ini > saldo saat penanganan dibuat
+        if ($data['hasil'] === 'isi_saldo') {
+            if ($siswa->saldo->saldo <= $penanganan->saldo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Saldo saat ini Rp " . number_format($siswa->saldo?->saldo, 0, ',', '.') . " harus lebih besar dari saldo saat penanganan dibuat Rp " . number_format($penanganan->saldo, 0, ',', '.'),
+                ], 400);
+            }
+        }
+
+
+        // TODO: Jika hasil = tidak_ada_respon atau hp_tidak aktif, pastikan tindak lanjut minimal 3 kali,
+
+        if (in_array($data['hasil'], ['tidak_ada_respon', 'hp_tidak_aktif'])) {
+
+            // hitung jenis penanganan
+            $jumlahChat = $penanganan->histories()
+                ->where('jenis_penanganan', 'chat')
+                ->count();
+
+            $jumlahTelepon = $penanganan->histories()
+                ->where('jenis_penanganan', 'phone')
+                ->count();
+
+
+            // validasi minimal aksi
+            if ($jumlahChat < 1 || $jumlahTelepon < 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Minimal 1x chat dan 2x telepon sebelum memilih hasil ini.',
+                ], 422);
+            }
+            // Jika hp tidak aktif → arahkan update nomor
+            if ($data['hasil'] === 'hp_tidak_aktif') {
+                return response()->json([
+                    'success' => false,
+                    'action_required' => 'update_nomor_hp',
+                    'message' => 'Nomor HP siswa tidak aktif. Silakan perbarui nomor telepon siswa terlebih dahulu.',
+                ], 409);
+            }
+        }
 
         $penanganan->update([
             'hasil' => $data['hasil'],
@@ -111,11 +173,11 @@ class PenangananController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Hasil penanganan berhasil disimpan.",
+            'message' => "Hasil penanganan berhasil disimpan.", // Fungsikan pesan sukses dan error
         ]);
     }
 
-    public function updatePhone(Request $request)
+    public function updatePhone(Request $request, SiswaService $siswaService)
     {
         $data = $request->validate([
             'id_siswa' => 'required|exists:siswa,id',
@@ -128,11 +190,38 @@ class PenangananController extends Controller
             'phone' => $data['phone'] . ' - ' . $data['wali'],
         ]);
 
+        \DB::transaction(function () use ($data) {
+            $siswa = Siswa::findOrFail($data['id_siswa']);
+            $penanganan = Penanganan::getOrCreateForSiswa($siswa);
+            $penanganan->addHistory(
+                'update phone',
+                trim('Update No. HP ke ' . $data['phone'] . ' - ' . ($data['wali'] ?? ''))
+            );
+
+        });
+
         return response()->json([
             'success' => true,
-            'message' => "Nomor HP siswa berhasil diperbarui.",
+            'message' => 'Aksi Penanganan berhasil disimpan',
         ]);
+
+        // Update via SISDA API
+        // try {
+        //     $result = $siswaService->updateTelepon(
+        //         $siswa->idperson,
+        //         $data['wali'],
+        //         $data['phone']
+        //     );
+
+        //     return response()->json([
+        //         'success' => true,
+        //         'data' => $result,
+        //     ]);
+        // } catch (\Throwable $e) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => $e->getMessage(),
+        //     ], 500);
+        // }
     }
-
-
 }

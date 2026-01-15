@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Traits\Pembayaran;
+
 
 
 class Penanganan extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Pembayaran;
 
     protected $table = 'penanganan';
 
@@ -81,5 +83,32 @@ class Penanganan extends Model
             'catatan' => $catatan,
         ]);
     }
+
+    public function getTotalTunggakan(): int
+    {
+        return $this->hitungTotalDariKategori(
+            $this->jenis_pembayaran ?? []
+        );
+    }
+
+
+    // ambil kategori pembayaran yang sudah lunas
+    public function getKategoriYangSudahLunas(Siswa $siswa): array
+    {
+        $belumLunasKeys = collect($siswa->getKategoriBelumLunas() ?? [])
+            ->map(fn($k) => ($k['category_name'] ?? '') . '|' . ($k['periode'] ?? ''));
+
+        return collect($this->jenis_pembayaran ?? [])
+            ->reject(
+                fn($k) =>
+                $belumLunasKeys->contains(
+                    ($k['category_name'] ?? '') . '|' . ($k['periode'] ?? '')
+                )
+            )
+            ->values()
+            ->all();
+    }
+
+
 
 }

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\Pembayaran;
 
 class Siswa extends Model
 {
-    use HasFactory;
+    use HasFactory, Pembayaran;
 
     protected $table = 'siswa';
 
@@ -63,6 +64,12 @@ class Siswa extends Model
             ->where('status', '!=', 'selesai')
             ->latest()
             ->first();
+    }
+    public function penangananSelesai()
+    {
+        return $this->penanganan()
+            ->where('status', 'selesai')
+            ->orderByDesc('created_at')->get();
     }
 
     public function sedangDitangani(): bool
@@ -128,10 +135,10 @@ class Siswa extends Model
         return $belumLunas; // bisa [] atau berisi
     }
 
-
-
-
-
-
-
+    public function getTotalTunggakan(): int
+    {
+        return $this->hitungTotalDariKategori(
+            $this->getKategoriBelumLunas() ?? []
+        );
+    }
 }

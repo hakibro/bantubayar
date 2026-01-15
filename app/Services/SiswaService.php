@@ -400,5 +400,30 @@ class SiswaService
         ];
     }
 
+    public function updateTelepon(
+        string $nis,
+        string $pemilik,
+        string $nomor
+    ): array {
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Cookie' => config('services.sisda.cookie'),
+        ])->post(
+                "{$this->baseUrl}/update_telepon/{$nis}",
+                [
+                    'pemilik' => $pemilik,
+                    'nomor' => $nomor,
+                ]
+            );
+
+        if (!$response->successful()) {
+            throw new \Exception(
+                'Gagal update nomor telepon: ' . $response->body()
+            );
+        }
+
+        return $response->json();
+    }
 
 }

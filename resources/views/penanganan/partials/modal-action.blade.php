@@ -184,7 +184,7 @@
                 `Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} \n\n` +
                 `Berikut kami sampaikan rincian pembayaran belum lunas:\n\n` +
                 detailTunggakan +
-                `\n\n *Total Keseluruhan: ${formatRupiah({{ $totalBelumLunas }})}*` +
+                `\n\n *Total Keseluruhan: ${formatRupiah({{ $siswa->getTotalTunggakan() }})}*` +
                 `\n\n Informasi detail: ${linkPembayaran}` +
                 `\n\nMohon kesediaan Bapak/Ibu untuk melakukan pembayaran atau konfirmasi kepada kami.\n\n` +
                 `Terima kasih atas perhatian dan kerjasamanya`;

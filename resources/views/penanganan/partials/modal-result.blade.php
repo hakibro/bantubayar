@@ -56,8 +56,6 @@
 
 @push('scripts')
     <script>
-        const hasPenanganan = @json($penangananTerakhir !== null);
-        const penangananId = @json(optional($penangananTerakhir)->id);
         // --- Hasil Logic ---
         let currentRating = 0;
 
@@ -69,17 +67,24 @@
                 else stars[i].classList.remove('active');
             }
         }
+        const hasPenanganan = @json($siswa->penangananAktif());
+        const penangananId = @json(optional($penangananTerakhir)->id)
 
         function saveResult() {
             const catatan = document.getElementById('catatanHasil').value;
 
             if (!catatan) {
-                showToast('Catatan hasil harus diisi', 'error');
+                showToast('Catatan harus diisi', 'warning');
                 return;
             }
 
-            if (!hasPenanganan || !penangananId) {
-                showToast('Tidak ada penanganan untuk disimpan', 'error');
+            if (currentRating === 0) {
+                showToast('Silahkan Beri Rating Wali', 'warning');
+                return;
+            }
+
+            if (!hasPenanganan) {
+                showToast('Lakukan tindakan penanganan sebelum menyimpan hasil', 'warning');
                 return;
             }
 
@@ -98,20 +103,26 @@
                         rating: currentRating
                     })
                 })
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) throw data;
+                    return data;
                 })
                 .then(data => {
-                    location.reload();
+                    showToast(data.message ?? 'Berhasil', 'success');
+                    closeModal('result');
+                    setTimeout(() => location.reload(), 800);
                 })
                 .catch(error => {
-                    console.error(error);
-                    showToast(error.message, 'error');
-                });
+                    if (error.action_required === 'update_nomor_hp') {
+                        showToast(error.message, 'warning');
+                        closeModal('result');
+                        openModal('updatehp');
+                        return;
+                    }
 
-            closeModal('result');
-            showToast('Hasil penanganan disimpan');
+                    showToast(error.message ?? 'Terjadi kesalahan', 'error');
+                });
         }
     </script>
 @endpush

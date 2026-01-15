@@ -186,8 +186,13 @@
 
     <!-- Toast Notification -->
     <div id="toast"
-        class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg z-[100] transition-all duration-300 opacity-0 translate-y-[-20px] pointer-events-none flex items-center gap-3">
-        <i class="fas fa-check-circle text-green-400"></i>
+        class="fixed top-5 left-1/2 transform -translate-x-1/2 
+           bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg 
+           z-[100] transition-all duration-300 
+           opacity-0 translate-y-[-20px] pointer-events-none 
+           flex items-center gap-3">
+
+        <i id="toastIcon" class="fas fa-check-circle text-green-400"></i>
         <span id="toastMsg" class="text-sm font-medium">Berhasil</span>
     </div>
 
@@ -213,14 +218,42 @@
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     @stack('scripts')
     <script>
-        function showToast(msg) {
+        function showToast(msg, type = 'success') {
             const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
-            toast.classList.remove('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+
+            // reset icon & color
+            toastIcon.className = 'fas';
+
+            switch (type) {
+                case 'error':
+                    toastIcon.classList.add('fa-times-circle', 'text-red-400');
+                    break;
+                case 'warning':
+                    toastIcon.classList.add('fa-exclamation-circle', 'text-yellow-400');
+                    break;
+                default:
+                    toastIcon.classList.add('fa-check-circle', 'text-green-400');
+            }
+
+            toast.classList.remove(
+                'opacity-0',
+                'translate-y-[-20px]',
+                'pointer-events-none'
+            );
+
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
-            }, 3000);
+                toast.classList.add(
+                    'opacity-0',
+                    'translate-y-[-20px]',
+                    'pointer-events-none'
+                );
+            }, 3600);
         }
+
 
         function closeError() {
             document.getElementById("errorModal").classList.add("hidden");

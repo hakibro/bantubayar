@@ -32,25 +32,14 @@
                                 </button>
                             </h1>
                             <p class="text-sm text-gray-500 font-medium mb-1">Total Tunggakan</p>
-                            <!-- Total Belum Lunas -->
-                            @php
-                                $totalBelumLunas = 0;
-                                $belumLunas = $siswa->getKategoriBelumLunas();
-                                if (is_array($belumLunas)) {
-                                    foreach ($belumLunas as $kategori) {
-                                        foreach ($kategori['items'] as $item) {
-                                            $totalBelumLunas += $item['remaining_balance'] ?? 0;
-                                        }
-                                    }
-                                }
-                            @endphp
+
                             <h2
                                 class="text-4xl font-bold text-accent tracking-tight
-                            {{ $totalBelumLunas < 0 || $belumLunas === null ? 'text-accent' : 'text-success' }}">
-                                @if (is_null($belumLunas))
+                            {{ $siswa->getTotalTunggakan() < 0 || $siswa->getKategoriBelumLunas() === null ? 'text-accent' : 'text-success' }}">
+                                @if (is_null($siswa->getKategoriBelumLunas()))
                                     Belum Sinkron
-                                @elseif ($totalBelumLunas < 0)
-                                    Rp {{ number_format($totalBelumLunas, 0, ',', '.') }}
+                                @elseif ($siswa->getTotalTunggakan() < 0)
+                                    Rp {{ number_format($siswa->getTotalTunggakan(), 0, ',', '.') }}
                                 @else
                                     Lunas
                                 @endif
@@ -60,20 +49,8 @@
                                 </button>
                             </h2>
                             @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
-                                {{-- tampilkan tunggakan pembayaran di penanganan terkhir --}}
-                                @php
-                                    $totalTunggakanPenanganan = 0;
-                                    $penangananBelumLunas = $penangananTerakhir->jenis_pembayaran;
-                                    if (is_array($penangananBelumLunas)) {
-                                        foreach ($penangananBelumLunas as $kategori) {
-                                            foreach ($kategori['items'] as $item) {
-                                                $totalTunggakanPenanganan += $item['remaining_balance'] ?? 0;
-                                            }
-                                        }
-                                    }
-                                @endphp
                                 <p class="text-sm text-gray-500 font-medium mt-2">Saat penanganan: Rp
-                                    {{ number_format($totalTunggakanPenanganan, 0, ',', '.') }}</p>
+                                    {{ number_format($penangananTerakhir->getTotalTunggakan(), 0, ',', '.') }}</p>
                             @endif
                             <div class="mt-4 pt-2 flex items-center gap-2 text-textMuted text-sm border-t border-gray-100">
                                 <i class="fas fa-wallet text-gray-400"></i>
@@ -144,7 +121,8 @@
                                 <p class="text-sm text-gray-400 italic">Belum ada riwayat aksi.</p>
                             @endif
                         @else
-                            <p class="text-sm text-gray-400 italic">Belum ada riwayat penanganan. </p>
+                            <p class="text-sm text-gray-400 italic">Belum ada riwayat aksi. </p>
+
                         @endif
 
 
@@ -153,7 +131,7 @@
                     </div>
                 </div>
             </div>
-            <!-- 2. Recent Activity (Payments) -->
+            <!-- 2. Recent Activity () -->
             <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-bold">Riwayat Penanganan</h3>
@@ -162,38 +140,66 @@
                 </div>
 
                 <div class="space-y-5" id="historyList">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-                                <i class="fas fa-receipt"></i>
+                    @if ($siswa->penangananSelesai()->isNotEmpty())
+                        @foreach ($siswa->penangananSelesai() as $riwayatPenanganan)
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div>
+                                        <p class="text-xs text-textMuted">
+                                            Ditangani oleh: {{ $riwayatPenanganan->petugas->name }}
+                                        </p>
+
+                                        <h4 class="font-bold text-md text-gray-800">
+                                            {{ $riwayatPenanganan->siswa->nama }}
+                                        </h4>
+
+                                        {{-- Rating --}}
+                                        <div class="flex items-center gap-0.5 mt-2 pt-2 border-t border-gray-200">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <i
+                                                    class="fas fa-star text-[11px]
+                {{ $i <= ($riwayatPenanganan->rating ?? 0) ? 'text-yellow-400' : 'text-gray-300' }}">
+                                                </i>
+                                            @endfor
+
+                                            @if (!is_null($riwayatPenanganan->rating))
+                                                <span class="text-[10px] text-textMuted ml-1">
+                                                    ({{ $riwayatPenanganan->rating }}/5)
+                                                </span>
+                                            @endif
+                                        </div>
+                                        @if (!is_null($riwayatPenanganan->catatan))
+                                            <span class="text-[12px] text-textMuted">
+                                                {{ $riwayatPenanganan->catatan }}
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                </div>
+                                <div class="flex flex-col gap-3 items-center justify-between text-right ">
+                                    <p
+                                        class="text-[10px] px-2 py-0.5 rounded-full
+    {{ in_array($riwayatPenanganan->hasil, ['lunas', 'isi_saldo', 'cicilan'])
+        ? 'bg-green-100 text-green-600'
+        : 'bg-red-100 text-red-600' }}">
+                                        {{ $riwayatPenanganan->hasil }}
+                                    </p>
+                                    <div
+                                        class="font-bold  text-sm {{ in_array($riwayatPenanganan->hasil, ['lunas', 'isi_saldo', 'cicilan']) ? ' text-success' : ' text-accent' }}">
+                                        Rp {{ number_format($riwayatPenanganan->getTotalTunggakan(), 0, ',', '.') }}
+                                    </div>
+
+                                    <p class="text-xs text-textMuted mt-2">
+                                        {{ $riwayatPenanganan->histories()->count() }} tindakan
+                                    </p>
+
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="font-bold text-sm text-gray-800">SPP Oktober 2023</h4>
-                                <p class="text-xs text-textMuted">Jatuh tempo: 10 Okt</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="font-bold text-accent text-sm">Rp 500.000</div>
-                            <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Belum
-                                Bayar</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-                                <i class="fas fa-receipt"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-sm text-gray-800">SPP September 2023</h4>
-                                <p class="text-xs text-textMuted">Jatuh tempo: 10 Sep</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="font-bold text-accent text-sm">Rp 500.000</div>
-                            <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Belum
-                                Bayar</span>
-                        </div>
-                    </div>
+                        @endforeach
+                    @else
+                        <p class="text-sm text-gray-400 italic">Belum ada riwayat penanganan. </p>
+                    @endif
+
                 </div>
             </div>
 
