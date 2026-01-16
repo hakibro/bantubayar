@@ -69,37 +69,87 @@
                     <i class="fa-solid fa-file-contract text-2xl"></i>
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold leading-tight">Kesanggupan Pembayaran</h2>
-                    <p class="text-blue-100 text-xs mt-1">Lengkapi formulir di bawah ini</p>
+                    <h2 class="text-xl font-bold leading-tight">Pernyataan Kesanggupan Pembayaran</h2>
                 </div>
             </div>
         </div>
+        <form method="POST" action="{{ route('wali.kesanggupan.submit', ['token' => $kesanggupan->token]) }}"
+            id="commitmentForm" autocomplete="off">
 
-        <div class="p-8">
+            <div class="p-8">
 
-            <!-- Info Tanggal (Simulasi Data Server) -->
-            <div class="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-2xl p-4 mb-6">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center">
-                        <i class="fa-regular fa-calendar-days"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Tanggal</p>
-                        <p class="font-bold text-gray-800" id="displayDate">
-                            <!-- Akan diisi oleh Javascript -->
-                        </p>
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-4 leading-relaxed">
+
+
+                    <p class="text-sm text-gray-700 ">
+                        Saya yang selaku
+                        <span class="font-semibold">orang tua / wali dari ananda <br>
+                            {{ $kesanggupan->penanganan->siswa->nama }}</span>,
+                        dengan ini menyatakan bahwa:
+                    </p>
+
+                    <ul class="list-decimal text-sm text-gray-700 space-y-2 px-4">
+                        <li>
+                            Saya menyatakan sanggup untuk memenuhi kewajiban pembayaran
+                            biaya pendidikan siswa sesuai dengan ketentuan yang telah ditetapkan
+                            oleh pihak sekolah/pondok.
+                        </li>
+                        <li>
+                            Saya bersedia melakukan pembayaran sesuai dengan nominal, jadwal,
+                            dan metode pembayaran yang telah diinformasikan.
+                        </li>
+                        <li>
+                            Apabila terjadi keterlambatan atau kendala pembayaran, saya bersedia
+                            melakukan komunikasi dan koordinasi dengan pihak sekolah untuk
+                            mencari solusi yang baik.
+                        </li>
+                        <li>
+                            Saya menyatakan bahwa pernyataan ini dibuat dengan sadar, tanpa
+                            paksaan, dan dapat dipertanggungjawabkan.
+                        </li>
+                    </ul>
+
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                        Dengan ini saya menyatakan bersedia dan mematuhi
+                        seluruh ketentuan yang berlaku.
+                    </p>
+
+                    <!-- Checkbox Persetujuan -->
+                    <label class="flex items-start gap-3 pt-2 cursor-pointer">
+                        <input type="checkbox" required id="agreement"
+                            class="mt-1 h-8 w-8 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700">
+                            Saya telah membaca dan menyetujui pernyataan kesanggupan pembayaran di atas.
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Info Tanggal (Simulasi Data Server) -->
+                <div class="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-2xl p-4 my-6">
+                    <div class="flex items-center space-x-3">
+                        <div
+                            class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center">
+                            <i class="fa-regular fa-calendar-days"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Jatuh Tempo Pembayaran
+                            </p>
+                            <p class="font-bold text-gray-800" id="displayDate">
+                                <!-- Akan diisi oleh Javascript -->
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <form id="commitmentForm" autocomplete="off">
+
 
                 <!-- Input Nominal Section -->
                 <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Masukkan nominal sesuai kemampuan Bapak/Ibu
-
+                    <label class="mb-2 block text-sm font-semibold text-gray-700 ">
+                        Masukkan nominal sesuai kemampuan Bapak/Ibu.
                     </label>
+
+
 
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -118,49 +168,30 @@
                     </div>
 
                     <!-- Helper Text -->
-                    <div class="flex justify-between items-center mt-2">
-                        <p class="text-xs text-gray-500">
-                            <i class="fa-solid fa-circle-info mr-1"></i> Masukkan nominal angka saja.
+                    <div class=" my-2 ">
+                        <p class="flex gap-1 justify-center items-start text-xs text-gray-500">
+                            <i class="fa-solid fa-circle-info mr-1 mt-1"></i>
+                            <span>Masukkan nominal angka saja. Data yang
+                                diisi akan digunakan
+                                sebagai
+                                dasar
+                                kesepakatan
+                                pembayaran.</span>
                         </p>
                         <!-- Hidden Input for Logic -->
                         <input type="hidden" name="nominal" id="nominal" value="">
                     </div>
                 </div>
 
-                <!-- Quick Options (Chips) -->
-                <div class="mb-8">
-                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Saran Nominal</p>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" onclick="setAmount(500000)"
-                            class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all-300">
-                            500 Rb
-                        </button>
-                        <button type="button" onclick="setAmount(1000000)"
-                            class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all-300">
-                            1 Juta
-                        </button>
-                        <button type="button" onclick="setAmount(2500000)"
-                            class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all-300">
-                            2.5 Juta
-                        </button>
-                        <button type="button" onclick="setAmount(5000000)"
-                            class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all-300">
-                            5 Juta
-                        </button>
-                    </div>
-                </div>
-
-                Data yang diisi akan digunakan sebagai dasar kesepakatan pembayaran
-
                 <!-- Submit Button -->
-                <button type="submit" id="submitBtn"
+                <button type="button" id="submitBtn"
                     class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-600/30 transition-all-300 flex items-center justify-center gap-2 group">
                     <span>Kirim Kesanggupan</span>
                     <i class="fa-solid fa-paper-plane group-hover:translate-x-1 transition-transform"></i>
                 </button>
 
-            </form>
-        </div>
+        </form>
+    </div>
     </div>
 
     <!-- MODAL SUKSES (Hidden by default) -->
@@ -253,16 +284,7 @@
                 clearBtn.classList.add('hidden');
             });
 
-            // 3. Logic Quick Select (Saran Nominal)
-            window.setAmount = function(amount) {
-                // Efek visual "click" pada input
-                displayInput.focus();
 
-                // Set value
-                realInput.value = amount;
-                displayInput.value = new Intl.NumberFormat('id-ID').format(amount);
-                clearBtn.classList.remove('hidden');
-            };
 
             // 4. Logic Submit Form
             const form = document.getElementById('commitmentForm');
@@ -337,6 +359,63 @@
                 modal.classList.add('hidden');
             }, 300); // Sesuaikan durasi transisi CSS
         }
+
+
+        document.getElementById('submitBtn').addEventListener('click', async function() {
+            const nominal = document.getElementById('nominal').value;
+            const agreement = document.getElementById('agreement').checked;
+
+            if (!nominal || parseInt(nominal) <= 0) {
+                alert('Nominal kesanggupan wajib diisi');
+                return;
+            }
+
+            if (!agreement) {
+                alert('Anda harus menyetujui pernyataan kesanggupan');
+                return;
+            }
+
+            const url = "{{ route('wali.kesanggupan.submit', $kesanggupan->token) }}";
+
+            const formData = new FormData();
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            formData.append('nominal', nominal);
+            formData.append('agreement', 1);
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+                // Tambahkan ini untuk debugging
+                console.log("Token yang dikirim:", csrfToken);
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json', // Penting: Minta server merespon JSON
+                        'X-Requested-With': 'XMLHttpRequest' // Identifikasi request AJAX
+                    },
+                    credentials: 'same-origin',
+                    body: formData
+                    // Jangan set 'Content-Type': 'multipart/form-data' manual, biarkan browser yang mengaturnya agar boundary benar
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Jika server merespon error (422/404/500), lempar result yang berisi message
+                    throw result;
+                }
+
+                alert('Terima kasih 🙏 Kesanggupan pembayaran berhasil dikirim');
+                document.getElementById('submitBtn').disabled = true;
+
+            } catch (error) {
+                console.error(error);
+
+                // Tampilkan pesan error spesifik dari server jika ada
+                const errorMessage = error.message || error.errors?.nominal?.[0] || 'Terjadi kesalahan sistem';
+                alert(errorMessage);
+            }
+        });
     </script>
 </body>
 

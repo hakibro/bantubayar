@@ -286,14 +286,27 @@ class PenangananController extends Controller
     public function submitKesanggupan(Request $request, $token)
     {
         $data = $request->validate([
-            'nominal' => 'required|numeric|min:0'
+            // Ubah min:0 menjadi min:1 atau gt:0 agar tidak menerima 0
+            'nominal' => 'required|numeric|min:1',
         ]);
 
         $kesanggupan = PenangananKesanggupan::where('token', $token)->firstOrFail();
+
+        // optional: cegah submit ulang
+        if ($kesanggupan->nominal !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kesanggupan sudah pernah dikirim'
+            ], 422);
+        }
+
         $kesanggupan->update([
             'nominal' => $data['nominal']
         ]);
 
-        return redirect()->back()->with('success', 'Kesanggupan berhasil dikirim');
+        return response()->json([
+            'success' => true,
+            'message' => 'Kesanggupan berhasil dikirim'
+        ]);
     }
 }
