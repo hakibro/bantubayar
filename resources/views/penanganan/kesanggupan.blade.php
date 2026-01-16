@@ -1,63 +1,5 @@
-<!DOCTYPE html>
-<html lang="id">
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="dummy_token">
-
-    <title>Form Kesanggupan Pembayaran</title>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <!-- FontAwesome untuk Ikon -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-    <!-- Google Fonts: Plus Jakarta Sans untuk tampilan modern -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        /* Transisi halus untuk elemen interaktif */
-        .transition-all-300 {
-            transition: all 0.3s ease-in-out;
-        }
-
-        /* Custom Scrollbar untuk elemen suggestions jika terlalu panjang */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Animasi Modal */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-    </style>
-</head>
-
-<body
-    class="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-800 min-h-screen flex items-center justify-center p-4">
-
+@extends('layouts.guest')
+@section('content')
     <div class="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden relative animate-fade-in">
 
         <!-- Header Section dengan Background Accent -->
@@ -127,8 +69,7 @@
                 <!-- Info Tanggal (Simulasi Data Server) -->
                 <div class="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-2xl p-4 my-6">
                     <div class="flex items-center space-x-3">
-                        <div
-                            class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center">
+                        <div class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center">
                             <i class="fa-regular fa-calendar-days"></i>
                         </div>
                         <div>
@@ -207,7 +148,7 @@
                 <div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-sm opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     id="modalPanel">
 
-                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 text-center">
+                    <div class="bg-white p-8 text-center">
                         <div
                             class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 mb-5 animate-bounce">
                             <i class="fa-solid fa-check text-3xl text-green-600"></i>
@@ -220,203 +161,186 @@
                             </p>
                             <!-- Display Summary in Modal -->
                             <div class="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                                <p class="text-xs text-gray-400 uppercase font-bold">Nominal Terkirim</p>
+                                <p class="text-xs text-gray-400 uppercase font-bold">Nominal Kesanggupan Anda</p>
                                 <p class="text-lg font-bold text-blue-600" id="modalNominal">Rp 0</p>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gray-50 px-4 py-4 sm:flex sm:flex-row-reverse sm:px-6">
+                    {{-- <div class="bg-gray-50 px-4 py-4 sm:flex sm:flex-row-reverse sm:px-6">
                         <button type="button" onclick="closeModal()"
                             class="inline-flex w-full justify-center rounded-xl bg-blue-600 px-3 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-full transition-colors">
                             Tutup
                         </button>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Set Tanggal Otomatis 
-            const dateElement = document.getElementById('displayDate');
-            const options = {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            };
-            const day = new Date(@json($kesanggupan->tanggal));
-            console.log(day);
-            dateElement.textContent = day.toLocaleDateString('id-ID', options);
+    @push('scripts')
+        <!-- JAVASCRIPT LOGIC -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // 1. Set Tanggal Otomatis 
+                const dateElement = document.getElementById('displayDate');
+                const options = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                };
+                const day = new Date(@json($kesanggupan->tanggal));
+                console.log(day);
+                dateElement.textContent = day.toLocaleDateString('id-ID', options);
 
-            // 2. Logic Input Format Rupiah
-            const displayInput = document.getElementById('nominal_display');
-            const realInput = document.getElementById('nominal');
-            const clearBtn = document.getElementById('clearBtn');
+                // 2. Logic Input Format Rupiah
+                const displayInput = document.getElementById('nominal_display');
+                const realInput = document.getElementById('nominal');
+                const clearBtn = document.getElementById('clearBtn');
 
-            displayInput.addEventListener('input', function(e) {
-                // Hapus karakter selain angka
-                let value = this.value.replace(/\D/g, '');
+                displayInput.addEventListener('input', function(e) {
+                    // Hapus karakter selain angka
+                    let value = this.value.replace(/\D/g, '');
 
-                if (!value) {
-                    realInput.value = '';
-                    clearBtn.classList.add('hidden');
-                    return;
-                }
+                    if (!value) {
+                        realInput.value = '';
+                        clearBtn.classList.add('hidden');
+                        return;
+                    }
 
-                // Simpan nilai asli
-                realInput.value = value;
+                    // Simpan nilai asli
+                    realInput.value = value;
 
-                // Format ke Rupiah
-                this.value = new Intl.NumberFormat('id-ID').format(value);
+                    // Format ke Rupiah
+                    this.value = new Intl.NumberFormat('id-ID').format(value);
 
-                // Tampilkan tombol hapus
-                clearBtn.classList.remove('hidden');
-            });
-
-            // Tombol Hapus Input
-            clearBtn.addEventListener('click', () => {
-                displayInput.value = '';
-                realInput.value = '';
-                displayInput.focus();
-                clearBtn.classList.add('hidden');
-            });
-
-
-
-            // 4. Logic Submit Form
-            const form = document.getElementById('commitmentForm');
-            const submitBtn = document.getElementById('submitBtn');
-            const originalBtnContent = submitBtn.innerHTML;
-
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                // Validasi Sederhana
-                if (!realInput.value || parseInt(realInput.value) <= 0) {
-                    // Shake effect pada input jika kosong
-                    displayInput.classList.add('ring-4', 'ring-red-500/20', 'border-red-400');
-                    setTimeout(() => displayInput.classList.remove('ring-4', 'ring-red-500/20',
-                        'border-red-400'), 500);
-                    return;
-                }
-
-                // Ubah tombol jadi loading
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Mengirim...`;
-                submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
-
-                // Simulasi Request ke Server (Delay 1.5 detik)
-                setTimeout(() => {
-                    // Tampilkan Modal Sukses
-                    showModal();
-
-                    // Reset Form & Tombol
-                    form.reset();
-                    realInput.value = '';
-                    clearBtn.classList.add('hidden');
-
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalBtnContent;
-                    submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
-
-                }, 1500);
-            });
-        });
-
-        // Modal Logic
-        const modal = document.getElementById('thankyouModal');
-        const modalBackdrop = document.getElementById('modalBackdrop');
-        const modalPanel = document.getElementById('modalPanel');
-
-        function showModal() {
-            // Set nominal di modal
-            const nominal = document.getElementById('nominal').value;
-            document.getElementById('modalNominal').textContent = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(nominal);
-
-            modal.classList.remove('hidden');
-            // Animasi masuk
-            setTimeout(() => {
-                modalBackdrop.classList.remove('opacity-0');
-                modalPanel.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
-                modalPanel.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
-            }, 10);
-        }
-
-        function closeModal() {
-            // Animasi keluar
-            modalBackdrop.classList.add('opacity-0');
-            modalPanel.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
-            modalPanel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
-
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300); // Sesuaikan durasi transisi CSS
-        }
-
-
-        document.getElementById('submitBtn').addEventListener('click', async function() {
-            const nominal = document.getElementById('nominal').value;
-            const agreement = document.getElementById('agreement').checked;
-
-            if (!nominal || parseInt(nominal) <= 0) {
-                alert('Nominal kesanggupan wajib diisi');
-                return;
-            }
-
-            if (!agreement) {
-                alert('Anda harus menyetujui pernyataan kesanggupan');
-                return;
-            }
-
-            const url = "{{ route('wali.kesanggupan.submit', $kesanggupan->token) }}";
-
-            const formData = new FormData();
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-            formData.append('nominal', nominal);
-            formData.append('agreement', 1);
-
-            try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-                // Tambahkan ini untuk debugging
-                console.log("Token yang dikirim:", csrfToken);
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json', // Penting: Minta server merespon JSON
-                        'X-Requested-With': 'XMLHttpRequest' // Identifikasi request AJAX
-                    },
-                    credentials: 'same-origin',
-                    body: formData
-                    // Jangan set 'Content-Type': 'multipart/form-data' manual, biarkan browser yang mengaturnya agar boundary benar
+                    // Tampilkan tombol hapus
+                    clearBtn.classList.remove('hidden');
                 });
 
-                const result = await response.json();
+                // Tombol Hapus Input
+                clearBtn.addEventListener('click', () => {
+                    displayInput.value = '';
+                    realInput.value = '';
+                    displayInput.focus();
+                    clearBtn.classList.add('hidden');
+                });
 
-                if (!response.ok) {
-                    // Jika server merespon error (422/404/500), lempar result yang berisi message
-                    throw result;
+
+
+                // 4. Logic Submit Form
+                const form = document.getElementById('commitmentForm');
+                const submitBtn = document.getElementById('submitBtn');
+                const originalBtnContent = submitBtn.innerHTML;
+
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    // Validasi Sederhana
+                    if (!realInput.value || parseInt(realInput.value) <= 0) {
+                        // Shake effect pada input jika kosong
+                        displayInput.classList.add('ring-4', 'ring-red-500/20', 'border-red-400');
+                        setTimeout(() => displayInput.classList.remove('ring-4', 'ring-red-500/20',
+                            'border-red-400'), 500);
+                        return;
+                    }
+
+                    // Ubah tombol jadi loading
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Mengirim...`;
+                    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+                    // Simulasi Request ke Server (Delay 1.5 detik)
+                    setTimeout(() => {
+                        // Tampilkan Modal Sukses
+                        showModal();
+
+                        // Reset Form & Tombol
+                        form.reset();
+                        realInput.value = '';
+                        clearBtn.classList.add('hidden');
+
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnContent;
+                        submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+
+                    }, 1500);
+                });
+            });
+
+            // Modal Logic
+            const modal = document.getElementById('thankyouModal');
+            const modalBackdrop = document.getElementById('modalBackdrop');
+            const modalPanel = document.getElementById('modalPanel');
+
+            function showModal() {
+                // Set nominal di modal
+                const nominal = document.getElementById('nominal').value;
+                document.getElementById('modalNominal').textContent = new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(nominal);
+
+                modal.classList.remove('hidden');
+                // Animasi masuk
+                setTimeout(() => {
+                    modalBackdrop.classList.remove('opacity-0');
+                    modalPanel.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+                    modalPanel.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+                }, 10);
+            }
+
+            function closeModal() {
+                // Animasi keluar
+                modalBackdrop.classList.add('opacity-0');
+                modalPanel.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
+                modalPanel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300); // Sesuaikan durasi transisi CSS
+            }
+
+
+            document.getElementById('submitBtn').addEventListener('click', async function() {
+                const nominal = document.getElementById('nominal').value;
+                const agreement = document.getElementById('agreement').checked;
+
+                if (!nominal || parseInt(nominal) <= 0) {
+                    alert('Nominal kesanggupan wajib diisi');
+                    return;
                 }
 
-                alert('Terima kasih 🙏 Kesanggupan pembayaran berhasil dikirim');
-                document.getElementById('submitBtn').disabled = true;
+                if (!agreement) {
+                    alert('Anda harus menyetujui pernyataan kesanggupan');
+                    return;
+                }
 
-            } catch (error) {
-                console.error(error);
-
-                // Tampilkan pesan error spesifik dari server jika ada
-                const errorMessage = error.message || error.errors?.nominal?.[0] || 'Terjadi kesalahan sistem';
-                alert(errorMessage);
-            }
-        });
-    </script>
-</body>
-
-</html>
+                fetch("{{ route('wali.kesanggupan.submit', $kesanggupan->token) }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                .getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            nominal: nominal,
+                            agreement: agreement,
+                        })
+                    }).then(async response => {
+                        const data = await response.json();
+                        if (!response.ok) throw data;
+                        return data;
+                    })
+                    .then(data => {
+                        showToast(data.message ?? 'Berhasil', 'success');
+                        showModal('thankyouModal');
+                    })
+                    .catch(error => {
+                        showToast(error.message ?? 'Terjadi kesalahan', 'error');
+                    });
+            });
+        </script>
+    @endpush
+@endsection

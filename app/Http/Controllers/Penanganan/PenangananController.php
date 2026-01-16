@@ -293,12 +293,12 @@ class PenangananController extends Controller
         $kesanggupan = PenangananKesanggupan::where('token', $token)->firstOrFail();
 
         // optional: cegah submit ulang
-        if ($kesanggupan->nominal !== null) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kesanggupan sudah pernah dikirim'
-            ], 422);
-        }
+        // if ($kesanggupan->nominal !== null) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Kesanggupan sudah pernah dikirim'
+        //     ], 422);
+        // }
 
         $kesanggupan->update([
             'nominal' => $data['nominal']
