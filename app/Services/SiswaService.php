@@ -406,11 +406,13 @@ class SiswaService
         string $nomor
     ): array {
         $response = Http::withHeaders([
-            'accept' => 'application/json',
+            'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-            'Cookie' => config('services.sisda.cookie'),
-        ])->post(
-                "{$this->baseUrl}/update_telepon/{$idperson}",
+        ])->withCookies([
+                    'SWN' => env('API_SWN'),
+                ], 'api.daruttaqwa.or.id')
+            ->post(
+                'https://api.daruttaqwa.or.id/sisda/v1/update_telepon/' . $idperson,
                 [
                     'pemilik' => $pemilik,
                     'nomor' => $nomor,
@@ -423,7 +425,11 @@ class SiswaService
             );
         }
 
-        return $response->json();
+        return [
+            'status' => true,
+            'data' => $response->json(),
+        ];
     }
+
 
 }
