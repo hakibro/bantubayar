@@ -232,7 +232,6 @@
                         class="w-full border rounded-lg px-3 py-2 text-sm focus:ring focus:ring-blue-200">
                 </div>
 
-                <!-- TODO: kirim surat pernyataan rekomendasi ke wali -->
 
                 {{-- RATING WALI MURID --}}
                 <div x-show="hasil === 'lunas' || hasil === 'isi_saldo' || hasil === 'tidak_ada_respon'"

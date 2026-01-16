@@ -67,9 +67,19 @@
                                     </span>
                                 </div>
                             @endif
+                            <!-- TODO: tambahkan info kesanggupan wali: tanggal dan nominal -->
+                            <!-- TODO: beri warna/simbol khusus jika kesanggupan wali kurang dari 1 hari -->
+
                         </div>
                     </div>
                     <!-- Main Action Buttons -->
+                    <!-- TODO: kembangkan pembatasan tindak lanjut dan hasil jika sudah diberi apresiasi -->
+                    @if (
+                        $penangananTerakhir &&
+                            $penangananTerakhir->hasil === 'lunas' &&
+                            $penangananTerakhir->updated_at->isSameMonth(now()))
+                        Tidak boleh ditangani lagi sampai bulan depan
+                    @endif
                     <div class="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4 mt-6 md:mt-8">
                         <button onclick="openModal('{{ $siswa->phone ? 'action' : 'updatehp' }}')"
                             @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') @if ($penangananTerakhir->id_petugas !== auth()->id()) disabled
@@ -160,6 +170,10 @@
                                         <h4 class="font-bold text-md text-gray-800">
                                             {{ $riwayatPenanganan->petugas->name }}
                                         </h4>
+
+                                        <p class="text-xs text-textMuted">
+                                            {{ $riwayatPenanganan->created_at->diffForHumans() }}
+                                        </p>
 
 
                                         {{-- Rating --}}

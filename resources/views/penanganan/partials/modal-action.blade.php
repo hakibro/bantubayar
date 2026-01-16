@@ -184,6 +184,7 @@
 
 
         function kirimTunggakan() {
+            // TODO: gunakan url khusus menampilkan detail pembayaran siswa jika diakses wali, menuju penanganan jika diakses petugas
             const linkPembayaran = @json(route('penanganan.show', $siswa->id));
             const detailTunggakan = formatTunggakanPerPeriode(@json($siswa->getKategoriBelumLunas()));
             const pesan =

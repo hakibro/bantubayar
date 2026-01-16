@@ -113,7 +113,7 @@ class PenangananController extends Controller
         $penanganan = Penanganan::findOrFail($data['id_penanganan']);
         $siswa = Siswa::findOrFail($penanganan->id_siswa);
 
-        // TODO: Jika hasil penanganan lunas, pastikan tidak ada tunggakan
+        // Jika hasil penanganan lunas, pastikan tidak ada tunggakan
         if ($data['hasil'] === 'lunas') {
             if ($siswa->getTotalTunggakan() < 0) {
                 return response()->json([
@@ -122,7 +122,7 @@ class PenangananController extends Controller
                 ], 400);
             }
         }
-        // TODO: Jika hasil = cicilan, pastikan total tunggakan saat ini < total tunggakan saat penanganan dibuat, ambil kategori pembayaran yang sudah lunas
+        // Jika hasil = cicilan, pastikan total tunggakan saat ini < total tunggakan saat penanganan dibuat, ambil kategori pembayaran yang sudah lunas
         if ($data['hasil'] === 'cicilan') {
             if ($siswa->getTotalTunggakan() >= $penanganan->getTotalTunggakan()) {
                 return response()->json([
@@ -131,7 +131,7 @@ class PenangananController extends Controller
                 ], 400);
             }
         }
-        // TODO: Jika hasil = isi_saldo, pastikan saldo saat ini > saldo saat penanganan dibuat
+        // Jika hasil = isi_saldo, pastikan saldo saat ini > saldo saat penanganan dibuat
         if ($data['hasil'] === 'isi_saldo') {
             if ($siswa->saldo->saldo <= $penanganan->saldo) {
                 return response()->json([
@@ -142,7 +142,7 @@ class PenangananController extends Controller
         }
 
 
-        // TODO: Jika hasil = tidak_ada_respon atau hp_tidak aktif, pastikan tindak lanjut minimal 3 kali,
+        // Jika hasil = tidak_ada_respon atau hp_tidak aktif, pastikan tindak lanjut minimal 3 kali,
 
         if (in_array($data['hasil'], ['tidak_ada_respon', 'hp_tidak_aktif'])) {
 

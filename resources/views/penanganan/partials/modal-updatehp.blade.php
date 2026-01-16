@@ -87,7 +87,6 @@
                 phone: phone
             });
 
-            // TODO: kirim ke backend
             fetch("{{ route('penanganan.update_phone') }}", {
                     method: 'POST',
                     headers: {
