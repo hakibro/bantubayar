@@ -17,7 +17,7 @@
                     Tindakan</label>
                 <div class="bg-gray-100 p-1 rounded-xl flex">
                     <button id="btnChat" onclick="toggleActionType('chat')"
-                        class="flex-1 py-2 rounded-lg text-sm font-bold bg-white text-primary shadow-sm transition">Chat</button>
+                        class="flex-1 py-2 rounded-lg text-sm font-bold bg-primary text-white shadow-sm transition">Chat</button>
                     <button id="btnPhone" onclick="toggleActionType('phone')"
                         class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-white hover:shadow-sm transition">Telepon</button>
                 </div>
@@ -29,10 +29,18 @@
                     class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200">
                     <i class="fas fa-comment text-xl"></i> Hubungi Wali
                 </button>
-                <button id="btnSendPayment" onclick="kirimTunggakan()"
-                    class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200">
-                    <i class="fas fa-paper-plane text-xl"></i> Kirim Tunggakan
-                </button>
+
+                @if ($siswa->getTotalTunggakan() < 0)
+                    <button id="btnSendPayment" onclick="kirimTunggakan()"
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200">
+                        <i class="fas fa-paper-plane text-xl"></i> Kirim Tunggakan
+                    </button>
+                @else
+                    <button id="btnSendAppreciation" onclick="kirimApresiasi()"
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200">
+                        <i class="fas fa-paper-plane text-xl"></i> Kirim Apresiasi
+                    </button>
+                @endif
 
             </div>
 
@@ -93,14 +101,14 @@
             const btnContact = document.getElementById('btnContactAction');
 
             if (type === 'chat') {
-                btnChat.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-white text-primary shadow-sm transition";
+                btnChat.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-primary text-white shadow-sm transition";
                 btnPhone.className =
                     "flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-white hover:shadow-sm transition";
                 btnContact.innerHTML = '<i class="fas fa-comment text-xl"></i> Hubungi Wali';
                 btnContact.className =
                     "w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200";
             } else {
-                btnPhone.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-white text-primary shadow-sm transition";
+                btnPhone.className = "flex-1 py-2 rounded-lg text-sm font-bold bg-primary text-white shadow-sm transition";
                 btnChat.className =
                     "flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-white hover:shadow-sm transition";
                 btnContact.innerHTML = '<i class="fas fa-phone text-xl"></i> Hubungi Wali';
@@ -176,8 +184,6 @@
 
 
         function kirimTunggakan() {
-            // TODO buat link detail tunggakan siswa untuk dilihat oleh wali, menuju penanganan jika petugas
-            // TODO pengembangan selanjutnya link berupa kode acak
             const linkPembayaran = @json(route('penanganan.show', $siswa->id));
             const detailTunggakan = formatTunggakanPerPeriode(@json($siswa->getKategoriBelumLunas()));
             const pesan =
@@ -190,6 +196,15 @@
                 `Terima kasih atas perhatian dan kerjasamanya`;
 
             sendWhatsapp(pesan);
+        }
+
+        function kirimApresiasi() {
+            const pesan = `Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} \n\n` +
+                `Kami mengucapkan terima kasih atas pembayaran yang telah dilakukan. Dengan ini kami informasikan bahwa *pembayaran Anda telah kami terima dan dinyatakan LUNAS.* \n` +
+                `Semoga kerja sama yang baik ini dapat terus terjalin.\n\n` +
+                `Wassalamu’alaikum warahmatullahi wabarakatuh.`;
+            sendWhatsapp(pesan);
+
         }
 
 

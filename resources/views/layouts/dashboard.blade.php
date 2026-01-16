@@ -65,7 +65,7 @@
     <div class="flex h-screen">
         @php
             $navActive = 'bg-primaryLight text-primary font-semibold';
-            $navInactive = 'hover:bg-gray-50 hover:text-primary transition';
+            $navInactive = 'hover:bg-gray-50 text-gray-500 hover:text-primary transition';
         @endphp
 
         <nav

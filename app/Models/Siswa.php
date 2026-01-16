@@ -94,8 +94,6 @@ class Siswa extends Model
         return $this->saldo?->saldo ?? 0;
     }
 
-
-
     public function pembayaran()
     {
         return $this->hasMany(SiswaPembayaran::class, 'siswa_id');

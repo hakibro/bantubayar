@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+@extends('layouts.container')
 @section('content')
     <div class="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden relative animate-fade-in">
 
