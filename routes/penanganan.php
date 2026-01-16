@@ -31,5 +31,12 @@ Route::prefix('wali')->name('wali.')->group(function () {
 });
 
 
+// test api update telepon
+
+Route::get('/test-api-phone', function () {
+    return view('penanganan.apiPhone');
+});
 
 
+Route::post('/test-api-phone', [App\Http\Controllers\ApiPhoneController::class, 'update'])
+    ->name('api.phone');

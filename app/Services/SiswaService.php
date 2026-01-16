@@ -401,16 +401,16 @@ class SiswaService
     }
 
     public function updateTelepon(
-        string $nis,
+        string $idperson,
         string $pemilik,
         string $nomor
     ): array {
         $response = Http::withHeaders([
-            'Accept' => 'application/json',
+            'accept' => 'application/json',
             'Content-Type' => 'application/json',
             'Cookie' => config('services.sisda.cookie'),
         ])->post(
-                "{$this->baseUrl}/update_telepon/{$nis}",
+                "{$this->baseUrl}/update_telepon/{$idperson}",
                 [
                     'pemilik' => $pemilik,
                     'nomor' => $nomor,

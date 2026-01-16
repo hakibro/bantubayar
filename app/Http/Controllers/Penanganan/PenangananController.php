@@ -216,29 +216,27 @@ class PenangananController extends Controller
 
         });
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Aksi Penanganan berhasil disimpan',
-        ]);
+
 
         // Update via SISDA API
-        // try {
-        //     $result = $siswaService->updateTelepon(
-        //         $siswa->idperson,
-        //         $data['wali'],
-        //         $data['phone']
-        //     );
+        try {
+            $result = $siswaService->updateTelepon(
+                $siswa->idperson,
+                $data['wali'],
+                $data['phone']
+            );
 
-        //     return response()->json([
-        //         'success' => true,
-        //         'data' => $result,
-        //     ]);
-        // } catch (\Throwable $e) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => $e->getMessage(),
-        //     ], 500);
-        // }
+            return response()->json([
+                'success' => true,
+                'message' => 'Berhasil menyimpan No. HP Wali ' . $siswa->nama . ': ' . $data['phone'] . ' - ' . $data['wali'],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+
     }
 
 
