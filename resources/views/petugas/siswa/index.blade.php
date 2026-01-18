@@ -334,7 +334,7 @@
 
                 <tbody>
                     @forelse ($siswa as $item)
-                        @php $belumLunas = $item->getKategoriBelumLunas(); @endphp
+                        @php $belumLunas = $item->getTotalTunggakan(); @endphp
 
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-4 py-3">{{ $item->idperson }}</td>
