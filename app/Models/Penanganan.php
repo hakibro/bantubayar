@@ -46,6 +46,10 @@ class Penanganan extends Model
     {
         return $this->hasMany(PenangananKesanggupan::class);
     }
+    public function kesanggupanTerakhir()
+    {
+        return $this->hasOne(PenangananKesanggupan::class)->latestOfMany();
+    }
     public function histories()
     {
         return $this->hasMany(PenangananHistory::class);

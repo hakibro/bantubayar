@@ -56,7 +56,7 @@
                                 <i class="fas fa-wallet text-gray-400"></i>
                                 <span>Saldo saat ini:</span>
                                 <span class="font-semibold text-gray-700"> Rp
-                                    {{ number_format($siswa->saldo?->saldo, 0, ',', '.') }}
+                                    {{ number_format($siswa->getsaldo, 0, ',', '.') }}
                                 </span>
                             </div>
                             @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
@@ -67,9 +67,31 @@
                                     </span>
                                 </div>
                             @endif
-                            <!-- TODO: tambahkan info kesanggupan wali: tanggal dan nominal -->
-                            <!-- TODO: beri warna/simbol khusus jika kesanggupan wali kurang dari 1 hari -->
 
+
+                            @if ($penangananTerakhir && $penangananTerakhir->kesanggupanTerakhir)
+                                @if ($penangananTerakhir->kesanggupanTerakhir->nominal)
+
+                                    <div
+                                        class="inline-flex flex-col py-2 px-4 bg-yellow-100 mt-2 rounded-lg text-xs text-gray-500 font-semibold">
+                                        Sanggup membayar sebelum: {{ $penangananTerakhir->kesanggupanTerakhir->tanggal }}
+
+
+                                        <span>
+                                            Dengan nominal: Rp
+                                            {{ number_format($penangananTerakhir->kesanggupanTerakhir->nominal, 0, ',', '.') }}
+                                        </span>
+                                        <!-- TODO: beri warna/simbol khusus jika kesanggupan wali kurang dari 1 hari -->
+
+
+                                    </div>
+                                @else
+                                    <span
+                                        class="inline-flex flex-col py-2 px-4 bg-red-400 mt-2 rounded-lg text-xs text-white font-semibold">Wali
+                                        Belum Mengisi Nominal Kesanggupan</span>
+
+                                @endif
+                            @endif
                         </div>
                     </div>
                     <!-- Main Action Buttons -->

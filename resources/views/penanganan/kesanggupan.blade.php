@@ -99,6 +99,7 @@
 
                         <!-- Input Tampilan -->
                         <input type="text" id="nominal_display" required placeholder="0"
+                            value="{{ number_format($kesanggupan->nominal, 0, ',', '.') }}"
                             class="w-full pl-12 pr-12 py-4 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all-300 outline-none text-gray-800 font-medium text-lg placeholder-gray-400">
 
                         <!-- Tombol Hapus -->

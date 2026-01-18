@@ -1,7 +1,7 @@
 <!-- 1. Modal Tindak Lanjut (Action) -->
 <div id="modalAction"
     class="fixed inset-0 bg-black/50 z-50 hidden flex items-end md:items-center justify-center transition-opacity">
-    <div class="bg-white w-full md:w-[500px] md:rounded-3xl rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 max-h-[90vh] md:h-auto overflow-y-auto"
+    <div class="bg-white w-full md:w-125 md:rounded-3xl rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 max-h-[90vh] md:h-auto overflow-y-auto"
         id="cardAction">
         <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6 md:hidden"></div>
         <div class="flex justify-between items-center mb-6">
