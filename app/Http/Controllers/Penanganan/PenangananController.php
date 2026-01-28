@@ -17,33 +17,12 @@ class PenangananController extends Controller
 {
     public function index()
     {
-        $lembagaUser = auth()->user()->lembaga;
-        $query = Penanganan::with(['siswa', 'petugas'])
-            ->whereIn('id', function ($query) {
-                $query->selectRaw('MAX(id)')
-                    ->from('penanganan')
-                    ->whereNull('deleted_at')
-                    ->groupBy('id_siswa');
-            });
+        $data = auth()->user()
+            ->penanganan()
+            ->with('siswa')
+            ->orderBy('status', 'asc')
+            ->paginate(20);
 
-        if (Auth::user()->hasRole('petugas')) {
-            $data = $query->whereHas('siswa.petugas', function ($q) {
-                $q->where('users.id', Auth::id());
-            })
-                ->orderBy('created_at', 'desc')
-                ->paginate(20);
-
-        } else {
-            $data = $query->whereHas('siswa', function ($q) use ($lembagaUser) {
-                $q->where(function ($sub) use ($lembagaUser) {
-                    $sub->where('UnitFormal', $lembagaUser)
-                        ->orWhere('AsramaPondok', $lembagaUser)
-                        ->orWhere('TingkatDiniyah', $lembagaUser);
-                });
-            })
-                ->orderBy('created_at', 'desc')
-                ->paginate(20);
-        }
         return view('penanganan.index', compact('data'));
     }
 

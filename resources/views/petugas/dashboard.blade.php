@@ -24,13 +24,6 @@
                 </p>
             </div>
 
-            <!-- Menunggu Tindak Lanjut -->
-            <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                <p class="text-sm text-indigo-700">Menunggu Tindak Lanjut</p>
-                <p class="text-2xl font-bold text-indigo-900">
-                    {{ $summary['menunggu_tindak_lanjut'] }}
-                </p>
-            </div>
 
             <!-- Selesai -->
             <div class="bg-green-50 border border-green-200 rounded-xl p-4">
@@ -57,62 +50,65 @@
                 Tugas Aktif
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-gray-600">
-                        <tr>
-                            <th class="px-4 py-3 text-left">Siswa</th>
-                            <th class="px-4 py-3 text-left">Jenis</th>
-                            <th class="px-4 py-3 text-left">Status</th>
-                            <th class="px-4 py-3 text-left">Menunggu</th>
-                            <th class="px-4 py-3 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y">
-                        @forelse ($tugasAktif as $item)
-                            <tr>
-                                <td class="px-4 py-3">
-                                    <div class="font-medium text-gray-800">
-                                        {{ $item->siswa->nama ?? '-' }}
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        {{ $item->siswa->idperson ?? '' }}
-                                    </div>
-                                </td>
-                                <td class="px-4 py-3 capitalize">
+            <div class="p-4 space-y-4">
+                @forelse ($tugasAktif as $item)
+                    <div
+                        class="rounded-2xl border border-gray-100 bg-white
+                       p-5
+                       hover:shadow-md hover:-translate-y-0.5
+                       transition-all duration-200">
+
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+                            {{-- LEFT : DATA --}}
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-semibold text-gray-900 truncate">
+                                    {{ $item->siswa->nama ?? '-' }}
+                                </h3>
+
+                                <p class="text-xs text-gray-500 mt-0.5">
+                                    {{ $item->siswa->idperson ?? '' }}
+                                </p>
+
+                                <p class="mt-2 text-sm text-gray-700 capitalize">
                                     {{ str_replace('_', ' ', $item->jenis_penanganan) }}
-                                </td>
-                                <td class="px-4 py-3">
+                                </p>
+
+                                <div class="mt-2 flex flex-wrap items-center gap-2">
                                     <span
                                         class="inline-flex px-2 py-1 rounded-full text-xs font-medium
-    @if ($item->status == 'menunggu_respon') bg-yellow-100 text-yellow-800
-    @elseif($item->status == 'menunggu_tindak_lanjut') bg-indigo-100 text-indigo-800
-    @elseif($item->status == 'selesai') bg-green-100 text-green-800
-    @else bg-gray-100 text-gray-700 @endif">
+                                @if ($item->status == 'menunggu_respon') bg-yellow-100 text-yellow-800
+                                @elseif($item->status == 'menunggu_tindak_lanjut') bg-indigo-100 text-indigo-800
+                                @elseif($item->status == 'selesai') bg-green-100 text-green-800
+                                @else bg-gray-100 text-gray-700 @endif">
                                         {{ ucwords(str_replace('_', ' ', $item->status)) }}
                                     </span>
 
+                                    <span class="text-xs text-gray-500">
+                                        Menunggu {{ $item->lama_menunggu }}
+                                    </span>
+                                </div>
+                            </div>
 
-                                </td>
-                                <td class="px-4 py-3 text-gray-600">
-                                    {{ $item->lama_menunggu }}
-                                </td>
-                                <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('penanganan.show', $item->siswa->id) }}"
-                                        class="text-blue-600 hover:underline">
-                                        Lanjutkan
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-4 py-6 text-center text-gray-500">
-                                    Tidak ada tugas aktif
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                            {{-- RIGHT : ACTION --}}
+                            <div class="shrink-0">
+                                <a href="{{ route('penanganan.show', $item->siswa->id) }}"
+                                    class="inline-flex items-center justify-center
+                                  px-4 py-2 text-sm font-medium
+                                  bg-blue-50 text-blue-600
+                                  rounded-xl
+                                  hover:bg-blue-100 transition">
+                                    Lanjutkan
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center text-gray-500 py-6">
+                        Tidak ada tugas aktif
+                    </div>
+                @endforelse
             </div>
         </div>
 

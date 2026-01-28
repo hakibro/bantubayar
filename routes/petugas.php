@@ -12,11 +12,6 @@ Route::middleware(['auth', 'role:bendahara|petugas'])->prefix('petugas')->name('
     // Dashboard Petugas
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-
-
-
-
-
     // -------------------------------------------- Route Lama --------------------------------------------
     // Data Siswa dan Penanganan
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa');

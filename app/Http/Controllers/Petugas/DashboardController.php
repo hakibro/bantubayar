@@ -12,17 +12,15 @@ class DashboardController extends Controller
 
     public function index()
     {
-        $user = Auth::user();
-        $lembagaUser = auth()->user()->lembaga;
 
 
-        // BASE QUERY: SELALU Penanganan
-        if ($user->hasRole(['petugas', 'bendahara'])) {
-            // HANYA penanganan milik petugas login
-            $scope = Penanganan::whereHas('petugas', function ($q) use ($user) {
-                $q->where('users.id', $user->id);
-            });
-        }
+
+        // HANYA penanganan milik petugas login
+        $scope = auth()->user()
+            ->penanganan()
+            ->with('siswa');
+
+
         $summary = [
             'total' => (clone $scope)->count(),
 

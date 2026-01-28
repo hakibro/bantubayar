@@ -55,4 +55,9 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function penanganan()
+    {
+        return $this->hasMany(Penanganan::class, 'id_petugas');
+    }
+
 }
