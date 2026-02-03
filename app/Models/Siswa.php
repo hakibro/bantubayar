@@ -71,6 +71,13 @@ class Siswa extends Model
             ->where('status', 'selesai')
             ->orderByDesc('created_at')->get();
     }
+    public function penangananLunas()
+    {
+        return $this->penanganan()
+            ->where(['status' => 'selesai', 'hasil' => 'lunas'])
+            ->latest()
+            ->first();
+    }
 
     public function sedangDitangani(): bool
     {

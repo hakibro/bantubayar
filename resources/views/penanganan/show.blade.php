@@ -56,7 +56,7 @@
                                 <i class="fas fa-wallet text-gray-400"></i>
                                 <span>Saldo saat ini:</span>
                                 <span class="font-semibold text-gray-700"> Rp
-                                    {{ number_format($siswa->getsaldo, 0, ',', '.') }}
+                                    {{ number_format($siswa->saldoNominal, 0, ',', '.') }}
                                 </span>
                             </div>
                             @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
@@ -96,37 +96,40 @@
                     </div>
                     <!-- Main Action Buttons -->
                     <!-- TODO: kembangkan pembatasan tindak lanjut dan hasil jika sudah diberi apresiasi -->
-                    @if ($penangananTerakhir && $penangananTerakhir->hasil === 'lunas' && $siswa->getTotalTunggakan() >= 0)
-                        Tidak boleh ditangani lagi sampai bulan depan
-                    @endif
-                    <div class="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4 mt-6 md:mt-8">
-                        <button onclick="openModal('{{ $siswa->phone ? 'action' : 'updatehp' }}')"
-                            @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') @if ($penangananTerakhir->id_petugas !== auth()->id()) disabled
+                    @if ($penangananTerakhir && $penangananTerakhir->hasil === 'lunas' && $siswa->getTotalTunggakan() == 0)
+                        <span class="text-gray-400 text-sm italic"> Sudah ditangani oleh
+                            {{ $penangananTerakhir->petugas->name }}.</span>
+                    @else
+                        <div class="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4 mt-6 md:mt-8">
+                            <button onclick="openModal('{{ $siswa->phone ? 'action' : 'updatehp' }}')"
+                                @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') @if ($penangananTerakhir->id_petugas !== auth()->id()) disabled
         title="Anda tidak berhak menindaklanjuti"
         class="opacity-50 cursor-not-allowed" @endif
-                            @endif
-                            class="w-full bg-primary hover:bg-blue-700 text-white
+                                @endif
+                                class="w-full bg-primary hover:bg-blue-700 text-white
                py-3 px-6 md:py-4 rounded-2xl font-bold
                shadow-md shadow-blue-200
                transition active:scale-95
                flex items-center justify-center gap-2 text-sm md:text-base">
-                            <i class="fas fa-tasks"></i>Tindak Lanjut
-                        </button>
+                                <i class="fas fa-tasks"></i>Tindak Lanjut
+                            </button>
 
-                        <button onclick="openModal('result')"
-                            @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') @if ($penangananTerakhir->id_petugas !== auth()->id()) disabled
+                            <button onclick="openModal('result')"
+                                @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai') @if ($penangananTerakhir->id_petugas !== auth()->id()) disabled
         title="Anda tidak berhak menindaklanjuti"
         class="opacity-50 cursor-not-allowed" @endif
-                            @endif
-                            class="w-full bg-white border-2 border-gray-300 text-gray-700
+                                @endif
+                                class="w-full bg-white border-2 border-gray-300 text-gray-700
                hover:border-gray-400 hover:bg-gray-50
                py-3 px-6 md:py-4 rounded-2xl font-bold
                transition active:scale-95
                flex items-center justify-center gap-2 text-sm md:text-base">
-                            <i class="fas fa-check-double"></i>
-                            Hasil
-                        </button>
-                    </div>
+                                <i class="fas fa-check-double"></i>
+                                Hasil
+                            </button>
+                        </div>
+                    @endif
+
 
                 </div>
 
@@ -158,8 +161,7 @@
                                 <p class="text-sm text-gray-400 italic">Belum ada riwayat aksi.</p>
                             @endif
                         @else
-                            <p class="text-sm text-gray-400 italic">Belum ada penanganan. </p>
-
+                            -
                         @endif
                     </div>
                 </div>

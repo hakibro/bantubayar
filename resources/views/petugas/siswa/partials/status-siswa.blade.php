@@ -13,5 +13,10 @@
                 Lunas
             @endif
         </span>
+        @if ($item->penangananLunas() && $item->getTotalTunggakan() == 0)
+            <span class="text-gray-500 text-sm italic ml-2">
+                telah ditangani oleh {{ $item->penangananLunas()->petugas->name }}
+            </span>
+        @endif
 
     </div>
