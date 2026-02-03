@@ -3,7 +3,7 @@
 @section('title', 'Dashboard Bendahara')
 
 @section('content')
-    <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div class="max-w-7xl mx-auto px-4 py-6 space-y-6 bg-gray-100">
 
         {{-- ================= SUMMARY CARDS ================= --}}
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -45,71 +45,57 @@
 
 
         {{-- ================= TUGAS AKTIF ================= --}}
-        <div class="bg-white rounded-xl shadow border">
-            <div class="px-5 py-4 border-b font-semibold text-gray-700">
-                Tugas Aktif
-            </div>
+        <div class="px-6 font-semibold text-gray-800">
+            Tugas Aktif
+        </div>
 
-            <div class="p-4 space-y-4">
-                @forelse ($tugasAktif as $item)
-                    <div
-                        class="rounded-2xl border border-gray-100 bg-white
-                       p-5
-                       hover:shadow-md hover:-translate-y-0.5
-                       transition-all duration-200">
+        <div class="p-4 space-y-4">
+            @forelse ($tugasAktif as $item)
+                <div class="rounded-2xl border border-gray-100 bg-white p-4
+                   hover:shadow-md transition">
 
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center justify-between gap-4">
 
-                            {{-- LEFT : DATA --}}
-                            <div class="flex-1 min-w-0">
+                        {{-- LEFT --}}
+                        <div class="flex items-center gap-3 min-w-0">
+
+
+                            <div class="min-w-0">
+                                <span
+                                    class="px-2.5 py-1 rounded-full text-xs font-medium
+                               bg-gray-100 text-gray-700">
+                                    {{ ucwords(str_replace('_', ' ', $item->status)) }}
+                                </span>
                                 <h3 class="font-semibold text-gray-900 truncate">
                                     {{ $item->siswa->nama ?? '-' }}
                                 </h3>
-
-                                <p class="text-xs text-gray-500 mt-0.5">
-                                    {{ $item->siswa->idperson ?? '' }}
-                                </p>
-
-                                <p class="mt-2 text-sm text-gray-700 capitalize">
+                                <p class="text-xs text-gray-500">
                                     {{ str_replace('_', ' ', $item->jenis_penanganan) }}
+                                    <span class="mx-1">•</span>
+                                    {{ $item->lama_menunggu }}
                                 </p>
-
-                                <div class="mt-2 flex flex-wrap items-center gap-2">
-                                    <span
-                                        class="inline-flex px-2 py-1 rounded-full text-xs font-medium
-                                @if ($item->status == 'menunggu_respon') bg-yellow-100 text-yellow-800
-                                @elseif($item->status == 'menunggu_tindak_lanjut') bg-indigo-100 text-indigo-800
-                                @elseif($item->status == 'selesai') bg-green-100 text-green-800
-                                @else bg-gray-100 text-gray-700 @endif">
-                                        {{ ucwords(str_replace('_', ' ', $item->status)) }}
-                                    </span>
-
-                                    <span class="text-xs text-gray-500">
-                                        Menunggu {{ $item->lama_menunggu }}
-                                    </span>
-                                </div>
                             </div>
-
-                            {{-- RIGHT : ACTION --}}
-                            <div class="shrink-0">
-                                <a href="{{ route('penanganan.show', $item->siswa->id) }}"
-                                    class="inline-flex items-center justify-center
-                                  px-4 py-2 text-sm font-medium
-                                  bg-blue-50 text-blue-600
-                                  rounded-xl
-                                  hover:bg-blue-100 transition">
-                                    Lanjutkan
-                                </a>
-                            </div>
-
                         </div>
+
+                        {{-- RIGHT --}}
+                        <div class="flex items-center gap-2 shrink-0">
+
+
+                            <a href="{{ route('penanganan.show', $item->siswa->id) }}"
+                                class="px-3 py-2 text-sm font-medium
+                              bg-blue-600 text-white rounded-xl
+                              hover:bg-blue-700 transition">
+                                Lanjutkan
+                            </a>
+                        </div>
+
                     </div>
-                @empty
-                    <div class="text-center text-gray-500 py-6">
-                        Tidak ada tugas aktif
-                    </div>
-                @endforelse
-            </div>
+                </div>
+            @empty
+                <div class="text-center text-gray-500 py-6">
+                    Tidak ada tugas aktif
+                </div>
+            @endforelse
         </div>
 
         {{-- ================= PENANGANAN TERLAMBAT ================= --}}

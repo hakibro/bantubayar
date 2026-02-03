@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use App\Models\SiswaSaldo;
 
 class SyncPembayaranSiswaJob implements ShouldQueue
 {
@@ -47,20 +48,31 @@ class SyncPembayaranSiswaJob implements ShouldQueue
                     return;
                 }
 
-                // result['data'] adalah array siswa (1 siswa per API)
-                $periods = $result['data'][0]['periods'] ?? [];
+                // 1. Ambil data utama (biasanya di index 0)
+                $apiDataSiswa = $result['data'][0] ?? null;
 
-                foreach ($periods as $period) {
+                if ($apiDataSiswa) {
+                    // --- PROSES UPDATE SALDO (TAMBAHAN) ---
+                    if (isset($apiDataSiswa['saldo'])) {
+                        SiswaSaldo::updateOrCreate(
+                            ['siswa_id' => $siswa->id],
+                            ['saldo' => (float) $apiDataSiswa['saldo']]
+                        );
+                    }
 
-                    SiswaPembayaran::updateOrCreate(
-                        [
-                            'siswa_id' => $siswa->id,
-                            'periode' => $period['period_id'],
-                        ],
-                        [
-                            'data' => $period,  // simpan 1 periode sebagai JSON
-                        ]
-                    );
+                    // --- PROSES UPDATE PEMBAYARAN PER PERIODE ---
+                    $periods = $apiDataSiswa['periods'] ?? [];
+                    foreach ($periods as $period) {
+                        SiswaPembayaran::updateOrCreate(
+                            [
+                                'siswa_id' => $siswa->id,
+                                'periode' => $period['period_id'],
+                            ],
+                            [
+                                'data' => $period,
+                            ]
+                        );
+                    }
                 }
 
                 Log::info('SyncPembayaranSiswaJob success for ' . $this->idperson);

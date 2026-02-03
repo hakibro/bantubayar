@@ -96,10 +96,7 @@
                     </div>
                     <!-- Main Action Buttons -->
                     <!-- TODO: kembangkan pembatasan tindak lanjut dan hasil jika sudah diberi apresiasi -->
-                    @if (
-                        $penangananTerakhir &&
-                            $penangananTerakhir->hasil === 'lunas' &&
-                            $penangananTerakhir->updated_at->isSameMonth(now()))
+                    @if ($penangananTerakhir && $penangananTerakhir->hasil === 'lunas' && $siswa->getTotalTunggakan() >= 0)
                         Tidak boleh ditangani lagi sampai bulan depan
                     @endif
                     <div class="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4 mt-6 md:mt-8">
@@ -164,10 +161,6 @@
                             <p class="text-sm text-gray-400 italic">Belum ada penanganan. </p>
 
                         @endif
-
-
-
-
                     </div>
                 </div>
             </div>
@@ -175,8 +168,6 @@
             <div class="bg-white rounded-3xl shadow-sm p-6 border border-gray-100">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-lg font-bold">Riwayat Penanganan</h3>
-                    <button onclick="openModal('detail')" class="text-xs text-primary font-semibold hover:underline">Lihat
-                        Semua</button>
                 </div>
 
                 <div class="space-y-5" id="historyList">
@@ -298,6 +289,22 @@
                 content.classList.toggle('active');
                 icon.classList.toggle('rotate-180');
             }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const hasSynced = localStorage.getItem('synced_siswa_{{ $siswa->id }}');
+
+                if (!hasSynced) {
+                    // Set flag agar tidak loop sebelum fungsi dipanggil
+                    localStorage.setItem('synced_siswa_{{ $siswa->id }}', 'true');
+
+                    // Panggil fungsi (pastikan nama sudah sama: syncPembayaran)
+                    syncPembayaran({{ $siswa->id }});
+                } else {
+                    // Opsional: Hapus flag setelah beberapa saat jika ingin bisa sync lagi nanti
+                    // localStorage.removeItem('synced_siswa_{{ $siswa->id }}');
+                    console.log(localStorage.getItem('synced_siswa_{{ $siswa->id }}'));
+                }
+            });
         </script>
     @endpush
 
