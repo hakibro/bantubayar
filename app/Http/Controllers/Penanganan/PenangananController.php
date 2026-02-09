@@ -56,26 +56,44 @@ class PenangananController extends Controller
             'catatan' => 'nullable|string',
         ]);
 
-        \DB::transaction(function () use ($data) {
+        $result = \DB::transaction(function () use ($data) {
             $siswa = Siswa::findOrFail($data['id_siswa']);
             $penanganan = Penanganan::getOrCreateForSiswa($siswa);
+
             // skip jika bukan petugas yang membuat penanganan
             if ($penanganan->id_petugas !== Auth::id()) {
-                return response()->json([
+                return [
                     'success' => false,
-                    'message' => 'Sedang ditangani oleh' . Auth::getName(),
-                ]);
+                    'message' => 'Sedang ditangani oleh ' . Auth::user()->name,
+                ];
             }
+
+            // jika ada history telepon terakhir kurang dari 1 hari, tolak
+            if (
+                $data['jenis_penanganan'] === 'phone' &&
+                $penanganan->histories()
+                    ->where('jenis_penanganan', 'phone')
+                    ->where('created_at', '>=', now()->startOfDay())
+                    ->exists()
+            ) {
+                return [
+                    'success' => false,
+                    'message' => 'Aksi telepon terakhir kurang dari 1 hari yang lalu.',
+                ];
+            }
+
             $penanganan->addHistory(
                 $data['jenis_penanganan'],
                 $data['catatan'] ?? null
             );
-        });
+            return [
+                'success' => true,
+                'message' => 'Aksi Penanganan berhasil disimpan',
+            ];
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Aksi Penanganan berhasil disimpan',
-        ]);
+
+        });
+        return response()->json($result, $result['success'] ? 200 : 422);
     }
 
 
@@ -230,10 +248,16 @@ class PenangananController extends Controller
                 'tanggal_kesanggupan' => 'required|date',
             ]);
 
+
+
             $kesanggupan = PenangananKesanggupan::create([
                 'penanganan_id' => $data['penanganan_id'],
                 'tanggal' => $data['tanggal_kesanggupan'],
                 'token' => \Str::uuid(),
+            ]);
+
+            $kesanggupan->penanganan()->update([
+                'status' => 'menunggu_tindak_lanjut',
             ]);
 
             return response()->json([

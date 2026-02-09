@@ -54,9 +54,9 @@
             <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                 <!-- BAGIAN 1: HEADER (SEARCH & ACTIONS) -->
                 <div class="p-4 md:p-6 border-b border-gray-100">
-                    <div class="flex justify-between gap-4">
-                        <!-- Search Input (Mengambil ruang penuh di mobile/kiri di desktop) -->
-                        <div class="relative w-full">
+                    <div class="flex flex-col md:flex-row justify-between gap-4">
+                        <!-- Search Input (Mengambil ruang penuh) -->
+                        <div class="relative w-full md:w-1/3">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-search text-gray-400"></i>
                             </div>
@@ -66,10 +66,10 @@
                         </div>
 
                         <!-- Tombol Aksi -->
-                        <div class="flex items-center gap-3 w-auto">
+                        <div class="flex items-center gap-3 w-full md:w-auto">
                             <!-- Tombol Filter Mobile (Hanya muncul di layar kecil) -->
                             <button type="button" onclick="toggleFilter()"
-                                class="md:hidden flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-sm font-semibold hover:bg-blue-100 active:scale-95 transition whitespace-nowrap">
+                                class="md:hidden flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-sm font-semibold hover:bg-blue-100 active:scale-95 transition whitespace-nowrap w-full md:w-auto">
                                 <i class="fas fa-sliders-h"></i> Filter Data
                             </button>
 
@@ -88,10 +88,9 @@
                     </div>
                 </div>
 
-                <!-- BAGIAN 2: DESKTOP FILTER GRID (Background sedikit berbeda tapi masih satu kartu) -->
-                <!-- Background bg-gray-50/30 memberi gradasi halus menyatu dengan putih -->
+                <!-- BAGIAN 2: DESKTOP FILTER GRID -->
                 <div class="hidden md:block bg-gray-50 p-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-2 gap-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-6">
                         <!-- Group Formal -->
                         <div class="space-y-3">
                             <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -187,12 +186,10 @@
 
             </div>
 
-            <!-- MOBILE DRAWER (Tetap Terpisah karena UX Mobile) -->
+            <!-- MOBILE DRAWER -->
             <div id="filterOverlay" onclick="toggleFilter()"
                 class="filter-overlay fixed inset-0 bg-black/50 z-40 xl:hidden">
             </div>
-
-
 
             <div id="filterDrawer"
                 class="filter-drawer fixed bottom-0 left-0 right-0 bg-white z-50 rounded-t-2xl shadow-2xl xl:hidden flex flex-col max-h-[85vh]">
@@ -217,7 +214,6 @@
                             Sekolah Formal
                         </h4>
                         <div class="grid grid-cols-2 gap-3">
-                            <!-- Samakan name dengan desktop agar sinkron -->
                             <select name="UnitFormal"
                                 class="mobile-select w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                                 {{ $lock['UnitFormal'] ? 'disabled' : '' }}>
@@ -315,167 +311,105 @@
             </div>
         </form>
 
-
-        {{-- Data SIswa --}}
-        {{-- DESKTOP TABLE --}}
-        <div class="hidden md:block overflow-x-auto">
-            <table class="min-w-full border-collapse">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">ID</th>
-                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Nama</th>
-                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Lembaga</th>
-                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Asrama</th>
-                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Diniyah</th>
-                        <th class="px-4 py-3 text-left text-gray-600 text-sm font-semibold">Status</th>
-                        <th class="px-4 py-3 text-center text-gray-600 text-sm font-semibold">Aksi</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @forelse ($siswa as $item)
-                        @php $belumLunas = $item->getTotalTunggakan(); @endphp
-
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-4 py-3">{{ $item->idperson }}</td>
-
-                            <td class="px-4 py-3">
-                                <div class="flex flex-col gap-1">
-                                    <span class="font-medium text-gray-900">{{ $item->nama }}</span>
-
-                                    @if ($item->sedangDitangani())
-                                        <span class="text-xs text-blue-600">
-                                            Sedang ditangani oleh {{ $item->petugasPenangananAktif() }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </td>
-
-                            <td class="px-4 py-3">
-                                {{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}
-                            </td>
-
-                            <td class="px-4 py-3">
-                                {{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}
-                            </td>
-
-                            <td class="px-4 py-3">
-                                {{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '-' }}
-                            </td>
-
-                            <td class="px-4 py-3">
-                                @include('petugas.siswa.partials.status-siswa')
-                            </td>
-
-                            <td class="px-4 py-3 text-center space-x-3">
-                                <button onclick="syncPembayaran({{ $item->id }})"
-                                    class="text-blue-600 hover:underline">
-                                    <i class="fas fa-sync"></i> Sync
-                                </button>
-
-                                <a href="{{ route('penanganan.show', $item->id) }}"
-                                    class="text-blue-600 hover:underline">
-                                    <i class="fas fa-eye"></i> Aksi
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="py-6 text-center text-gray-500">
-                                Tidak ada data siswa ditemukan.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        {{-- MOBILE CARD --}}
-        <div class="md:hidden space-y-4 mt-4">
+        {{-- DATA SISWA (RESPONSIVE GRID CARDS) --}}
+        {{-- Grid Layout: 1 Kolom di Mobile, 2 di Tablet, 3 di Desktop, 4 di Layar Lebar --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
             @forelse ($siswa as $item)
                 <div
-                    class="{{ $item->sedangDitangani() ? 'bg-blue-100' : 'bg-white' }}
-           rounded-3xl border border-gray-100
-           hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200
-           p-5">
+                    class="{{ $item->sedangDitangani() ? 'bg-blue-100 ring-2 ring-blue-200' : 'bg-white' }}
+           rounded-2xl border border-gray-100 shadow-sm
+           hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200
+           p-5 flex flex-col h-full">
 
-
-                    <div class="flex justify-between items-start gap-4">
-
+                    <div class="flex justify-between items-start gap-4 flex-1">
                         <!-- LEFT : DATA SISWA -->
                         <div class="flex-1 min-w-0">
-                            @php $belumLunas = $item->getKategoriBelumLunas(); @endphp
-
-                            <h3 class="font-semibold text-gray-900 truncate">
+                            <h3 class="font-bold text-gray-900 text-lg leading-tight truncate">
                                 {{ $item->nama }}
                             </h3>
-
-                            <p class="mt-1 text-xs text-gray-500 leading-relaxed">
-                                <span class="font-medium">{{ $item->idperson }}</span>
-                                <span class="mx-1">•</span>
-
-                                {{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}
-                                <span class="mx-1">•</span>
-
-                                {{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}
-                                <span class="mx-1">•</span>
-
-                                {{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '-' }}
+                            <p class="mt-1 text-xs font-mono text-gray-500 bg-gray-100 inline-block px-1.5 py-0.5 rounded">
+                                {{ $item->idperson }}
                             </p>
 
-                            <div class="mt-2">
+                            <div class="mt-3 space-y-1.5">
+                                <!-- Formal -->
+                                <div class="flex items-start text-xs text-gray-600">
+                                    <i class="fas fa-school mt-0.5 w-4 text-blue-400"></i>
+                                    <span class="truncate">
+                                        {{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}
+                                    </span>
+                                </div>
+                                <!-- Pondok -->
+                                <div class="flex items-start text-xs text-gray-600">
+                                    <i class="fas fa-bed mt-0.5 w-4 text-green-400"></i>
+                                    <span class="truncate">
+                                        {{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}
+                                    </span>
+                                </div>
+                                <!-- Diniyah -->
+                                <div class="flex items-start text-xs text-gray-600">
+                                    <i class="fas fa-mosque mt-0.5 w-4 text-amber-400"></i>
+                                    <span class="truncate">
+                                        {{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '-' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 mb-1">
                                 @include('petugas.siswa.partials.status-siswa')
                             </div>
+
                             @if ($item->sedangDitangani())
                                 <div
-                                    class="mt-2 inline-flex items-center gap-2
-                            px-3 py-1 text-xs rounded-full
-                            bg-blue-50 text-blue-600">
-                                    <span class="ml-1"> Ditangani oleh {{ $item->petugasPenangananAktif() }}
-                                    </span>
+                                    class="mt-2 inline-flex items-center gap-1.5
+                            px-2.5 py-1 text-[10px] font-bold rounded-md
+                            bg-blue-600 text-white shadow-sm shadow-blue-200">
+                                    <i class="fas fa-user-check"></i>
+                                    <span> Ditangani: {{ $item->petugasPenangananAktif() }}</span>
                                 </div>
                             @endif
 
                         </div>
+                    </div>
 
-                        <!-- RIGHT : ACTION -->
-                        <div class="flex flex-col gap-2 shrink-0">
-                            <button onclick="syncPembayaran({{ $item->id }})"
-                                class="flex items-center justify-center gap-2
-                       px-3 py-2 text-sm font-medium
+                    <!-- BOTTOM : ACTION BUTTONS -->
+                    <div class="mt-4 pt-4 border-t border-gray-100/50 grid grid-cols-2 gap-3">
+                        <button onclick="syncPembayaran({{ $item->id }})"
+                            class="flex items-center justify-center gap-2
+                       px-3 py-2 text-xs font-bold uppercase tracking-wide
                        bg-blue-50 text-blue-600
-                       rounded-xl
+                       rounded-lg
                        hover:bg-blue-100 transition">
-                                <i class="fas fa-sync text-xs"></i>
-                                Sync
-                            </button>
+                            <i class="fas fa-sync"></i> Sync
+                        </button>
 
-                            <a href="{{ route('penanganan.show', $item->id) }}"
-                                class="flex items-center justify-center gap-2
-                      px-3 py-2 text-sm
-                      bg-gray-100 text-gray-700
-                      rounded-xl
-                      hover:bg-gray-200 transition">
-                                <i class="fas fa-eye text-xs"></i>
-                                Aksi
-                            </a>
-                        </div>
+                        <a href="{{ route('penanganan.show', $item->id) }}"
+                            class="flex items-center justify-center gap-2
+                      px-3 py-2 text-xs font-bold uppercase tracking-wide
+                      bg-gray-800 text-white
+                      rounded-lg
+                      hover:bg-gray-900 transition shadow-md shadow-gray-200">
+                            <i class="fas fa-arrow-right"></i> Aksi
+                        </a>
                     </div>
                 </div>
 
             @empty
-                <div class="text-center text-gray-500 py-6">
-                    Tidak ada data siswa ditemukan.
+                <div
+                    class="col-span-full flex flex-col items-center justify-center py-16 text-center bg-white rounded-2xl border border-dashed border-gray-300">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-folder-open text-gray-400 text-2xl"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-700">Tidak ada data siswa</h4>
+                    <p class="text-gray-500 text-sm mt-1">Coba ubah kata kunci pencarian atau filter Anda.</p>
                 </div>
             @endforelse
         </div>
 
-
         {{-- PAGINATION --}}
-        <div class="mt-4 ">
+        <div class="mt-8">
             {{ $siswa->links() }}
         </div>
-
 
     </div>
 
@@ -494,7 +428,7 @@
                 overlay.classList.remove("open");
                 body.style.overflow = "";
             } else {
-                // Sync values dari Desktop ke Mobile saat dibuka (agar user melihat filter yg sama)
+                // Sync values dari Desktop ke Mobile saat dibuka
                 syncDesktopToMobile();
 
                 drawer.classList.add("open");
@@ -505,8 +439,7 @@
 
         // Sinkronisasi nilai filter antara Tampilan Desktop dan Mobile Drawer
         function syncDesktopToMobile() {
-            const mobileSelects =
-                document.querySelectorAll(".mobile-select");
+            const mobileSelects = document.querySelectorAll(".mobile-select");
             mobileSelects.forEach((mSelect) => {
                 const name = mSelect.name;
                 const dSelect = document.querySelector(
@@ -517,8 +450,7 @@
         }
 
         function syncMobileToDesktopAndSubmit() {
-            const mobileSelects =
-                document.querySelectorAll(".mobile-select");
+            const mobileSelects = document.querySelectorAll(".mobile-select");
             mobileSelects.forEach((mSelect) => {
                 const name = mSelect.name;
                 const dSelect = document.querySelector(
@@ -527,7 +459,6 @@
                 if (dSelect) dSelect.value = mSelect.value;
             });
 
-            // Tutup drawer lalu submit
             toggleFilter();
             document.getElementById("filterForm").submit();
         }
@@ -538,8 +469,15 @@
             const selects = form.querySelectorAll("select");
             selects.forEach((s) => (s.selectedIndex = 0));
             // Reset text input
-            form.querySelector('input[type="text"]').value = "";
-            toggleFilter();
+            const textInput = form.querySelector('input[type="text"]');
+            if (textInput) textInput.value = "";
+
+            // Jika drawer terbuka, tutup dulu
+            const drawer = document.getElementById("filterDrawer");
+            if (drawer.classList.contains("open")) {
+                toggleFilter();
+            }
+
             document.getElementById("filterForm").submit();
         }
     </script>
