@@ -71,143 +71,158 @@
         @endphp
 
         <nav
-            class="fixed z-40 bg-white border-gray-100
-           md:inset-y-0 md:left-0 md:w-64 md:border-r
-           bottom-0 left-0 w-full border-t
-           md:flex md:flex-col
-           flex">
+            class="fixed z-40 bg-white border-gray-100 
+            md:inset-y-0 md:left-0 md:w-64 md:border-r 
+            bottom-0 left-0 w-full border-t 
+            md:flex md:flex-col justify-between shadow-2xl md:shadow-none">
 
-            <!-- BRAND / LOGO (Desktop Only) -->
-            <div class="hidden md:flex p-8 items-center gap-3 text-primary text-2xl font-bold">
-                <i class="fas fa-credit-card"></i> {{ config('app.name', 'App') }}
+            <div class="w-full">
+                <div class="hidden md:flex p-8 items-center gap-3 text-primary text-2xl font-bold italic">
+                    <i class="fas fa-credit-card"></i> {{ config('app.name', 'App') }}
+                </div>
+
+                <div
+                    class="flex md:flex-col flex-row 
+                    md:space-y-2 md:px-4 
+                    justify-around md:justify-start w-full 
+                    px-2 py-3 md:py-4
+                    text-gray-500 text-[10px] md:text-base">
+
+                    @php
+                        // Logika Role-Based Menu untuk mempersingkat kode
+                        $isAdmin = auth()->user()->hasRole('admin');
+                        $menus = $isAdmin
+                            ? [
+                                [
+                                    'route' => 'dashboard',
+                                    'icon' => 'fa-home',
+                                    'label' => 'Beranda',
+                                    'active' => 'dashboard',
+                                ],
+                                [
+                                    'route' => 'admin.petugas.index',
+                                    'icon' => 'fa-user-shield',
+                                    'label' => 'Petugas',
+                                    'active' => 'admin.petugas*',
+                                ],
+                                [
+                                    'route' => 'admin.siswa.index',
+                                    'icon' => 'fa-user-graduate',
+                                    'label' => 'Siswa',
+                                    'active' => 'admin.siswa*',
+                                ],
+                                [
+                                    'route' => 'admin.assign.index',
+                                    'icon' => 'fa-clipboard-check',
+                                    'label' => 'Assign',
+                                    'active' => 'admin.assign*',
+                                ],
+                            ]
+                            : [
+                                [
+                                    'route' => 'dashboard',
+                                    'icon' => 'fa-home',
+                                    'label' => 'Beranda',
+                                    'active' => 'petugas.dashboard',
+                                ],
+                                [
+                                    'route' => 'petugas.siswa',
+                                    'icon' => 'fa-users',
+                                    'label' => 'Siswa',
+                                    'active' => 'petugas.siswa*',
+                                ],
+                                [
+                                    'route' => 'penanganan.index',
+                                    'icon' => 'fa-hand-holding-usd',
+                                    'label' => 'Proses',
+                                    'active' => 'penanganan*',
+                                ],
+                            ];
+                    @endphp
+
+                    @foreach ($menus as $menu)
+                        <a href="{{ route($menu['route']) }}"
+                            class="flex flex-col md:flex-row items-center gap-1 md:gap-4 
+                          px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200
+                          {{ request()->routeIs($menu['active']) ? $navActive : $navInactive }}">
+                            <i class="fas {{ $menu['icon'] }} text-lg md:text-xl md:w-6 text-center"></i>
+                            <span class="font-medium">{{ $menu['label'] }}</span>
+                        </a>
+                    @endforeach
+
+                    <button onclick="toggleLogoutPopup()"
+                        class="flex md:hidden flex-col items-center gap-1 px-3 py-2 text-gray-500">
+                        <i class="fas fa-user-circle text-lg"></i>
+                        <span class="font-medium">Akun</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- NAVIGATION ITEMS -->
-            <div
-                class="flex md:flex-col flex-row
-               md:space-y-2 md:px-4
-               justify-between w-full
-               px-6 py-4 pb-6
-               text-textMuted text-xs
-               md:text-base
-               md:mt-4">
+            <div class="p-4 border-t border-gray-50">
+                <div class="relative">
+                    <button onclick="toggleLogoutPopup()"
+                        class="hidden md:flex w-full items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition group">
+                        <div
+                            class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                            {{ substr(auth()->user()->name, 0, 1) }}
+                        </div>
+                        <div class="text-left overflow-hidden">
+                            <p class="text-sm font-bold text-gray-800 truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
+                                {{ auth()->user()->getRoleNames()->first() }}
+                            </p>
+                        </div>
+                        <i class="fas fa-ellipsis-v ml-auto text-gray-300 group-hover:text-gray-500"></i>
+                    </button>
 
-                @role('admin')
-                    <!-- Beranda -->
-                    <a href="{{ route('dashboard') }}"
-                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                  px-4 py-3 rounded-xl
-                  {{ request()->routeIs('admin.dashboard') ? $navActive : $navInactive }}">
-                        <i class="fas fa-home text-xl md:w-5"></i>
-                        <span>Beranda</span>
-                    </a>
-                    <!-- Manage Petugas -->
-                    <a href="{{ route('admin.petugas.index') }}"
-                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                  px-4 py-3 rounded-xl
-                  {{ request()->routeIs('admin.petugas*') ? $navActive : $navInactive }}">
-                        <i class="fas fa-user text-xl md:w-5"></i>
-                        <span>Manage Petugas</span>
-                    </a>
-                    <!-- Siswa -->
-                    <a href="{{ route('admin.siswa.index') }}"
-                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                  px-4 py-3 rounded-xl
-                  {{ request()->routeIs('admin.siswa*') ? $navActive : $navInactive }}">
-                        <i class="fas fa-list text-xl md:w-5"></i>
-                        <span>Siswa</span>
-                    </a>
-                    <!-- Assign Siswa -->
-                    <a href="{{ route('admin.assign.index') }}"
-                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                  px-4 py-3 rounded-xl
-                  {{ request()->routeIs('admin.assign*') ? $navActive : $navInactive }}">
-                        <i class="fas fa-check text-xl md:w-5"></i>
-                        <span>Assign Siswa</span>
-                    </a>
-                @endrole
-
-                @role(['petugas', 'bendahara'])
-                    <!-- Beranda -->
-                    <a href="{{ route('dashboard') }}"
-                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                  px-4 py-3 rounded-xl
-                  {{ request()->routeIs('petugas.dashboard') ? $navActive : $navInactive }}">
-                        <i class="fas fa-home text-xl md:w-5"></i>
-                        <span>Beranda</span>
-                    </a>
-                    <!-- Siswa -->
-                    <a href="{{ route('petugas.siswa') }}"
-                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                  px-4 py-3 rounded-xl
-                  {{ request()->routeIs('petugas.siswa*') ? $navActive : $navInactive }}">
-                        <i class="fas fa-list text-xl md:w-5"></i>
-                        <span>Siswa</span>
-                    </a>
-
-                    <!-- Penanganan -->
-                    <a href="{{ route('penanganan.index') }}"
-                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                  px-4 py-3 rounded-xl
-                  {{ request()->routeIs('penanganan*') ? $navActive : $navInactive }}">
-                        <i class="fas fa-credit-card text-xl md:w-5"></i>
-                        <span>Penanganan</span>
-                    </a>
-
-                    <!-- Akun -->
-                    <a href="#"
-                        class="flex flex-col md:flex-row items-center gap-1 md:gap-4
-                  px-4 py-3 rounded-xl
-                  {{ request()->routeIs('akun*') ? $navActive : $navInactive }}">
-                        <i class="fas fa-user text-xl md:w-5"></i>
-                        <span>Akun</span>
-                    </a>
-                @endrole
+                    <div id="logoutPopup"
+                        class="hidden absolute bottom-full left-0 mb-2 w-full bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
+                        <div class="p-5">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md">
+                                    {{ substr(auth()->user()->name, 0, 1) }}
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-sm font-bold text-gray-800 truncate">{{ auth()->user()->name }}</p>
+                                    <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
+                                        {{ auth()->user()->getRoleNames()->first() }} •
+                                        {{ auth()->user()->lembaga ?? 'Umum' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="py-1">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full text-left px-5 py-4 text-sm text-red-600 font-bold hover:text-red-800 hover:cursor-pointer flex items-center gap-3 transition">
+                                    <i class="fas fa-sign-out-alt"></i> Logout Aplikasi
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+
+
+            <div id="mobileOverlay" onclick="toggleLogoutPopup()"
+                class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"></div>
+
         </nav>
 
 
 
         <!-- Main Content -->
         <main class="flex-1 md:ml-64 pb-24 md:pb-2 flex flex-col h-full overflow-hidden relative">
-            <!-- Header -->
-            <header class="flex justify-between items-center p-4 md:p-6 bg-white shadow-sm z-10">
-                <div>
-                    @yield('title')
-                </div>
-                <div class="relative">
-                    <button onclick="toggleLogoutPopup()" class="flex items-center gap-3 focus:outline-none">
-                        <div class="text-right">
-                            <p class="text-sm font-semibold text-gray-800">
-                                {{ auth()->user()->name }}
-                            </p>
-                            <p class="text-xs text-gray-500 capitalize">
-                                {{ auth()->user()->getRoleNames()->first() ?? 'Petugas' }}
-                                {{ auth()->user()->lembaga ?? '-' }}
-                            </p>
-                        </div>
-                    </button>
 
-                    <!-- Popup Logout -->
-                    <div id="logoutPopup"
-                        class="hidden absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-lg border z-50">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit"
-                                class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-xl">
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-            </header>
-            <!-- Content -->
             <div class="max-w-full overflow-auto bg-bgBody">
                 @yield('content')
             </div>
         </main>
     </div>
+
 
     <!-- Toast Notification -->
     <div id="toast"
@@ -245,8 +260,40 @@
     <script>
         function toggleLogoutPopup() {
             const popup = document.getElementById('logoutPopup');
-            popup.classList.toggle('hidden');
+            const overlay = document.getElementById('mobileOverlay');
+
+            if (popup.classList.contains('hidden')) {
+                // Tampilkan
+                popup.classList.remove('hidden');
+                if (overlay) overlay.classList.remove('hidden');
+
+                // Atur Class Berdasarkan Lebar Layar
+                if (window.innerWidth < 768) {
+                    // Tampilan Mobile: Melayang di tengah bawah
+                    popup.className =
+                        "fixed bottom-24 left-6 right-6 bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-none z-50 animate-bounce-in";
+                } else {
+                    // Tampilan Desktop: Di atas profile sidebar
+                    popup.className =
+                        "absolute bottom-full left-0 mb-2 w-full bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50";
+                }
+            } else {
+                // Sembunyikan
+                popup.classList.add('hidden');
+                if (overlay) overlay.classList.add('hidden');
+            }
         }
+        // Menutup popup jika klik di luar area
+        document.addEventListener('click', function(event) {
+            const nav = document.querySelector('nav');
+            const popup = document.getElementById('logoutPopup');
+            const overlay = document.getElementById('mobileOverlay');
+
+            if (!nav.contains(event.target)) {
+                popup.classList.add('hidden');
+                if (overlay) overlay.classList.add('hidden');
+            }
+        });
 
         function showToast(msg, type = 'success') {
             const toast = document.getElementById('toast');
