@@ -187,14 +187,13 @@
 
         function kirimTunggakan() {
             // TODO: gunakan url khusus menampilkan detail pembayaran siswa jika diakses wali, menuju penanganan jika diakses petugas
-            const linkPembayaran = @json(route('penanganan.show', $siswa->id));
             const detailTunggakan = formatTunggakanPerPeriode(@json($siswa->getKategoriBelumLunas()));
             const pesan =
                 `Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} \n\n` +
                 `Berikut kami sampaikan rincian pembayaran belum lunas:\n\n` +
                 detailTunggakan +
                 `\n\n *Total Keseluruhan: ${formatRupiah({{ $siswa->getTotalTunggakan() }})}*` +
-                `\n\n Informasi detail: ${linkPembayaran}` +
+                `\n\n Informasi detail: {!! $urlUntukWali !!}` +
                 `\n\nMohon kesediaan Bapak/Ibu untuk melakukan pembayaran atau konfirmasi kepada kami.\n\n` +
                 `Terima kasih atas perhatian dan kerjasamanya`;
 

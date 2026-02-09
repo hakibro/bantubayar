@@ -373,7 +373,7 @@
                     </div>
 
                     <!-- BOTTOM : ACTION BUTTONS -->
-                    <div class="mt-4 pt-4 border-t border-gray-100/50 grid grid-cols-2 gap-3">
+                    <div class="mt-4 pt-4 border-t border-gray-100/50 flex flex-col sm:flex-row gap-3">
                         <button onclick="syncPembayaran({{ $item->id }})"
                             class="flex items-center justify-center gap-2
                        px-3 py-2 text-xs font-bold uppercase tracking-wide

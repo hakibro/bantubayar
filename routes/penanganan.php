@@ -3,11 +3,13 @@
 use App\Http\Controllers\Penanganan\PenangananController;
 
 
+Route::get('penanganan/show/{id_siswa}', [PenangananController::class, 'show'])
+    ->name('penanganan.show');
+
 Route::middleware(['auth:web', 'role:bendahara|petugas'])->prefix('penanganan')->name('penanganan.')->group(function () {
 
     Route::get('', [PenangananController::class, 'index'])->name('index');
-    Route::get('/show/{id_siswa}', [PenangananController::class, 'show'])
-        ->name('show');
+
 
     Route::post('/store', [PenangananController::class, 'store'])->name('store');
     Route::post('/save-hasil', [PenangananController::class, 'saveHasil'])->name('save_hasil');

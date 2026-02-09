@@ -11,6 +11,7 @@ use App\Services\SiswaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 
 class PenangananController extends Controller
@@ -26,25 +27,49 @@ class PenangananController extends Controller
         return view('penanganan.index', compact('data'));
     }
 
-    public function show($id_siswa)
+    public function show(Request $request, $id_siswa)
     {
-        $siswa = Siswa::findOrFail($id_siswa);
-
-        $penanganan = Penanganan::where('id_siswa', $id_siswa)
-            ->with('petugas')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $siswa = Siswa::with('pembayaran')->findOrFail($id_siswa);
 
 
-        // Ambil penanganan terakhir
-        $penangananTerakhir = $penanganan->first();
-        $riwayatAksi = $penangananTerakhir
-            ? $penangananTerakhir->histories()->latest()->get()
-            : collect();
-        return view(
-            'penanganan.show',
-            compact('siswa', 'penanganan', 'riwayatAksi', 'penangananTerakhir')
-        );
+
+        // 2. CEK AKSES PETUGAS (Harus Login)
+        if (auth()->check()) {
+            $penanganan = Penanganan::where('id_siswa', $id_siswa)
+                ->with('petugas')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $urlUntukWali = URL::temporarySignedRoute(
+                'penanganan.show', // Nama route Anda
+                now()->addDays(30), // Link berlaku 30 hari
+                ['id_siswa' => $siswa->id]
+            );
+
+            $penangananTerakhir = $penanganan->first();
+            $riwayatAksi = $penangananTerakhir
+                ? $penangananTerakhir->histories()->latest()->get()
+                : collect();
+
+
+            return view(
+                'penanganan.show', // View detail penanganan untuk petugas
+                compact('siswa', 'penanganan', 'riwayatAksi', 'penangananTerakhir', 'urlUntukWali')
+            );
+        }
+
+        // 1. CEK AKSES WALI SISWA (Tanpa Login via Signed URL)
+        if ($request->hasValidSignature() || app()->environment('local')) {
+            // Ambil data pembayaran untuk ditampilkan ke wali
+
+            // dd($siswa->getKategoriBelumLunas());
+
+            $pembayaran = $siswa->getKategoriBelumLunas();
+            return view('penanganan.wali_pembayaran', compact('siswa', 'pembayaran'));
+        }
+
+        // Jika tidak keduanya, tolak akses
+        abort(403, 'Akses ditolak. Link tidak valid atau Anda tidak memiliki akses.');
     }
 
 
