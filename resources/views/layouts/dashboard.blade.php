@@ -73,7 +73,7 @@
         <nav
             class="fixed z-40 bg-white border-gray-100 
             md:inset-y-0 md:left-0 md:w-64 md:border-r 
-            bottom-0 left-0 w-full border-t 
+            bottom-0 w-full border-t 
             md:flex md:flex-col justify-between shadow-2xl md:shadow-none">
 
             <div class="w-full">
@@ -158,7 +158,7 @@
                 </div>
             </div>
 
-            <div class="p-4 border-t border-gray-50">
+            <div class="px-4 py-0 md:py-4 border-t border-gray-50">
                 <div class="relative">
                     <button onclick="toggleLogoutPopup()"
                         class="hidden md:flex w-full items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition group">

@@ -50,358 +50,205 @@
 
     <div class="bg-gray-100 p-6 rounded-xl shadow">
         <form method="GET" id="filterForm" class="sticky top-0 z-10">
-            <!-- FILTER CARD -->
             <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <!-- BAGIAN 1: HEADER (SEARCH & ACTIONS) -->
-                <div class="p-4 md:p-6 border-b border-gray-100 ">
-                    <div class="flex justify-between gap-4">
-                        <!-- Search Input (Mengambil ruang penuh) -->
-                        <div class="relative w-2/3">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-search text-gray-400"></i>
-                            </div>
-                            <input type="text" name="search" placeholder="Cari nama / ID Person..."
-                                class="w-full  pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+
+                <div class="p-4 md:p-6 border-b border-gray-100">
+                    <div class="flex items-center gap-2 md:gap-4">
+
+                        <div class="relative flex-grow">
+
+                            <input type="text" name="search" placeholder="Cari nama / ID..."
+                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                                 value="{{ request('search') }}" />
                         </div>
 
-                        <!-- Tombol Aksi -->
-                        <div class="flex items-center gap-3 w-auto">
-                            <!-- Tombol Filter Mobile (Hanya muncul di layar kecil) -->
-                            <button type="button" onclick="toggleFilter()"
-                                class="md:hidden flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-sm font-semibold hover:bg-blue-100 active:scale-95 transition whitespace-nowrap w-full md:w-auto">
-                                <i class="fas fa-sliders-h"></i> Filter Data
+                        <div class="flex items-center gap-2">
+                            <button id="filterButton" type="button" onclick="toggleFilter()"
+                                class="md:hidden flex items-center justify-center w-10 h-10 bg-gray-100 text-gray-600 border border-gray-200 rounded-lg">
+                                <i class="fas fa-sliders-h"></i>
                             </button>
 
-                            <!-- Tombol Reset (Hanya Desktop) -->
-                            <button type="button" onclick="resetForm()"
-                                class="hidden md:block px-5 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium">
-                                Reset
+                            <button type="button" onclick="window.location.href=window.location.pathname"
+                                class="flex items-center justify-center h-10 md:w-auto px-3 md:px-5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium border border-gray-200"
+                                title="Reset Filter">
+                                <i class="fas fa-undo md:mr-2"></i>
+                                <span class="hidden md:inline">Reset</span>
                             </button>
 
-                            <!-- Tombol Terapkan (Hanya Desktop) -->
-                            <button type="submit" onclick="syncDesktopToMobile()"
-                                class="hidden md:flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95 transition shadow-md shadow-blue-200">
-                                Terapkan
+                            <button type="submit"
+                                class="flex items-center justify-center h-10 md:w-auto px-4 md:px-6 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition shadow-md shadow-blue-200"
+                                title="Cari">
+                                <i class="fas fa-search md:mr-2"></i>
+                                <span class="hidden md:inline">Cari</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- BAGIAN 2: DESKTOP FILTER GRID -->
-                <div class="hidden md:block bg-gray-50 p-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-6">
-                        <!-- Group Formal -->
-                        <div class="space-y-3">
-                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                Sekolah Formal
-                            </h4>
-                            <div class="grid grid-cols-2">
-                                <select name="UnitFormal"
-                                    class="w-full px-2 py-2 bg-white border border-gray-200 rounded-lg rounded-r-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-                                    {{ $lock['UnitFormal'] ? 'disabled' : '' }}>
-                                    <option value="">Lembaga</option>
-                                    @foreach ($filterOptions['UnitFormal'] as $item)
-                                        <option value="{{ $item }}"
-                                            {{ request('UnitFormal', $selected['UnitFormal']) == $item ? 'selected' : '' }}>
-                                            {{ $item }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <select name="KelasFormal"
-                                    class="w-full px-2 py-2 bg-white border border-gray-200 rounded-lg rounded-l-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                                    <option value="">Kelas...</option>
-                                    <!-- Loop Blade -->
-                                    @foreach ($filterOptions['KelasFormal'] as $item)
-                                        <option value="{{ $item }}"
-                                            {{ request('KelasFormal') == $item ? 'selected' : '' }}>
-                                            {{ $item }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                <div id="filterSection" class="hidden md:block bg-gray-50">
+                    <div class="p-4 md:p-6 border-t border-gray-100 md:border-t-0">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-bold text-blue-600 uppercase tracking-wider">
+                                    Sekolah Formal</h4>
+                                <div class="flex md:grid md:grid-cols-2">
+                                    <select name="UnitFormal"
+                                        class="w-full px-2 py-2 bg-white border border-gray-200 rounded-l-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                        {{ $lock['UnitFormal'] ? 'disabled' : '' }}>
+                                        <option value="">Lembaga</option>
+                                        @foreach ($filterOptions['UnitFormal'] as $item)
+                                            <option value="{{ $item }}"
+                                                {{ request('UnitFormal', $selected['UnitFormal']) == $item ? 'selected' : '' }}>
+                                                {{ $item }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select name="KelasFormal"
+                                        class="w-full px-2 py-2 bg-white border border-gray-200 border-l-0 rounded-r-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Kelas...</option>
+                                        @foreach ($filterOptions['KelasFormal'] as $item)
+                                            <option value="{{ $item }}"
+                                                {{ request('KelasFormal') == $item ? 'selected' : '' }}>{{ $item }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Group Pondok -->
-                        <div class="space-y-3">
-                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                Asrama Pondok
-                            </h4>
-                            <div class="grid grid-cols-2">
-                                <select name="AsramaPondok"
-                                    class="w-full px-2 py-2 bg-white border border-gray-200 rounded-lg rounded-r-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-                                    {{ $lock['AsramaPondok'] ? 'disabled' : '' }}>
-                                    <option value="">Asrama...</option>
-                                    @foreach ($filterOptions['AsramaPondok'] as $item)
-                                        <option value="{{ $item }}"
-                                            {{ request('AsramaPondok', $selected['AsramaPondok']) == $item ? 'selected' : '' }}>
-                                            {{ $item }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <select name="KamarPondok"
-                                    class="w-full px-2 py-2 bg-white border border-gray-200 rounded-lg rounded-l-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                                    <option value="">Kamar...</option>
-                                    @foreach ($filterOptions['KamarPondok'] as $item)
-                                        <option value="{{ $item }}"
-                                            {{ request('KamarPondok') == $item ? 'selected' : '' }}>
-                                            {{ $item }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-bold text-green-600 uppercase tracking-wider">
+                                    Asrama Pondok</h4>
+                                <div class="flex md:grid md:grid-cols-2">
+                                    <select name="AsramaPondok"
+                                        class="w-full px-2 py-2 bg-white border border-gray-200 rounded-l-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                        {{ $lock['AsramaPondok'] ? 'disabled' : '' }}>
+                                        <option value="">Asrama...</option>
+                                        @foreach ($filterOptions['AsramaPondok'] as $item)
+                                            <option value="{{ $item }}"
+                                                {{ request('AsramaPondok', $selected['AsramaPondok']) == $item ? 'selected' : '' }}>
+                                                {{ $item }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select name="KamarPondok"
+                                        class="w-full px-2 py-2 bg-white border border-gray-200 border-l-0 rounded-r-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Kamar...</option>
+                                        @foreach ($filterOptions['KamarPondok'] as $item)
+                                            <option value="{{ $item }}"
+                                                {{ request('KamarPondok') == $item ? 'selected' : '' }}>
+                                                {{ $item }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Group Diniyah -->
-                        <div class="space-y-3">
-                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                Diniyah
-                            </h4>
-                            <div class="grid grid-cols-2">
-                                <select name="TingkatDiniyah"
-                                    class="w-full px-2 py-2 bg-white border border-gray-200 rounded-lg rounded-r-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-                                    {{ $lock['TingkatDiniyah'] ? 'disabled' : '' }}>
-                                    <option value="">Tingkat...</option>
-                                    @foreach ($filterOptions['TingkatDiniyah'] as $item)
-                                        <option value="{{ $item }}"
-                                            {{ request('TingkatDiniyah', $selected['TingkatDiniyah']) == $item ? 'selected' : '' }}>
-                                            {{ $item }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <select name="KelasDiniyah"
-                                    class="w-full px-2 py-2 bg-white border border-gray-200 rounded-lg rounded-l-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                                    <option value="">Kelas D...</option>
-                                    @foreach ($filterOptions['KelasDiniyah'] as $item)
-                                        <option value="{{ $item }}"
-                                            {{ request('KelasDiniyah') == $item ? 'selected' : '' }}>
-                                            {{ $item }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-bold text-amber-600 uppercase tracking-wider">
+                                    Diniyah</h4>
+                                <div class="flex md:grid md:grid-cols-2">
+                                    <select name="TingkatDiniyah"
+                                        class="w-full px-2 py-2 bg-white border border-gray-200 rounded-l-lg text-sm focus:ring-2 focus:ring-blue-500"
+                                        {{ $lock['TingkatDiniyah'] ? 'disabled' : '' }}>
+                                        <option value="">Tingkat...</option>
+                                        @foreach ($filterOptions['TingkatDiniyah'] as $item)
+                                            <option value="{{ $item }}"
+                                                {{ request('TingkatDiniyah', $selected['TingkatDiniyah']) == $item ? 'selected' : '' }}>
+                                                {{ $item }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select name="KelasDiniyah"
+                                        class="w-full px-2 py-2 bg-white border border-gray-200 border-l-0 rounded-r-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Kelas...</option>
+                                        @foreach ($filterOptions['KelasDiniyah'] as $item)
+                                            <option value="{{ $item }}"
+                                                {{ request('KelasDiniyah') == $item ? 'selected' : '' }}>
+                                                {{ $item }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
+
                         </div>
                     </div>
-                </div>
-
-            </div>
-
-            <!-- MOBILE DRAWER -->
-            <div id="filterOverlay" onclick="toggleFilter()"
-                class="filter-overlay fixed inset-0 bg-black/50 z-40 xl:hidden">
-            </div>
-
-            <div id="filterDrawer"
-                class="filter-drawer fixed bottom-0 left-0 right-0 bg-white z-50 rounded-t-2xl shadow-2xl xl:hidden flex flex-col max-h-[85vh]">
-                <!-- Handle Bar -->
-                <div class="flex justify-center pt-3 pb-1">
-                    <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
-                </div>
-
-                <!-- Drawer Header -->
-                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-800">Filter</h3>
-                    <button onclick="toggleFilter()" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-
-                <!-- Drawer Content (Scrollable) -->
-                <div class="overflow-y-auto p-6 space-y-6 bg-gray-50">
-                    <!-- Mobile: Group Formal -->
-                    <div class="space-y-3">
-                        <h4 class="text-xs font-bold text-blue-600 uppercase tracking-wider">
-                            Sekolah Formal
-                        </h4>
-                        <div class="grid grid-cols-2 gap-3">
-                            <select name="UnitFormal"
-                                class="mobile-select w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                                {{ $lock['UnitFormal'] ? 'disabled' : '' }}>
-                                <option value="">Lembaga...</option>
-                                @foreach ($filterOptions['UnitFormal'] as $item)
-                                    <option value="{{ $item }}"
-                                        {{ request('UnitFormal', $selected['UnitFormal']) == $item ? 'selected' : '' }}>
-                                        {{ $item }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <select name="KelasFormal"
-                                class="mobile-select w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
-                                <option value="">Kelas...</option>
-                                @foreach ($filterOptions['KelasFormal'] as $item)
-                                    <option value="{{ $item }}"
-                                        {{ request('KelasFormal') == $item ? 'selected' : '' }}>
-                                        {{ $item }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Mobile: Group Pondok -->
-                    <div class="space-y-3">
-                        <h4 class="text-xs font-bold text-green-600 uppercase tracking-wider">
-                            Asrama Pondok
-                        </h4>
-                        <div class="grid grid-cols-2 gap-3">
-                            <select name="AsramaPondok" {{ $lock['AsramaPondok'] ? 'disabled' : '' }}
-                                class="mobile-select w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
-                                <option value="">Asrama...</option>
-                                @foreach ($filterOptions['AsramaPondok'] as $item)
-                                    <option value="{{ $item }}"
-                                        {{ request('AsramaPondok', $selected['AsramaPondok']) == $item ? 'selected' : '' }}>
-                                        {{ $item }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <select name="KamarPondok"
-                                class="mobile-select w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
-                                <option value="">Kamar...</option>
-                                @foreach ($filterOptions['KamarPondok'] as $item)
-                                    <option value="{{ $item }}"
-                                        {{ request('KamarPondok') == $item ? 'selected' : '' }}>
-                                        {{ $item }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Mobile: Group Diniyah -->
-                    <div class="space-y-3">
-                        <h4 class="text-xs font-bold text-amber-600 uppercase tracking-wider">
-                            Diniyah
-                        </h4>
-                        <div class="grid grid-cols-2 gap-3">
-                            <select name="TingkatDiniyah" {{ $lock['TingkatDiniyah'] ? 'disabled' : '' }}
-                                class="mobile-select w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
-                                <option value="">Tingkat...</option>
-                                @foreach ($filterOptions['TingkatDiniyah'] as $item)
-                                    <option value="{{ $item }}"
-                                        {{ request('TingkatDiniyah', $selected['TingkatDiniyah']) == $item ? 'selected' : '' }}>
-                                        {{ $item }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <select name="KelasDiniyah"
-                                class="mobile-select w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
-                                <option value="">Kelas...</option>
-                                @foreach ($filterOptions['KelasDiniyah'] as $item)
-                                    <option value="{{ $item }}"
-                                        {{ request('KelasDiniyah') == $item ? 'selected' : '' }}>
-                                        {{ $item }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Drawer Footer -->
-                <div class="p-4 border-t border-gray-200 bg-white grid grid-cols-4 gap-3">
-                    <button type="button" onclick="resetForm()"
-                        class="col-span-1 flex items-center justify-center text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition text-sm py-3">
-                        <i class="fas fa-undo"></i>
-                    </button>
-                    <button type="button" onclick="syncMobileToDesktopAndSubmit()"
-                        class="col-span-3 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition shadow-lg shadow-blue-200 font-semibold text-sm">
-                        Terapkan Filter
-                    </button>
                 </div>
             </div>
         </form>
 
         {{-- DATA SISWA (RESPONSIVE GRID CARDS) --}}
         {{-- Grid Layout: 1 Kolom di Mobile, 2 di Tablet, 3 di Desktop, 4 di Layar Lebar --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
             @forelse ($siswa as $item)
                 <div
-                    class="{{ $item->sedangDitangani() ? 'bg-blue-100 ring-2 ring-blue-200' : 'bg-white' }}
-           rounded-2xl border border-gray-100 shadow-sm
-           hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200
-           p-5 flex flex-col h-full">
+                    class="group {{ $item->sedangDitangani()
+                        ? 'bg-yellow-50 ring-2 ring-yellow-200 text-gray-800'
+                        : ($item->penangananLunas() && $item->getTotalTunggakan() == 0
+                            ? 'bg-gray-100 border-none shadow-none text-gray-400'
+                            : 'bg-white') }} rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-4">
 
-                    <div class="flex justify-between items-start gap-4 flex-1">
-                        <!-- LEFT : DATA SISWA -->
+                    <div class="flex justify-between items-center gap-3">
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 text-lg leading-tight truncate">
+                            <h3 class="font-bold text-base leading-tight truncate">
                                 {{ $item->nama }}
                             </h3>
-                            <p class="mt-1 text-xs font-mono text-gray-500 bg-gray-100 inline-block px-1.5 py-0.5 rounded">
-                                {{ $item->idperson }}
-                            </p>
+                            <div class="flex items-center gap-2">
 
-                            <div class="mt-3 space-y-1.5">
-                                <!-- Formal -->
-                                <div class="flex items-start text-xs text-gray-600">
-                                    <i class="fas fa-school mt-0.5 w-4 text-blue-400"></i>
-                                    <span class="truncate">
-                                        {{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}
-                                    </span>
-                                </div>
-                                <!-- Pondok -->
-                                <div class="flex items-start text-xs text-gray-600">
-                                    <i class="fas fa-bed mt-0.5 w-4 text-green-400"></i>
-                                    <span class="truncate">
-                                        {{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}
-                                    </span>
-                                </div>
-                                <!-- Diniyah -->
-                                <div class="flex items-start text-xs text-gray-600">
-                                    <i class="fas fa-mosque mt-0.5 w-4 text-amber-400"></i>
-                                    <span class="truncate">
-                                        {{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '-' }}
-                                    </span>
-                                </div>
+
                             </div>
 
-                            <div class="mt-3 mb-1">
-                                @include('petugas.siswa.partials.status-siswa')
-                            </div>
+                            <div
+                                class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 border-t border-gray-50 pt-2">
 
-                            @if ($item->sedangDitangani())
-                                <div
-                                    class="mt-2 inline-flex items-center gap-1.5
-                            px-2.5 py-1 text-[10px] font-bold rounded-md
-                            bg-blue-600 text-white shadow-sm shadow-blue-200">
-                                    <i class="fas fa-user-check"></i>
-                                    <span> Ditangani: {{ $item->petugasPenangananAktif() }}</span>
+                                <span class="text-xs font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                    {{ $item->idperson }}
+                                </span>
+                                <div class="flex items-center gap-1">
+                                    <i class="fas fa-school text-blue-400"></i>
+                                    <span>{{ $item->UnitFormal ?? '-' }} ({{ $item->KelasFormal ?? '-' }})</span>
                                 </div>
-                            @endif
+                                <div class="flex items-center gap-1">
+                                    <i class="fas fa-bed text-green-400"></i>
+                                    <span>{{ $item->AsramaPondok ?? '-' }}/{{ $item->KamarPondok ?? '-' }}</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <i class="fas fa-mosque text-amber-400"></i>
+                                    <span>{{ $item->TingkatDiniyah ?? '-' }}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 mt-2">@include('petugas.siswa.partials.status-siswa')
+                                @if ($item->sedangDitangani())
+                                    <span class="text-xs font-semibold text-yellow-600 truncate italic">
+                                        <i class="fas fa-warning"></i> Sedang ditangani
+                                        {{ $item->petugasPenangananAktif() }}
+                                    </span>
+                                @endif
+                                @if ($item->penangananLunas() && $item->getTotalTunggakan() == 0)
+                                    <span class="text-xs font-semibold text-green-600 text-sm italic ml-2">
+                                        <i class="fas fa-circle-check"></i> Telah ditangani oleh
+                                        {{ $item->penangananLunas()->petugas->name }}
+                                    </span>
+                                @endif
+                            </div>
 
                         </div>
-                    </div>
 
-                    <!-- BOTTOM : ACTION BUTTONS -->
-                    <div class="mt-4 pt-4 border-t border-gray-100/50 flex flex-col sm:flex-row gap-3">
-                        <button onclick="syncPembayaran({{ $item->id }})"
-                            class="flex items-center justify-center gap-2
-                       px-3 py-2 text-xs font-bold uppercase tracking-wide
-                       bg-blue-50 text-blue-600
-                       rounded-lg
-                       hover:bg-blue-100 transition">
-                            <i class="fas fa-sync"></i> Sync
-                        </button>
-
-                        <a href="{{ route('penanganan.show', $item->id) }}"
-                            class="flex items-center justify-center gap-2
-                      px-3 py-2 text-xs font-bold uppercase tracking-wide
-                      bg-gray-800 text-white
-                      rounded-lg
-                      hover:bg-gray-900 transition shadow-md shadow-gray-200">
-                            <i class="fas fa-arrow-right"></i> Aksi
-                        </a>
+                        <div class="flex flex-col gap-2 shrink-0">
+                            <button onclick="syncPembayaran({{ $item->id }})"
+                                class="p-2.5 md:px-3 md:py-1.5 text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition flex items-center justify-center"
+                                title="Sync Data">
+                                <i class="fas fa-sync-alt text-sm"></i>
+                                <span class="inline ml-2 text-[11px] font-bold uppercase">Sync</span>
+                            </button>
+                            <a href="{{ route('penanganan.show', $item->id) }}"
+                                class="p-2.5 md:px-4 md:py-1.5 bg-gray-800 text-white rounded-xl hover:bg-black transition flex items-center justify-center shadow-sm"
+                                title="Aksi">
+                                <i class="fas fa-arrow-right text-sm"></i>
+                                <span class="inline ml-2 text-[11px] font-bold uppercase">Aksi</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
-
             @empty
-                <div
-                    class="col-span-full flex flex-col items-center justify-center py-16 text-center bg-white rounded-2xl border border-dashed border-gray-300">
-                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-folder-open text-gray-400 text-2xl"></i>
-                    </div>
-                    <h4 class="text-lg font-bold text-gray-700">Tidak ada data siswa</h4>
-                    <p class="text-gray-500 text-sm mt-1">Coba ubah kata kunci pencarian atau filter Anda.</p>
+                <div class="col-span-full py-12 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                    <p class="text-gray-500 font-medium">Data siswa tidak ditemukan.</p>
                 </div>
             @endforelse
         </div>
@@ -418,49 +265,14 @@
 @push('scripts')
     <script>
         function toggleFilter() {
-            const drawer = document.getElementById("filterDrawer");
-            const overlay = document.getElementById("filterOverlay");
-            const body = document.body;
-            const isOpen = drawer.classList.contains("open");
-
-            if (isOpen) {
-                drawer.classList.remove("open");
-                overlay.classList.remove("open");
-                body.style.overflow = "";
-            } else {
-                // Sync values dari Desktop ke Mobile saat dibuka
-                syncDesktopToMobile();
-
-                drawer.classList.add("open");
-                overlay.classList.add("open");
-                body.style.overflow = "hidden";
+            const filterSection = document.getElementById('filterSection');
+            const filterButton = document.getElementById('filterButton');
+            // Toggle class hidden pada mobile saja
+            if (window.innerWidth < 768) {
+                filterSection.classList.toggle('hidden');
+                filterButton.classList.toggle('bg-gray-100');
+                filterButton.classList.toggle('bg-blue-100');
             }
-        }
-
-        // Sinkronisasi nilai filter antara Tampilan Desktop dan Mobile Drawer
-        function syncDesktopToMobile() {
-            const mobileSelects = document.querySelectorAll(".mobile-select");
-            mobileSelects.forEach((mSelect) => {
-                const name = mSelect.name;
-                const dSelect = document.querySelector(
-                    `#filterForm select[name="${name}"]:not(.mobile-select)`
-                );
-                if (dSelect) mSelect.value = dSelect.value;
-            });
-        }
-
-        function syncMobileToDesktopAndSubmit() {
-            const mobileSelects = document.querySelectorAll(".mobile-select");
-            mobileSelects.forEach((mSelect) => {
-                const name = mSelect.name;
-                const dSelect = document.querySelector(
-                    `#filterForm select[name="${name}"]:not(.mobile-select)`
-                );
-                if (dSelect) dSelect.value = mSelect.value;
-            });
-
-            toggleFilter();
-            document.getElementById("filterForm").submit();
         }
 
         function resetForm() {
