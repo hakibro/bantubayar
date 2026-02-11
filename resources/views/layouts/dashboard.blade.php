@@ -337,7 +337,8 @@
         }
 
         function syncPembayaran(id) {
-            console.log(id);
+            // 1. Simpan ID siswa yang sedang di-sync ke localStorage
+            localStorage.setItem('syncTargetId', 'siswa-' + id);
 
             document.getElementById("loadingModal").classList.remove("hidden");
 
@@ -348,20 +349,43 @@
                 })
                 .then(res => res.json())
                 .then(data => {
-
                     if (!data.status) throw new Error(data.message);
+                    location.reload();
                 })
                 .catch(err => {
+                    localStorage.removeItem('syncTargetId'); // Hapus jika gagal
+                    document.getElementById("loadingModal").classList.add("hidden");
                     document.getElementById("errorMessage").innerText = err.message || 'Gagal sync';
                     document.getElementById("errorModal").classList.remove("hidden");
-                })
-                .finally(() => {
-                    document.getElementById("loadingModal").classList.add("hidden");
-                    location.reload();
-
                 });
-
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const targetId = localStorage.getItem('syncTargetId');
+
+            if (targetId) {
+                // Beri jeda sedikit agar layout selesai dirender
+                setTimeout(() => {
+                    const element = document.getElementById(targetId);
+                    if (element) {
+                        // 2. Scroll otomatis ke elemen (Auto-Focus)
+                        element.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+
+                        // 3. Tambahkan efek Highlight visual (opsional)
+                        element.classList.add('ring-4', 'ring-blue-400', 'duration-500');
+
+                        // Hilangkan efek ring setelah 2 detik
+                        setTimeout(() => {
+                            element.classList.remove('ring-4', 'ring-blue-400');
+                            localStorage.removeItem('syncTargetId');
+                        }, 2000);
+                    }
+                }, 300);
+            }
+        });
     </script>
 
 </body>

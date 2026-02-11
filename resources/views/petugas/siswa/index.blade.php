@@ -177,7 +177,7 @@
         {{-- Grid Layout: 1 Kolom di Mobile, 2 di Tablet, 3 di Desktop, 4 di Layar Lebar --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
             @forelse ($siswa as $item)
-                <div
+                <div id="siswa-{{ $item->id }}"
                     class="group {{ $item->sedangDitangani()
                         ? 'bg-yellow-50 ring-2 ring-yellow-200 text-gray-800'
                         : ($item->penangananLunas() && $item->getTotalTunggakan() == 0
@@ -216,13 +216,14 @@
                             <div class="flex items-center gap-3 mt-2">@include('petugas.siswa.partials.status-siswa')
                                 @if ($item->sedangDitangani())
                                     <span class="text-xs font-semibold text-yellow-600 truncate italic">
-                                        <i class="fas fa-warning"></i> Sedang ditangani
+                                        Sedang ditangani
                                         {{ $item->petugasPenangananAktif() }}
                                     </span>
                                 @endif
+                                {{-- tambahkan jika penanganan terakhir masih di bulan yang sama --}}
                                 @if ($item->penangananLunas() && $item->getTotalTunggakan() == 0)
                                     <span class="text-xs font-semibold text-green-600 text-sm italic ml-2">
-                                        <i class="fas fa-circle-check"></i> Telah ditangani oleh
+                                        Telah ditangani oleh
                                         {{ $item->penangananLunas()->petugas->name }}
                                     </span>
                                 @endif
