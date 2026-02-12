@@ -22,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Auto Hitung Lunas Observer
+        \App\Models\SiswaPembayaran::observe(\App\Observers\SiswaPembayaranObserver::class);
     }
 }

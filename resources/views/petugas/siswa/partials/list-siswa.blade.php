@@ -1,12 +1,8 @@
 @forelse ($siswa as $item)
     <div id="siswa-{{ $item->id }}"
-        class="group {{ $item->sedangDitangani()
-            ? 'bg-yellow-50 ring-2 ring-yellow-200 text-gray-800'
-            : ($item->penangananLunas() &&
-            $item->getTotalTunggakan() == 0 &&
-            $item->penangananLunas()->updated_at->isSameMonth(now())
-                ? 'bg-gray-100 border-none shadow-none text-gray-400'
-                : 'bg-white') }} rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-4">
+        class="group {{ $item->is_lunas === true && $item->penangananLunas()?->updated_at->isSameMonth(now())
+            ? 'bg-gray-100 border-none shadow-none text-gray-400'
+            : 'bg-white' }} rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-4">
 
         <div class="flex justify-between items-center gap-3">
             <div class="flex-1 min-w-0">
@@ -26,15 +22,15 @@
                     </span>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-school text-blue-400"></i>
-                        <span>{{ $item->UnitFormal ?? '-' }} ({{ $item->KelasFormal ?? '-' }})</span>
+                        <span>{{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-bed text-green-400"></i>
-                        <span>{{ $item->AsramaPondok ?? '-' }}/{{ $item->KamarPondok ?? '-' }}</span>
+                        <span>{{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-mosque text-amber-400"></i>
-                        <span>{{ $item->TingkatDiniyah ?? '-' }}</span>
+                        <span>{{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '' }}</span>
                     </div>
                 </div>
                 @include('petugas.siswa.partials.status-siswa')
@@ -51,7 +47,7 @@
                     <span class="inline ml-2 text-[11px] font-bold uppercase">Sync</span>
                 </button>
                 <a href="{{ route('penanganan.show', $item->id) }}"
-                    class="p-2.5 md:px-4 md:py-1.5 bg-gray-800 text-white rounded-xl hover:bg-black transition flex items-center justify-center shadow-sm"
+                    class="p-2.5 md:px-4 md:py-1.5 bg-blue-600 text-white rounded-xl hover:bg-black transition flex items-center justify-center shadow-sm"
                     title="Aksi">
                     <i class="fas fa-arrow-right text-sm"></i>
                     <span class="inline ml-2 text-[11px] font-bold uppercase">Aksi</span>

@@ -15,6 +15,7 @@ class Siswa extends Model
     protected $fillable = [
         'idperson',
         'nama',
+        'is_lunas',
         'gender',
         'lahirtempat',
         'lahirtanggal',
@@ -29,16 +30,13 @@ class Siswa extends Model
 
     protected $casts = [
         'lahirtanggal' => 'date',
+        'is_lunas' => 'boolean',
     ];
 
     /**
      * Scope pencarian sederhana berdasarkan nama atau idperson
      */
-    // public function scopeSearch($query, $keyword)
-    // {
-    //     return $query->where('nama', 'like', "%{$keyword}%")
-    //         ->orWhere('idperson', 'like', "%{$keyword}%");
-    // }
+
     public function scopeSearch($query, $keyword)
     {
         return $query->where(function ($q) use ($keyword) {
@@ -106,6 +104,51 @@ class Siswa extends Model
         return $this->hasMany(SiswaPembayaran::class, 'siswa_id');
     }
 
+    /**
+     * Scope untuk mencari berdasarkan status pembayaran global
+     */
+    public function scopeStatusPembayaran($query, $status)
+    {
+        if ($status === 'lunas') {
+            return $query->where('is_lunas', true);
+        } elseif ($status === 'belum_lunas') {
+            return $query->where('is_lunas', false);
+        }
+        return $query;
+    }
+
+    /**
+     * Mendapatkan class Tailwind berdasarkan kolom is_lunas dan sinkronisasi
+     */
+    public function getStatusPembayaranBadgeAttribute(): string
+    {
+        // Jika data pembayaran belum ada sama sekali (Belum Sinkron)
+        if (is_null($this->getKategoriBelumLunas())) {
+            return 'border-yellow-400 text-yellow-600';
+        }
+
+        // Jika is_lunas true (Lunas)
+        if ($this->is_lunas) {
+            return 'border-green-400 text-green-600';
+        }
+
+        // Jika is_lunas false (Belum Lunas)
+        return 'border-red-400 text-red-600';
+    }
+
+    /**
+     * Mendapatkan label teks berdasarkan kolom is_lunas
+     */
+    public function getStatusPembayaranLabelAttribute(): string
+    {
+        if (is_null($this->getKategoriBelumLunas())) {
+            return 'Belum Sinkron';
+        }
+
+        return $this->is_lunas ? 'Lunas' : 'Belum Lunas';
+    }
+
+
     public function getKategoriBelumLunas(): ?array
     {
         if (!$this->pembayaran()->exists()) {
@@ -145,5 +188,11 @@ class Siswa extends Model
         return $this->hitungTotalDariKategori(
             $this->getKategoriBelumLunas() ?? []
         );
+    }
+
+    public function getFormattedTotalTunggakanAttribute()
+    {
+        $total = $this->getTotalTunggakan(); // Memanggil fungsi yang sudah ada di trait Anda
+        return 'Rp ' . number_format($total, 0, ',', '.');
     }
 }

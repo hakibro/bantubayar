@@ -11,10 +11,12 @@ class SiswaPembayaran extends Model
         'siswa_id',
         'periode',
         'data',
+        'is_lunas',
     ];
 
     protected $casts = [
         'data' => 'json',
+        'is_lunas' => 'boolean',
     ];
 
     public function siswa()

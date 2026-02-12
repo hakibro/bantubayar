@@ -48,7 +48,6 @@ class SiswaController extends Controller
             }
             // Ambil Enum dari tabel 'penanganan'
             $filterOptions['status_penanganan'] = $this->getEnumValues('penanganan', 'status');
-            $filterOptions['hasil_penanganan'] = $this->getEnumValues('penanganan', 'hasil');
         }
 
         // 3) Logika Penguncian Lembaga
@@ -67,17 +66,20 @@ class SiswaController extends Controller
         // 4) Build Query Utama
         $query = (clone $scope);
 
-        // Apply Filter Siswa (Lembaga Terkunci + Dropdown Siswa)
-        foreach (array_merge($selected, $request->only($siswaCols)) as $field => $value) {
-            if ($value) {
-                $query->where($field, $value);
+        // PENTING: Merge selected (lembaga yang dikunci) dengan request filter lainnya
+        $allFilters = array_merge($selected, $request->only(array_merge($siswaCols, ['status_penanganan', 'pembayaran_status'])));
+
+        // Apply Filter Siswa
+        foreach ($siswaCols as $field) {
+            $val = $request->get($field, $selected[$field] ?? null);
+            if ($val) {
+                $query->where($field, $val);
             }
         }
 
-        // Filter Khusus Penanganan (menggunakan relasi 'penanganan' di Model Siswa)
+        // Filter Penanganan
         if ($request->status_penanganan) {
             if ($request->status_penanganan === 'belum_ditangani') {
-                // Logika: Siswa yang sama sekali tidak punya record di tabel penanganan
                 $query->whereDoesntHave('penanganan');
             } else {
                 $query->whereHas('penanganan', function ($q) use ($request) {
@@ -86,22 +88,25 @@ class SiswaController extends Controller
             }
         }
 
-        if ($request->hasil_penanganan) {
-            $query->whereHas('penanganan', function ($q) use ($request) {
-                $q->where('hasil', $request->hasil_penanganan);
-            });
+        // Filter Pembayaran (Menggunakan kolom is_lunas yang baru)
+        if ($request->pembayaran_status) {
+            $isLunas = $request->pembayaran_status === 'lunas' ? 1 : 0;
+            $query->where('is_lunas', $isLunas);
         }
 
-        // Search (Gunakan scopeSearch yang ada di model Siswa)
+        // Search
         if ($request->search) {
             $query->search($request->search);
         }
 
         $siswa = $query->paginate(40)->appends($request->query());
 
-        // Response AJAX atau Full Page
         if ($request->ajax()) {
-            return view('petugas.siswa.partials.list-siswa', compact('siswa'))->render();
+            // Kembalikan partial list DAN link pagination baru
+            return response()->json([
+                'html' => view('petugas.siswa.partials.list-siswa', compact('siswa'))->render(),
+                'pagination' => $siswa->links()->render()
+            ]);
         }
 
         return view('petugas.siswa.index', compact('siswa', 'filterOptions', 'lock', 'selected'));

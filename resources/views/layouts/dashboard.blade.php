@@ -215,7 +215,7 @@
 
 
         <!-- Main Content -->
-        <main class="flex-1 md:ml-64 pb-24 md:pb-2 flex flex-col h-full overflow-hidden relative">
+        <main class="flex-1 md:ml-64 pb-20 md:pb-2 flex flex-col h-full overflow-hidden relative">
 
             <div class="max-w-full overflow-auto bg-bgBody">
                 @yield('content')
