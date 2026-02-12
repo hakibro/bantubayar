@@ -1,11 +1,16 @@
 @extends('layouts.dashboard')
-@section('title', 'Riwayat Penanganan')
 
 @section('content')
     <!-- Scrollable Content -->
-    <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24">
+    <div class="flex-1 overflow-y-auto px-4 py-6 md:p-8 pb-24">
 
-        <div class="max-w-4xl mx-auto space-y-6">
+        <div class="max-w-4xl mx-auto space-y-4">
+
+            <button onclick="window.history.back()"
+                class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition font-medium shadow-sm">
+                <i class="fas fa-arrow-left text-sm"></i>
+                <span>Kembali</span>
+            </button>
 
             <!-- 1. Payment Focus Card (Updated Actions) -->
             <div class="bg-white rounded-3xl shadow-lg p-6 md:p-8 border border-gray-100 relative overflow-hidden">
@@ -86,9 +91,11 @@
 
                                     </div>
                                 @else
-                                    <span
-                                        class="inline-flex flex-col py-2 px-4 bg-red-400 mt-2 rounded-lg text-xs text-white font-semibold">Wali
-                                        Belum Mengisi Nominal Kesanggupan</span>
+                                    <div
+                                        class="inline-flex flex-col py-2 px-4 bg-red-400 mt-2 rounded-lg text-xs text-white font-semibold">
+                                        Wali Belum Mengisi Nominal Kesanggupan. <br />
+                                        Tanggal Kesanggupan: {{ $penangananTerakhir->kesanggupanTerakhir->tanggal }}
+                                    </div>
 
                                 @endif
                             @endif
@@ -173,71 +180,90 @@
                 </div>
 
                 <div class="space-y-5" id="historyList">
-                    @if ($siswa->penangananSelesai()->isNotEmpty())
-                        @foreach ($siswa->penangananSelesai() as $riwayatPenanganan)
-                            <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+                    @forelse ($siswa->penangananSelesai() as $riwayatPenanganan)
+                        <details class="group border-t border-gray-200 pt-4 appearance-none">
+                            {{-- Bagian Header (Klik untuk buka/tutup) --}}
+                            <summary
+                                class="flex items-center justify-between cursor-pointer list-none outline-none hover:bg-gray-50 p-2 rounded-lg transition-all">
                                 <div class="flex items-center gap-4">
                                     <div>
-                                        <p class="text-xs text-textMuted">
-                                            Ditangani oleh:
-                                        </p>
-
+                                        <p class="text-xs text-textMuted">Ditangani oleh:</p>
                                         <h4 class="font-bold text-md text-gray-800">
                                             {{ $riwayatPenanganan->petugas->name }}
                                         </h4>
-
                                         <p class="text-xs text-textMuted">
                                             {{ $riwayatPenanganan->created_at->diffForHumans() }}
                                         </p>
 
-
                                         {{-- Rating --}}
-                                        <div class="flex items-center gap-0.5 mt-2 pt-2 border-t border-gray-200">
+                                        <div class="flex items-center gap-0.5 mt-2">
                                             @for ($i = 1; $i <= 5; $i++)
                                                 <i
-                                                    class="fas fa-star text-[11px]
-                {{ $i <= ($riwayatPenanganan->rating ?? 0) ? 'text-yellow-400' : 'text-gray-300' }}">
-                                                </i>
+                                                    class="fas fa-star text-[11px] {{ $i <= ($riwayatPenanganan->rating ?? 0) ? 'text-yellow-400' : 'text-gray-300' }}"></i>
                                             @endfor
-
                                             @if (!is_null($riwayatPenanganan->rating))
-                                                <span class="text-[10px] text-textMuted ml-1">
-                                                    ({{ $riwayatPenanganan->rating }}/5)
-                                                </span>
+                                                <span
+                                                    class="text-[10px] text-textMuted ml-1">({{ $riwayatPenanganan->rating }}/5)</span>
                                             @endif
                                         </div>
-                                        @if (!is_null($riwayatPenanganan->catatan))
-                                            <span class="text-[12px] text-textMuted">
-                                                {{ $riwayatPenanganan->catatan }}
-                                            </span>
-                                        @endif
                                     </div>
-
                                 </div>
-                                <div class="flex flex-col gap-2 items-end justify-between text-right ">
+
+                                <div class="flex flex-col gap-1 items-end text-right">
                                     <p
-                                        class="text-xs px-2 py-0.5 rounded-full
-    {{ in_array($riwayatPenanganan->hasil, ['lunas', 'isi_saldo', 'cicilan'])
-        ? 'bg-green-100 text-green-600'
-        : 'bg-red-100 text-red-600' }}">
+                                        class="text-xs px-2 py-0.5 rounded-full {{ in_array($riwayatPenanganan->hasil, ['lunas', 'isi_saldo', 'cicilan']) ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' }}">
                                         {{ $riwayatPenanganan->hasil }}
                                     </p>
                                     <div
-                                        class="font-bold  text-sm {{ in_array($riwayatPenanganan->hasil, ['lunas', 'isi_saldo', 'cicilan']) ? ' text-success' : ' text-accent' }}">
+                                        class="font-bold text-sm {{ in_array($riwayatPenanganan->hasil, ['lunas', 'isi_saldo', 'cicilan']) ? 'text-success' : 'text-accent' }}">
                                         Rp {{ number_format($riwayatPenanganan->getTotalTunggakan(), 0, ',', '.') }}
                                     </div>
 
-                                    <p class="text-xs text-textMuted mt-2">
-                                        {{ $riwayatPenanganan->histories()->count() }} tindakan
-                                    </p>
+                                    {{-- Indikator Panah & Total Tindakan --}}
+                                    <div class="flex items-center gap-2 mt-1 text-primary">
+                                        <span class="text-xs font-semibold">{{ $riwayatPenanganan->histories()->count() }}
+                                            tindakan</span>
+                                        {{-- Icon berputar saat <details> terbuka berkat group-open:rotate-180 --}}
+                                        <i
+                                            class="fas fa-chevron-down text-[10px] transition-transform duration-300 group-open:rotate-180"></i>
+                                    </div>
+                                </div>
+                            </summary>
 
+                            {{-- Isi Detail (Muncul saat diklik) --}}
+                            <div class="mt-4 ml-4 pl-4 border-l-2 border-gray-100 space-y-4 pb-2 animate-fadeIn">
+                                @if (!is_null($riwayatPenanganan->catatan))
+                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Catatan Petugas:</p>
+                                        <p class="text-sm text-gray-700 italic">"{{ $riwayatPenanganan->catatan }}"</p>
+                                    </div>
+                                @endif
+
+                                <div class="space-y-3">
+                                    <p class="text-[10px] uppercase font-bold text-gray-400">Rincian Tindakan:</p>
+                                    @foreach ($riwayatPenanganan->histories as $history)
+                                        <div
+                                            class="flex justify-between items-start text-sm bg-white p-2 rounded shadow-sm">
+                                            <div class="flex gap-2">
+                                                <i class="fas fa-check-circle text-green-500 mt-1 text-[10px]"></i>
+                                                <div>
+                                                    <p class="text-gray-700">{{ $history->tindakan ?? 'Tindakan terekam' }}
+                                                    </p>
+                                                    <p class="text-[10px] text-gray-400">
+                                                        {{ $history->created_at->format('d M Y, H:i') }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
-                        @endforeach
-                    @else
-                        <p class="text-sm text-gray-400 italic">Belum ada riwayat penanganan. </p>
-                    @endif
-
+                        </details>
+                    @empty
+                        <div class="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                            <i class="fas fa-history text-gray-200 text-4xl mb-3"></i>
+                            <p class="text-sm text-gray-400 italic">Belum ada riwayat penanganan.</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
 

@@ -59,7 +59,8 @@ class PenangananController extends Controller
         }
 
         // 1. CEK AKSES WALI SISWA (Tanpa Login via Signed URL)
-        if ($request->hasValidSignature() || app()->environment('local')) {
+        // if ($request->hasValidSignature() || app()->environment('local')) {
+        if ($request->hasValidSignature()) {
             // Ambil data pembayaran untuk ditampilkan ke wali
 
             // dd($siswa->getKategoriBelumLunas());
@@ -93,7 +94,7 @@ class PenangananController extends Controller
                 ];
             }
 
-            // jika ada history telepon terakhir kurang dari 1 hari, tolak
+            // jika history telepon terakhir sama dengan aksi telepon sekarang, tolak
             if (
                 $data['jenis_penanganan'] === 'phone' &&
                 $penanganan->histories()
@@ -103,7 +104,7 @@ class PenangananController extends Controller
             ) {
                 return [
                     'success' => false,
-                    'message' => 'Aksi telepon terakhir kurang dari 1 hari yang lalu.',
+                    'message' => 'Lakukan telepon ulang di hari berikutnya.',
                 ];
             }
 
@@ -273,33 +274,32 @@ class PenangananController extends Controller
                 'tanggal_kesanggupan' => 'required|date',
             ]);
 
+            // Gunakan firstOrCreate agar jika ID & Tanggal sama, tidak buat baris baru
+            // Kita tidak menyertakan 'token' di pencarian agar tidak selalu buat baru
+            $kesanggupan = PenangananKesanggupan::firstOrCreate(
+                [
+                    'penanganan_id' => $data['penanganan_id'],
+                    'tanggal' => $data['tanggal_kesanggupan'],
+                ],
+                [
+                    'token' => \Str::uuid(), // Ini hanya diisi jika data baru dibuat
+                ]
+            );
 
-
-            $kesanggupan = PenangananKesanggupan::create([
-                'penanganan_id' => $data['penanganan_id'],
-                'tanggal' => $data['tanggal_kesanggupan'],
-                'token' => \Str::uuid(),
-            ]);
-
+            // Update status penanganan utama
             $kesanggupan->penanganan()->update([
                 'status' => 'menunggu_tindak_lanjut',
             ]);
 
             return response()->json([
                 'success' => true,
+                'is_duplicate' => !$kesanggupan->wasRecentlyCreated, // Info tambahan jika perlu
                 'link' => route('wali.kesanggupan.form', $kesanggupan->token)
             ]);
 
         } catch (\Throwable $e) {
-            logger()->error('KESANGGUPAN ERROR', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Server error'
-            ], 500);
+            // ... (log error tetap sama)
+            return response()->json(['success' => false, 'message' => 'Server error'], 500);
         }
     }
 

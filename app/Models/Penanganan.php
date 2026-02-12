@@ -50,6 +50,12 @@ class Penanganan extends Model
     {
         return $this->hasOne(PenangananKesanggupan::class)->latestOfMany();
     }
+
+    public function getTanggalKesanggupanFormattedAttribute()
+    {
+        return $this->kesanggupanTerakhir ? \Carbon\Carbon::parse($this->kesanggupanTerakhir->tanggal)->format('Y-m-d') : '';
+    }
+
     public function histories()
     {
         return $this->hasMany(PenangananHistory::class);

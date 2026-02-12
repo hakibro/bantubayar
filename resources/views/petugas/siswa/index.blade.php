@@ -213,27 +213,15 @@
                                     <span>{{ $item->TingkatDiniyah ?? '-' }}</span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3 mt-2">@include('petugas.siswa.partials.status-siswa')
-                                @if ($item->sedangDitangani())
-                                    <span class="text-xs font-semibold text-yellow-600 truncate italic">
-                                        Sedang ditangani
-                                        {{ $item->petugasPenangananAktif() }}
-                                    </span>
-                                @endif
-                                {{-- tambahkan jika penanganan terakhir masih di bulan yang sama --}}
-                                @if ($item->penangananLunas() && $item->getTotalTunggakan() == 0)
-                                    <span class="text-xs font-semibold text-green-600 text-sm italic ml-2">
-                                        Telah ditangani oleh
-                                        {{ $item->penangananLunas()->petugas->name }}
-                                    </span>
-                                @endif
-                            </div>
+                            @include('petugas.siswa.partials.status-siswa')
+
+
 
                         </div>
 
                         <div class="flex flex-col gap-2 shrink-0">
                             <button onclick="syncPembayaran({{ $item->id }})"
-                                class="p-2.5 md:px-3 md:py-1.5 text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition flex items-center justify-center"
+                                class="p-2.5 md:px-3 md:py-1.5 text-blue-600 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 transition flex items-center justify-center"
                                 title="Sync Data">
                                 <i class="fas fa-sync-alt text-sm"></i>
                                 <span class="inline ml-2 text-[11px] font-bold uppercase">Sync</span>

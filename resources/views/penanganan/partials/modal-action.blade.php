@@ -71,6 +71,7 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">Tanggal Kesanggupan</label>
                             <input type="date" name="tanggal_kesanggupan" id="tanggal_kesanggupan"
+                                value="{{ $penangananTerakhir->tanggal_kesanggupan_formatted ?? '' }}"
                                 class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-primaryLight outline-none">
                         </div>
                         <button onclick="sendAgreement()"
@@ -218,6 +219,10 @@
         function sendAgreement() {
             const tanggal_kesanggupan = document.getElementById('tanggal_kesanggupan').value;
             const bolehKirimKesanggupan = @json($penangananTerakhir && $penangananTerakhir->status !== 'selesai');
+
+            // Kita tetap ambil tanggal terakhir untuk verifikasi visual jika butuh, 
+            // tapi tidak untuk memblokir request.
+
             if (!tanggal_kesanggupan) {
                 showToast('Tanggal kesanggupan harus diisi', 'error');
                 return;
@@ -227,6 +232,8 @@
                 showToast('Follow up wali terlebih dahulu', 'error');
                 return;
             }
+
+            // Blokir pengecekan duplikat di JS dihapus agar petugas bisa "Resend" link
 
             fetch("{{ route('penanganan.kesanggupan') }}", {
                     method: "POST",
@@ -242,7 +249,7 @@
                 .then(res => res.json())
                 .then(res => {
                     if (!res.success) {
-                        showToast('Gagal mengirim kesanggupan', 'error');
+                        showToast('Gagal memproses kesanggupan', 'error');
                         return;
                     }
 
@@ -255,7 +262,13 @@ ${res.link}
 Terima kasih atas perhatian dan kerja samanya 🙏`;
 
                     sendWhatsapp(pesan);
-                    showToast('Pernyataan kesanggupan berhasil dikirim', 'success');
+
+                    // Berikan info berbeda jika data sebenarnya sudah ada sebelumnya
+                    if (res.is_duplicate) {
+                        showToast('Link dikirim ulang (tanggal sama)', 'success');
+                    } else {
+                        showToast('Pernyataan kesanggupan berhasil dikirim', 'success');
+                    }
                 })
                 .catch(() => {
                     showToast('Terjadi kesalahan sistem', 'error');
