@@ -166,6 +166,33 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-bold text-amber-600 uppercase tracking-wider">
+                                    Penanganan</h4>
+                                <div class="flex md:grid md:grid-cols-2">
+                                    <select name="status_penanganan"
+                                        class="w-full px-2 py-2 bg-white border border-gray-200 rounded-l-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Status...</option>
+                                        <option value="belum_ditangani">Belum Ditangani</option>
+                                        @foreach ($filterOptions['status_penanganan'] as $status)
+                                            <option value="{{ $status }}"
+                                                {{ request('status_penanganan') == $status ? 'selected' : '' }}>
+                                                {{ Str::title(str_replace('_', ' ', $status)) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <select name="hasil_penanganan"
+                                        class="w-full px-2 py-2 bg-white border border-gray-200 border-l-0 rounded-r-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Hasil...</option>
+                                        @foreach ($filterOptions['hasil_penanganan'] as $hasil)
+                                            <option value="{{ $hasil }}"
+                                                {{ request('hasil_penanganan') == $hasil ? 'selected' : '' }}>
+                                                {{ Str::title(str_replace('_', ' ', $hasil)) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -175,71 +202,8 @@
 
         {{-- DATA SISWA (RESPONSIVE GRID CARDS) --}}
         {{-- Grid Layout: 1 Kolom di Mobile, 2 di Tablet, 3 di Desktop, 4 di Layar Lebar --}}
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
-            @forelse ($siswa as $item)
-                <div id="siswa-{{ $item->id }}"
-                    class="group {{ $item->sedangDitangani()
-                        ? 'bg-yellow-50 ring-2 ring-yellow-200 text-gray-800'
-                        : ($item->penangananLunas() && $item->getTotalTunggakan() == 0
-                            ? 'bg-gray-100 border-none shadow-none text-gray-400'
-                            : 'bg-white') }} rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-4">
-
-                    <div class="flex justify-between items-center gap-3">
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-base leading-tight truncate">
-                                {{ $item->nama }}
-                            </h3>
-                            <div class="flex items-center gap-2">
-
-
-                            </div>
-
-                            <div
-                                class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 border-t border-gray-50 pt-2">
-
-                                <span class="text-xs font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                    {{ $item->idperson }}
-                                </span>
-                                <div class="flex items-center gap-1">
-                                    <i class="fas fa-school text-blue-400"></i>
-                                    <span>{{ $item->UnitFormal ?? '-' }} ({{ $item->KelasFormal ?? '-' }})</span>
-                                </div>
-                                <div class="flex items-center gap-1">
-                                    <i class="fas fa-bed text-green-400"></i>
-                                    <span>{{ $item->AsramaPondok ?? '-' }}/{{ $item->KamarPondok ?? '-' }}</span>
-                                </div>
-                                <div class="flex items-center gap-1">
-                                    <i class="fas fa-mosque text-amber-400"></i>
-                                    <span>{{ $item->TingkatDiniyah ?? '-' }}</span>
-                                </div>
-                            </div>
-                            @include('petugas.siswa.partials.status-siswa')
-
-
-
-                        </div>
-
-                        <div class="flex flex-col gap-2 shrink-0">
-                            <button onclick="syncPembayaran({{ $item->id }})"
-                                class="p-2.5 md:px-3 md:py-1.5 text-blue-600 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 transition flex items-center justify-center"
-                                title="Sync Data">
-                                <i class="fas fa-sync-alt text-sm"></i>
-                                <span class="inline ml-2 text-[11px] font-bold uppercase">Sync</span>
-                            </button>
-                            <a href="{{ route('penanganan.show', $item->id) }}"
-                                class="p-2.5 md:px-4 md:py-1.5 bg-gray-800 text-white rounded-xl hover:bg-black transition flex items-center justify-center shadow-sm"
-                                title="Aksi">
-                                <i class="fas fa-arrow-right text-sm"></i>
-                                <span class="inline ml-2 text-[11px] font-bold uppercase">Aksi</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="col-span-full py-12 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                    <p class="text-gray-500 font-medium">Data siswa tidak ditemukan.</p>
-                </div>
-            @endforelse
+        <div id="siswa-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
+            @include('petugas.siswa.partials.list-siswa')
         </div>
 
         {{-- PAGINATION --}}
@@ -281,5 +245,51 @@
 
             document.getElementById("filterForm").submit();
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.getElementById('filterForm');
+            const selects = filterForm.querySelectorAll('select');
+            const searchInput = filterForm.querySelector('input[name="search"]');
+            const container = document.getElementById('siswa-container');
+            let typingTimer;
+
+            // 1. Dropdown tetap submit form (reload halaman)
+            selects.forEach(select => {
+                select.addEventListener('change', () => filterForm.submit());
+            });
+
+            // 2. Input Search menggunakan AJAX
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(typingTimer);
+
+                    // Indikator loading visual sederhana
+                    container.style.opacity = '0.5';
+
+                    typingTimer = setTimeout(() => {
+                        const formData = new FormData(filterForm);
+                        const params = new URLSearchParams(formData).toString();
+
+                        fetch(`${window.location.pathname}?${params}`, {
+                                headers: {
+                                    "X-Requested-With": "XMLHttpRequest"
+                                }
+                            })
+                            .then(res => res.text())
+                            .then(html => {
+                                container.innerHTML = html;
+                                container.style.opacity = '1';
+
+                                // Update URL browser tanpa reload (opsional)
+                                window.history.pushState({}, '', `?${params}`);
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                container.style.opacity = '1';
+                            });
+                    }, 500); // 500ms lebih cepat untuk live search
+                });
+            }
+        });
     </script>
 @endpush

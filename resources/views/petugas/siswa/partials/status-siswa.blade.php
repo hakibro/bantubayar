@@ -19,7 +19,10 @@
                     Sedang ditangani
                     {{ $item->petugasPenangananAktif() }}
                 </span>
-            @elseif ($item->penangananLunas() && $item->getTotalTunggakan() == 0)
+            @elseif (
+                $item->penangananLunas() &&
+                    $item->getTotalTunggakan() == 0 &&
+                    $item->penangananLunas()->updated_at->isSameMonth(now()))
                 <span class="text-xs font-semibold text-green-600 text-sm italic">
                     Telah ditangani
                     {{ $item->penangananLunas()->petugas->name }}

@@ -74,7 +74,7 @@
                             @endif
 
 
-                            @if ($penangananTerakhir && $penangananTerakhir->kesanggupanTerakhir)
+                            @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai' && $penangananTerakhir->kesanggupanTerakhir)
                                 @if ($penangananTerakhir->kesanggupanTerakhir->nominal)
 
                                     <div
@@ -103,7 +103,11 @@
                     </div>
                     <!-- Main Action Buttons -->
                     <!-- TODO: kembangkan pembatasan tindak lanjut dan hasil jika sudah diberi apresiasi -->
-                    @if ($penangananTerakhir && $penangananTerakhir->hasil === 'lunas' && $siswa->getTotalTunggakan() == 0)
+                    @if (
+                        $penangananTerakhir &&
+                            $penangananTerakhir->hasil === 'lunas' &&
+                            $siswa->getTotalTunggakan() == 0 &&
+                            $penangananTerakhir->updated_at->isSameMonth(now()))
                         <span class="text-gray-400 text-sm italic"> Sudah ditangani oleh
                             {{ $penangananTerakhir->petugas->name }}.</span>
                     @else
@@ -239,22 +243,38 @@
                                     </div>
                                 @endif
 
-                                <div class="space-y-3">
-                                    <p class="text-[10px] uppercase font-bold text-gray-400">Rincian Tindakan:</p>
-                                    @foreach ($riwayatPenanganan->histories as $history)
-                                        <div
-                                            class="flex justify-between items-start text-sm bg-white p-2 rounded shadow-sm">
-                                            <div class="flex gap-2">
-                                                <i class="fas fa-check-circle text-green-500 mt-1 text-[10px]"></i>
-                                                <div>
-                                                    <p class="text-gray-700">{{ $history->tindakan ?? 'Tindakan terekam' }}
+                                <div class="mt-4">
+                                    <p class="text-[10px] uppercase font-bold text-gray-400 mb-4 ml-1">Riwayat Tindakan</p>
+
+                                    <div class="relative ml-20 border-l border-gray-100 space-y-3">
+                                        @foreach ($riwayatPenanganan->histories as $history)
+                                            <div class="relative pl-6">
+                                                {{-- Waktu di luar garis (Kiri) --}}
+                                                <div class="absolute -left-20 w-16 text-right top-1">
+                                                    <p class="text-[9px] font-bold text-gray-500 leading-none">
+                                                        {{ $history->created_at->format('d/m/y') }}</p>
+                                                    <p class="text-[9px] text-gray-400 mt-1">
+                                                        {{ $history->created_at->format('H:i') }}</p>
+                                                </div>
+
+                                                {{-- Dot Icon --}}
+                                                <div
+                                                    class="absolute -left-[11px] top-1 w-5 h-5 rounded-full bg-white border flex items-center justify-center shadow-sm
+                {{ $history->jenis_penanganan === 'chat' ? 'border-green-500' : ($history->jenis_penanganan === 'phone' ? 'border-blue-500' : 'border-gray-300') }}">
+                                                    <i
+                                                        class="fas {{ $history->jenis_penanganan === 'chat' ? 'fa-comment' : ($history->jenis_penanganan === 'phone' ? 'fa-phone' : 'fa-info') }} 
+                    text-[8px] {{ $history->jenis_penanganan === 'chat' ? 'text-green-500' : ($history->jenis_penanganan === 'phone' ? 'text-blue-500' : 'text-gray-400') }}"></i>
+                                                </div>
+
+                                                {{-- Content Minimalis --}}
+                                                <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                                    <p class="text-xs text-gray-700 leading-snug">
+                                                        {{ $history->catatan ?? 'Tindakan terekam' }}
                                                     </p>
-                                                    <p class="text-[10px] text-gray-400">
-                                                        {{ $history->created_at->format('d M Y, H:i') }}</p>
                                                 </div>
                                             </div>
-                                        </div>
-                                    @endforeach
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
                         </details>
