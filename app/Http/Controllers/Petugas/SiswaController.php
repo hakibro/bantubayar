@@ -7,6 +7,7 @@ use App\Services\SiswaService;
 use App\Models\User;
 use App\Models\Siswa;
 use App\Models\PetugasSiswa;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -77,10 +78,15 @@ class SiswaController extends Controller
             }
         }
 
+        $now = Carbon::now();
+
         // Filter Penanganan
         if ($request->status_penanganan) {
             if ($request->status_penanganan === 'belum_ditangani') {
-                $query->whereDoesntHave('penanganan');
+                $query->whereDoesntHave('penanganan', function ($q) use ($now) {
+                    $q->whereMonth('created_at', $now->month)
+                        ->whereYear('created_at', $now->year);
+                });
             } else {
                 $query->whereHas('penanganan', function ($q) use ($request) {
                     $q->where('status', $request->status_penanganan);

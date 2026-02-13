@@ -1,13 +1,13 @@
-@forelse ($siswa as $item)
-    <div id="siswa-{{ $item->id }}"
-        class="group {{ $item->is_lunas === true && $item->penangananLunas()?->updated_at->isSameMonth(now())
+@forelse ($listPenanganan as $item)
+    <div id="siswa-{{ $item->siswa->id }}"
+        class="group {{ $item->siswa->is_lunas === true && $item->siswa->penangananLunas()?->updated_at->isSameMonth(now())
             ? 'bg-gray-100 border-none shadow-none text-gray-400'
             : 'bg-white' }} rounded-2xl border border-gray-100 hover:shadow-lg transition-all p-4">
 
         <div class="flex justify-between items-center gap-3">
             <div class="flex-1 min-w-0">
                 <h3 class="font-bold text-base leading-tight truncate">
-                    {{ $item->nama }}
+                    {{ $item->siswa->nama }}
                 </h3>
                 <div class="flex items-center gap-2">
 
@@ -18,35 +18,39 @@
                     class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 border-t border-gray-50 pt-2">
 
                     <span class="text-xs font-mono font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                        {{ $item->idperson }}
+                        {{ $item->siswa->idperson }}
                     </span>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-graduation-cap text-blue-400"></i>
-                        <span>{{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}</span>
+                        <span>{{ $item->siswa->UnitFormal ?? '-' }} - {{ $item->siswa->KelasFormal ?? '-' }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-home text-green-400"></i>
-                        <span>{{ $item->AsramaPondok ?? '-' }} - {{ $item->KamarPondok ?? '-' }}</span>
+                        <span>{{ $item->siswa->AsramaPondok ?? '-' }} - {{ $item->siswa->KamarPondok ?? '-' }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-atom text-amber-400"></i>
-                        <span>{{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '' }}</span>
+                        <span>{{ $item->siswa->TingkatDiniyah ?? '-' }} - {{ $item->siswa->KelasDiniyah ?? '' }}</span>
                     </div>
                 </div>
-                @include('petugas.siswa.partials.status-siswa')
-
-
-
+                @include('penanganan.partials.status-siswa')
+                <div
+                    class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 border-t border-gray-50 pt-2">
+                    <span class="text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                        Dibuat {{ $item->created_at->diffForHumans() }}</span>
+                    <span class="text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                        Diperbarui {{ $item->updated_at->diffForHumans() }}</span>
+                </div>
             </div>
 
             <div class="flex flex-col gap-2 shrink-0">
-                <button onclick="syncPembayaran({{ $item->id }})"
+                <button onclick="syncPembayaran({{ $item->siswa->id }})"
                     class="p-2.5 md:px-3 md:py-1.5 text-blue-600 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 transition flex items-center justify-center"
                     title="Sync Data">
                     <i class="fas fa-sync-alt text-sm"></i>
                     <span class="inline ml-2 text-[11px] font-bold uppercase">Sync</span>
                 </button>
-                <a href="{{ route('penanganan.show', $item->id) }}"
+                <a href="{{ route('penanganan.show', $item->siswa->id) }}"
                     class="p-2.5 md:px-4 md:py-1.5 bg-blue-600 text-white rounded-xl hover:bg-black transition flex items-center justify-center shadow-sm"
                     title="Aksi">
                     <i class="fas fa-arrow-right text-sm"></i>

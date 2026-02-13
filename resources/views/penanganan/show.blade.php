@@ -347,10 +347,13 @@
 
                     // Panggil fungsi (pastikan nama sudah sama: syncPembayaran)
                     syncPembayaran({{ $siswa->id }});
+
                 } else {
                     // Opsional: Hapus flag setelah beberapa saat jika ingin bisa sync lagi nanti
                     // localStorage.removeItem('synced_siswa_{{ $siswa->id }}');
-                    console.log(localStorage.getItem('synced_siswa_{{ $siswa->id }}'));
+                    console.log('has synced in local storage? ' + localStorage.getItem(
+                        'synced_siswa_{{ $siswa->id }}'));
+
                 }
             });
         </script>

@@ -80,36 +80,6 @@
         function closeError() {
             document.getElementById("errorModal").classList.add("hidden");
         }
-
-        function syncPembayaran(id) {
-
-            document.getElementById("loadingModal").classList.remove("hidden");
-
-            fetch("{{ url('petugas/siswa/sync-pembayaran-siswa') }}/" + id, {
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-
-                    if (!data.status) throw new Error(data.message);
-
-                    // AMBIL HTML TERBARU
-                    return fetch(`/petugas/siswa/${id}/pembayaran-partial`);
-                })
-                .then(res => res.text())
-                .then(html => {
-                    document.getElementById('pembayaranWrapper').innerHTML = html;
-                })
-                .catch(err => {
-                    document.getElementById("errorMessage").innerText = err.message || 'Gagal sync';
-                    document.getElementById("errorModal").classList.remove("hidden");
-                })
-                .finally(() => {
-                    document.getElementById("loadingModal").classList.add("hidden");
-                });
-        }
     </script>
 
 

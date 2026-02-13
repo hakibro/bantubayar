@@ -18,13 +18,42 @@ class PenangananController extends Controller
 {
     public function index()
     {
-        $data = auth()->user()
-            ->penanganan()
-            ->with('siswa')
-            ->orderBy('status', 'asc')
-            ->paginate(20);
 
-        return view('penanganan.index', compact('data'));
+        $scope = auth()->user()
+            ->penanganan()
+            ->with('siswa');
+
+        $listPenanganan = $scope->where('status', '!=', 'selesai')
+            ->orderBy('status', 'asc')
+            ->paginate(40);
+
+
+        $filterOptions = [];
+        $filterOptions['status_penanganan'] = $this->getEnumValues('penanganan', 'status');
+
+
+        return view('penanganan.index', compact('filterOptions', 'listPenanganan'));
+    }
+
+    private function getEnumValues($table, $column)
+    {
+        // Hapus DB::raw, gunakan string langsung
+        $results = \DB::select("SHOW COLUMNS FROM {$table} WHERE Field = ?", [$column]);
+
+        if (empty($results))
+            return [];
+
+        $type = $results[0]->Type;
+
+        // Mengekstrak nilai di dalam tanda petik
+        preg_match('/^enum\((.*)\)$/', $type, $matches);
+        $values = [];
+        if (isset($matches[1])) {
+            foreach (explode(',', $matches[1]) as $value) {
+                $values[] = trim($value, "'");
+            }
+        }
+        return $values;
     }
 
     public function show(Request $request, $id_siswa)
