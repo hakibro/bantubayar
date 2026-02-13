@@ -60,6 +60,10 @@ class Penanganan extends Model
     {
         return $this->hasMany(PenangananHistory::class);
     }
+    public function lastHistory()
+    {
+        return $this->hasOne(PenangananHistory::class)->latest();
+    }
 
     /**
      * Ambil penanganan aktif atau buat baru

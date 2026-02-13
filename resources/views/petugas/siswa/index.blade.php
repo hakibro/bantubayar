@@ -74,7 +74,7 @@
                 <div class="p-4 bg-white">
                     <div class="flex items-center gap-2">
                         <div class="relative flex-grow">
-                            <input type="text" name="search" placeholder="Cari nama atau ID person..."
+                            <input type="text" name="search" placeholder="Cari nama atau ID Yayasan..."
                                 class="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none"
                                 value="{{ request('search') }}" />
                         </div>

@@ -16,25 +16,53 @@ use Illuminate\Support\Facades\URL;
 
 class PenangananController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = auth()->user()->penanganan()->with('siswa');
 
-        $scope = auth()->user()
-            ->penanganan()
-            ->with('siswa');
+        // Filter Search (Nama Siswa atau ID)
+        if ($request->filled('search')) {
+            $query->whereHas('siswa', function ($q) use ($request) {
+                $q->where('nama', 'like', '%' . $request->search . '%')
+                    ->orWhere('idperson', 'like', '%' . $request->search . '%');
+            });
+        }
 
-        $listPenanganan = $scope->where('status', '!=', 'selesai')
-            ->orderBy('status', 'asc')
-            ->paginate(40);
+        // Filter Status Penanganan
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        } else {
+            $query->where('status', '!=', 'selesai');
+        }
 
+        // 3. Filter Waktu Dibuat (Lama Hari: 1 - 7 Hari Terakhir)
+        if ($request->filled('waktuDibuat') && is_numeric($request->waktu)) {
+            $hari = (int) $request->waktu;
+            // Mengambil data yang dibuat sejak X hari yang lalu sampai sekarang
+            $query->where('created_at', '>=', now()->subDays($hari)->startOfDay());
+        }
+        // 3. Filter Waktu Diperbarui (Lama Hari: 1 - 7 Hari Terakhir)
+        if ($request->filled('waktuDiperbarui') && is_numeric($request->waktu)) {
+            $hari = (int) $request->waktu;
+            // Mengambil data yang diperbarui sejak X hari yang lalu sampai sekarang
+            $query->lastHistory()->where('updated_at', '>=', now()->subDays($hari)->startOfDay());
+        }
 
-        $filterOptions = [];
-        $filterOptions['status_penanganan'] = $this->getEnumValues('penanganan', 'status');
+        // 4. Filter Penanganan Terlambat (Belum selesai dalam 7 hari)
+        if ($request->filled('terlambat') && is_numeric($request->terlambat)) {
+            $hari = (int) $request->terlambat;
+            $query->lastHistory()->where('created_at', '<=', now()->subDays($hari)->endOfDay());
+        }
 
+        $listPenanganan = $query->orderBy('status', 'asc')->paginate(40);
+
+        // Jika AJAX, kirim hanya bagian tabelnya saja
+        if ($request->ajax()) {
+            return view('penanganan.partials.list-siswa', compact('listPenanganan'))->render();
+        }
 
         return view('penanganan.index', compact('filterOptions', 'listPenanganan'));
     }
-
     private function getEnumValues($table, $column)
     {
         // Hapus DB::raw, gunakan string langsung
