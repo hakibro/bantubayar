@@ -1,8 +1,10 @@
 ### Todo:
 
-- index list penanganan dengan filter by [status, hasil, sudah ditangani, created_at, kesanggupan], hapus duplikat nama siswa karena penanganan > 1, update tampilan list,
+- ubah logika simpan aksi agar update juga timestamp penanganan
 
 ### Done:
+
+- index list penanganan dengan filter by [status, hasil, sudah ditangani, created_at, kesanggupan], hapus duplikat nama siswa karena penanganan > 1, update tampilan list,
 
 Admin:
 
