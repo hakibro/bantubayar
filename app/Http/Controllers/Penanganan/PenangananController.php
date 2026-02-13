@@ -35,17 +35,32 @@ class PenangananController extends Controller
             $query->where('status', '!=', 'selesai');
         }
 
-        // 3. Filter Waktu Dibuat (Lama Hari: 1 - 7 Hari Terakhir)
-        if ($request->filled('waktuDibuat') && is_numeric($request->waktu)) {
-            $hari = (int) $request->waktu;
-            // Mengambil data yang dibuat sejak X hari yang lalu sampai sekarang
-            $query->where('created_at', '>=', now()->subDays($hari)->startOfDay());
+        // 3. Filter Waktu Dibuat
+        if ($request->filled('waktuDibuat') && is_numeric($request->waktuDibuat)) {
+            $hari = (int) $request->waktuDibuat;
+
+            if ($hari > 7) {
+                // Logika: Data yang dibuat sebelum atau tepat 8 hari yang lalu (tumpukan lama)
+                $query->whereDate('created_at', '<=', now()->subDays(8));
+            } else {
+                // Logika: Tepat X hari yang lalu (1-7 hari)
+                $query->whereDate('created_at', now()->subDays($hari));
+            }
         }
-        // 3. Filter Waktu Diperbarui (Lama Hari: 1 - 7 Hari Terakhir)
-        if ($request->filled('waktuDiperbarui') && is_numeric($request->waktu)) {
-            $hari = (int) $request->waktu;
-            // Mengambil data yang diperbarui sejak X hari yang lalu sampai sekarang
-            $query->lastHistory()->where('updated_at', '>=', now()->subDays($hari)->startOfDay());
+        // 3. Filter Waktu Diperbarui (Berdasarkan Riwayat Terakhir)
+        if ($request->filled('waktuDiperbarui') && is_numeric($request->waktuDiperbarui)) {
+            $hari = (int) $request->waktuDiperbarui;
+
+            // Panggil scope lastHistory sekali di awal
+            $query->lastHistory(function ($q) use ($hari) {
+                if ($hari > 7) {
+                    // Data yang riwayat terakhirnya 8 hari yang lalu atau lebih lama
+                    $q->whereDate('created_at', '<=', now()->subDays(8));
+                } else {
+                    // Data yang riwayat terakhirnya tepat X hari yang lalu
+                    $q->whereDate('created_at', now()->subDays($hari));
+                }
+            });
         }
 
         // 4. Filter Penanganan Terlambat (Belum selesai dalam 7 hari)
@@ -61,7 +76,7 @@ class PenangananController extends Controller
             return view('penanganan.partials.list-siswa', compact('listPenanganan'))->render();
         }
 
-        return view('penanganan.index', compact('filterOptions', 'listPenanganan'));
+        return view('penanganan.index', compact('listPenanganan'));
     }
     private function getEnumValues($table, $column)
     {

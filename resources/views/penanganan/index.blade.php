@@ -104,9 +104,15 @@
                                 <select name="waktuDibuat"
                                     class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs outline-none">
                                     <option value="">Semua Waktu</option>
-                                    <option value="1">1 Hari Terakhir</option>
-                                    <option value="3">3 Hari Terakhir</option>
-                                    <option value="7">7 Hari Terakhir</option>
+                                    <option value="0">Hari ini</option>
+                                    <option value="1">1 Hari yang lalu</option>
+                                    <option value="2">2 Hari yang lalu</option>
+                                    <option value="3">3 Hari yang lalu</option>
+                                    <option value="4">4 Hari yang lalu</option>
+                                    <option value="5">5 Hari yang lalu</option>
+                                    <option value="6">6 Hari yang lalu</option>
+                                    <option value="7">7 Hari yang lalu</option>
+                                    <option value="8">Lebih dari 7 Hari yang lalu</option>
                                 </select>
                             </div>
                         </div>
@@ -117,9 +123,15 @@
                                 <select name="waktuDiperbarui"
                                     class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs outline-none">
                                     <option value="">Semua Waktu</option>
-                                    <option value="1">1 Hari Terakhir</option>
-                                    <option value="3">3 Hari Terakhir</option>
-                                    <option value="7">7 Hari Terakhir</option>
+                                    <option value="0">Hari ini</option>
+                                    <option value="1">1 Hari yang lalu</option>
+                                    <option value="2">2 Hari yang lalu</option>
+                                    <option value="3">3 Hari yang lalu</option>
+                                    <option value="4">4 Hari yang lalu</option>
+                                    <option value="5">5 Hari yang lalu</option>
+                                    <option value="6">6 Hari yang lalu</option>
+                                    <option value="7">7 Hari yang lalu</option>
+                                    <option value="8">Lebih dari 7 Hari yang lalu</option>
                                 </select>
                             </div>
                         </div>

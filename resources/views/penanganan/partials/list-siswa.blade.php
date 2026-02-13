@@ -41,6 +41,14 @@
                     <span class="text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                         Diperbarui {{ $item->lastHistory?->updated_at->diffForHumans() ?? 'Belum diperbarui' }}</span>
                 </div>
+                @if ($item->kesanggupanTerakhir)
+                    <div
+                        class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 border-t border-gray-50 pt-2">
+                        Sanggup membayar tanggal: {{ $item->kesanggupanTerakhir->tanggal }} dengan nominal:
+                        {{ number_format($item->kesanggupanTerakhir->nominal, 0, ',', '.') }}
+                    </div>
+                @endif
+
             </div>
 
             <div class="flex flex-col gap-2 shrink-0">
