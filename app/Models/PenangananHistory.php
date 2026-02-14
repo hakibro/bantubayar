@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PenangananHistory extends Model
 {
     protected $table = 'penanganan_history';
+    protected $touches = ['penanganan'];
 
     protected $fillable = [
         'penanganan_id',
