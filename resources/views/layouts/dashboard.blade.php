@@ -127,13 +127,13 @@
                                 ],
                                 [
                                     'route' => 'petugas.siswa',
-                                    'icon' => 'fa-users',
+                                    'icon' => 'fa-list-ul',
                                     'label' => 'Siswa',
                                     'active' => 'petugas.siswa*',
                                 ],
                                 [
                                     'route' => 'penanganan.index',
-                                    'icon' => 'fa-hand-holding-usd',
+                                    'icon' => 'fa-location-arrow',
                                     'label' => 'Proses',
                                     'active' => 'penanganan*',
                                 ],
@@ -158,6 +158,7 @@
                 </div>
             </div>
 
+            <!-- Profile & Logout Popup -->
             <div class="px-4 py-0 md:py-4 border-t border-gray-50">
                 <div class="relative">
                     <button onclick="toggleLogoutPopup()"

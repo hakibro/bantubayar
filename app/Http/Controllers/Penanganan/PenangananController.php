@@ -51,22 +51,23 @@ class PenangananController extends Controller
         if ($request->filled('waktuDiperbarui') && is_numeric($request->waktuDiperbarui)) {
             $hari = (int) $request->waktuDiperbarui;
 
-            // Panggil scope lastHistory sekali di awal
-            $query->lastHistory(function ($q) use ($hari) {
-                if ($hari > 7) {
-                    // Data yang riwayat terakhirnya 8 hari yang lalu atau lebih lama
-                    $q->whereDate('created_at', '<=', now()->subDays(8));
-                } else {
-                    // Data yang riwayat terakhirnya tepat X hari yang lalu
-                    $q->whereDate('created_at', now()->subDays($hari));
-                }
-            });
+            if ($hari > 7) {
+                // Logika: Data yang dibuat sebelum atau tepat 8 hari yang lalu (tumpukan lama)
+                $query->whereDate('updated_at', '<=', now()->subDays(8));
+            } else {
+                // Logika: Tepat X hari yang lalu (1-7 hari)
+                $query->whereDate('updated_at', now()->subDays($hari));
+            }
         }
 
-        // 4. Filter Penanganan Terlambat (Belum selesai dalam 7 hari)
+        // 4. Filter Penanganan Terlambat (Berdasarkan update terakhir)
         if ($request->filled('terlambat') && is_numeric($request->terlambat)) {
             $hari = (int) $request->terlambat;
-            $query->lastHistory()->where('created_at', '<=', now()->subDays($hari)->endOfDay());
+
+            // Kita cari yang statusnya belum selesai DAN 
+            // terakhir diupdate (disentuh petugas) sudah lebih dari X hari yang lalu
+            $query->where('status', '!=', 'selesai')
+                ->where('updated_at', '<=', now()->subDays($hari)->endOfDay());
         }
 
         $listPenanganan = $query->orderBy('status', 'asc')->paginate(40);
@@ -146,19 +147,19 @@ class PenangananController extends Controller
                 ];
             }
 
-            // jika history telepon terakhir sama dengan aksi telepon sekarang, tolak
-            if (
-                $data['jenis_penanganan'] === 'phone' &&
-                $penanganan->histories()
-                    ->where('jenis_penanganan', 'phone')
-                    ->where('created_at', '>=', now()->startOfDay())
-                    ->exists()
-            ) {
-                return [
-                    'success' => false,
-                    'message' => 'Lakukan telepon ulang di hari berikutnya.',
-                ];
-            }
+            // jika history telepon terakhir hari ini, tolak
+            // if (
+            //     $data['jenis_penanganan'] === 'phone' &&
+            //     $penanganan->histories()
+            //         ->where('jenis_penanganan', 'phone')
+            //         ->where('created_at', '>=', now()->startOfDay())
+            //         ->exists()
+            // ) {
+            //     return [
+            //         'success' => false,
+            //         'message' => 'Lakukan telepon ulang di hari berikutnya.',
+            //     ];
+            // }
 
             $penanganan->addHistory(
                 $data['jenis_penanganan'],

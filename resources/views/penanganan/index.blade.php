@@ -82,69 +82,57 @@
                 </div>
 
                 <div id="filterSection" class="hidden md:block bg-slate-50/50 border-t border-gray-100 p-4 md:p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="flex items-center gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex items-center justify-between gap-3">
                             <h4 class="text-[10px] font-bold text-blue-600 uppercase w-16 shrink-0">Status</h4>
                             <div
-                                class="flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-blue-400 transition-colors">
+                                class="flex flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-blue-400 transition-colors">
                                 <select name="status"
                                     class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs outline-none">
-                                    <option value="">Semua</option>
+                                    <option value="">Status...</option>
                                     <option value="menunggu_respon">Menunggu Respon</option>
                                     <option value="menunggu_tindak_lanjut">Kesanggupan</option>
-                                    <option value="selesai">Selesai</option>
                                 </select>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <h4 class="text-[10px] font-bold text-emerald-600 uppercase w-16 shrink-0">Dibuat</h4>
-                            <div
-                                class="flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-emerald-400 transition-colors">
-                                <select name="waktuDibuat"
-                                    class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs outline-none">
-                                    <option value="">Semua Waktu</option>
-                                    <option value="0">Hari ini</option>
-                                    <option value="1">1 Hari yang lalu</option>
-                                    <option value="2">2 Hari yang lalu</option>
-                                    <option value="3">3 Hari yang lalu</option>
-                                    <option value="4">4 Hari yang lalu</option>
-                                    <option value="5">5 Hari yang lalu</option>
-                                    <option value="6">6 Hari yang lalu</option>
-                                    <option value="7">7 Hari yang lalu</option>
-                                    <option value="8">Lebih dari 7 Hari yang lalu</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <h4 class="text-[10px] font-bold text-emerald-600 uppercase w-16 shrink-0">Diperbarui</h4>
-                            <div
-                                class="flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-emerald-400 transition-colors">
-                                <select name="waktuDiperbarui"
-                                    class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs outline-none">
-                                    <option value="">Semua Waktu</option>
-                                    <option value="0">Hari ini</option>
-                                    <option value="1">1 Hari yang lalu</option>
-                                    <option value="2">2 Hari yang lalu</option>
-                                    <option value="3">3 Hari yang lalu</option>
-                                    <option value="4">4 Hari yang lalu</option>
-                                    <option value="5">5 Hari yang lalu</option>
-                                    <option value="6">6 Hari yang lalu</option>
-                                    <option value="7">7 Hari yang lalu</option>
-                                    <option value="8">Lebih dari 7 Hari yang lalu</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                            <h4 class="text-[10px] font-bold text-red-600 uppercase w-16 shrink-0">Urgent</h4>
-                            <div
-                                class="flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-red-400 transition-colors">
                                 <select name="terlambat"
                                     class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs outline-none">
-                                    <option value="">Semua</option>
-                                    <option value="7">Terlambat 7 Hari</option>
-                                    <option value="14">Terlambat 14 Hari</option>
+                                    <option value="">Terlambat...</option>
+                                    <option value="3">3 Hari</option>
+                                    <option value="7">7 Hari</option>
+                                    <option value="14">14 Hari</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-3">
+                            <h4 class="text-[10px] font-bold text-purple-600 uppercase tracking-widest w-16 shrink-0">
+                                Waktu</h4>
+                            <div
+                                class="flex flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-purple-400 transition-colors">
+                                <select name="waktuDibuat"
+                                    class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs outline-none">
+                                    <option value="">Dibuat...</option>
+                                    <option value="0">Hari ini</option>
+                                    <option value="1">Kemarin</option>
+                                    <option value="2">2 Hari lalu</option>
+                                    <option value="3">3 Hari lalu</option>
+                                    <option value="4">4 Hari lalu</option>
+                                    <option value="5">5 Hari lalu</option>
+                                    <option value="6">6 Hari lalu</option>
+                                    <option value="7">7 Hari lalu</option>
+                                    <option value="8">Lebih dari 7 Hari lalu</option>
+                                </select>
+                                <select name="waktuDiperbarui"
+                                    class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs outline-none">
+                                    <option value="">Diperbarui...</option>
+                                    <option value="0">Hari ini</option>
+                                    <option value="1">Kemarin</option>
+                                    <option value="2">2 Hari lalu</option>
+                                    <option value="3">3 Hari lalu</option>
+                                    <option value="4">4 Hari lalu</option>
+                                    <option value="5">5 Hari lalu</option>
+                                    <option value="6">6 Hari lalu</option>
+                                    <option value="7">7 Hari lalu</option>
+                                    <option value="8">Lebih dari 7 Hari lalu</option>
                                 </select>
                             </div>
                         </div>

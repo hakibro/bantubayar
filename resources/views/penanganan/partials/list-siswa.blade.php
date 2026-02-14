@@ -39,7 +39,7 @@
                     <span class="text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                         Dibuat {{ $item->created_at->diffForHumans() }}</span>
                     <span class="text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                        Diperbarui {{ $item->lastHistory?->updated_at->diffForHumans() ?? 'Belum diperbarui' }}</span>
+                        Diperbarui {{ $item->updated_at->diffForHumans() ?? 'Belum diperbarui' }}</span>
                 </div>
                 @if ($item->kesanggupanTerakhir)
                     <div

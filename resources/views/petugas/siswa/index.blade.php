@@ -103,7 +103,36 @@
                 <div id="filterSection" class="hidden md:block bg-slate-50/50 border-t border-gray-100">
                     <div class="p-4 md:p-6">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-
+                            <div class="flex items-center justify-between gap-3">
+                                <h4 class="text-[10px] font-bold text-purple-600 uppercase tracking-widest w-16 shrink-0">
+                                    Status</h4>
+                                <div
+                                    class="flex flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-purple-400 transition-colors">
+                                    <select name="status_penanganan"
+                                        class="w-1/2 px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none border-r border-gray-100">
+                                        <option value="">Penanganan</option>
+                                        <option value="belum_ditangani"
+                                            {{ request('status_penanganan') == 'belum_ditangani' ? 'selected' : '' }}>Belum
+                                            Ditangani
+                                        </option>
+                                        @foreach ($filterOptions['status_penanganan'] as $status)
+                                            <option value="{{ $status }}"
+                                                {{ request('status_penanganan') == $status ? 'selected' : '' }}>
+                                                {{ Str::title(str_replace('_', ' ', $status)) }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select name="pembayaran_status"
+                                        class="w-1/2 px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none">
+                                        <option value="">Pembayaran</option>
+                                        <option value="lunas"
+                                            {{ request('pembayaran_status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
+                                        <option value="belum_lunas"
+                                            {{ request('pembayaran_status') == 'belum_lunas' ? 'selected' : '' }}>Belum
+                                            Lunas
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="flex items-center justify-between gap-3">
                                 <h4 class="text-[10px] font-bold text-blue-600 uppercase tracking-widest w-16 shrink-0">
                                     Formal</h4>
@@ -124,7 +153,8 @@
                                         <option value="">Kelas</option>
                                         @foreach ($filterOptions['KelasFormal'] as $item)
                                             <option value="{{ $item }}"
-                                                {{ request('KelasFormal') == $item ? 'selected' : '' }}>{{ $item }}
+                                                {{ request('KelasFormal') == $item ? 'selected' : '' }}>
+                                                {{ $item }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -133,13 +163,13 @@
 
                             <div class="flex items-center justify-between gap-3">
                                 <h4 class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest w-16 shrink-0">
-                                    Asrama</h4>
+                                    Pondok</h4>
                                 <div
                                     class="flex flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-emerald-400 transition-colors">
                                     <select name="AsramaPondok"
                                         class="w-1/2 px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none border-r border-gray-100"
                                         {{ $lock['AsramaPondok'] ? 'disabled' : '' }}>
-                                        <option value="">Pondok</option>
+                                        <option value="">Asrama</option>
                                         @foreach ($filterOptions['AsramaPondok'] as $item)
                                             <option value="{{ $item }}"
                                                 {{ request('AsramaPondok', $selected['AsramaPondok']) == $item ? 'selected' : '' }}>
@@ -185,36 +215,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between gap-3">
-                                <h4 class="text-[10px] font-bold text-purple-600 uppercase tracking-widest w-16 shrink-0">
-                                    Status</h4>
-                                <div
-                                    class="flex flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-purple-400 transition-colors">
-                                    <select name="status_penanganan"
-                                        class="w-1/2 px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none border-r border-gray-100">
-                                        <option value="">Penanganan</option>
-                                        <option value="belum_ditangani"
-                                            {{ request('status_penanganan') == 'belum_ditangani' ? 'selected' : '' }}>Belum
-                                            Ditangani
-                                        </option>
-                                        @foreach ($filterOptions['status_penanganan'] as $status)
-                                            <option value="{{ $status }}"
-                                                {{ request('status_penanganan') == $status ? 'selected' : '' }}>
-                                                {{ Str::title(str_replace('_', ' ', $status)) }}</option>
-                                        @endforeach
-                                    </select>
-                                    <select name="pembayaran_status"
-                                        class="w-1/2 px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none">
-                                        <option value="">Pembayaran</option>
-                                        <option value="lunas"
-                                            {{ request('pembayaran_status') == 'lunas' ? 'selected' : '' }}>Lunas</option>
-                                        <option value="belum_lunas"
-                                            {{ request('pembayaran_status') == 'belum_lunas' ? 'selected' : '' }}>Belum
-                                            Lunas
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
