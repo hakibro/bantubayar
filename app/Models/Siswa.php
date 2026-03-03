@@ -51,6 +51,15 @@ class Siswa extends Model
             ->withTimestamps();
     }
 
+    public function homeVisits()
+    {
+        return $this->hasMany(HomeVisit::class);
+    }
+    public function homeVisitsActive()
+    {
+        return $this->homeVisits()->where('status', '!=', 'selesai')->latest()->first();
+    }
+
     public function penanganan()
     {
         return $this->hasMany(Penanganan::class, 'id_siswa');

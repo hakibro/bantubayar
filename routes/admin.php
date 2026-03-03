@@ -1,20 +1,21 @@
 <?php
 use App\Http\Controllers\Admin\PenggunaController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AssignController;
 use App\Http\Controllers\Admin\SiswaSyncController;
 use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\SyncPembayaranController;
 use App\Http\Controllers\Admin\PembayaranSiswaController;
+use App\Http\Controllers\Admin\HomeVisitController;
+use App\Http\Controllers\Admin\LaporanPetugasController;
 
 
 
 // Group route khusus admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Dashboard Admin
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    // Dashboard Admin dengan data statistik
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Manajemen Petugas
     Route::get('/petugas', [PenggunaController::class, 'index'])->name('petugas.index');
@@ -23,6 +24,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/petugas/{id}/edit', [PenggunaController::class, 'edit'])->name('petugas.edit');
     Route::put('/petugas/{id}', [PenggunaController::class, 'update'])->name('petugas.update');
     Route::delete('/petugas/{id}', [PenggunaController::class, 'destroy'])->name('petugas.destroy');
+
 
     // Restore & Permanent Delete
     Route::post('/petugas/{id}/restore', [PenggunaController::class, 'restore'])->name('petugas.restore');
@@ -71,5 +73,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Pembayaran Siswa
     Route::get('/pembayaran-siswa', [PembayaranSiswaController::class, 'index'])->name('pembayaran-siswa.index');
+
+    Route::prefix('home-visit')->name('home-visit.')->group(function () {
+        Route::get('/select', [HomeVisitController::class, 'select'])->name('select');
+        Route::get('/kelas', [HomeVisitController::class, 'kelas'])->name('kelas');
+        Route::get('/kamar', [HomeVisitController::class, 'kamar'])->name('kamar');
+        Route::get('/create', [HomeVisitController::class, 'create'])->name('create');
+        Route::post('/', [HomeVisitController::class, 'store'])->name('store');
+        Route::get('/{id}', [HomeVisitController::class, 'show'])->name('show');
+        Route::get('/{id}/cetak', [HomeVisitController::class, 'cetak'])->name('cetak');
+    });
+
+    Route::get('/laporan/petugas', [LaporanPetugasController::class, 'index'])->name('laporan.petugas');
+
+
 
 });

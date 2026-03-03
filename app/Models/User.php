@@ -60,4 +60,9 @@ class User extends Authenticatable
         return $this->hasMany(Penanganan::class, 'id_petugas');
     }
 
+    public function homeVisits()
+    {
+        return $this->hasMany(HomeVisit::class, 'admin_id');
+    }
+
 }

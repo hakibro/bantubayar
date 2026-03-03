@@ -239,6 +239,11 @@
 
 @push('scripts')
     <script>
+        if (localStorage.getItem('kembali_dari_detail') === 'true') {
+            window.location.reload();
+            localStorage.setItem('kembali_dari_detail', 'false');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const filterForm = document.getElementById('filterForm');
             const container = document.getElementById('siswa-container');

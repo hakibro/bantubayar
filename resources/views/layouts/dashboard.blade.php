@@ -113,9 +113,21 @@
                                 ],
                                 [
                                     'route' => 'admin.assign.index',
-                                    'icon' => 'fa-clipboard-check',
+                                    'icon' => 'fa-check',
                                     'label' => 'Assign',
                                     'active' => 'admin.assign*',
+                                ],
+                                [
+                                    'route' => 'admin.home-visit.select',
+                                    'icon' => 'fa-clipboard-check',
+                                    'label' => 'Home Visit',
+                                    'active' => 'admin.home-visit*',
+                                ],
+                                [
+                                    'route' => 'admin.laporan.petugas',
+                                    'icon' => 'fa-chart-line',
+                                    'label' => 'Laporan Petugas',
+                                    'active' => 'admin.laporan.petugas',
                                 ],
                             ]
                             : [

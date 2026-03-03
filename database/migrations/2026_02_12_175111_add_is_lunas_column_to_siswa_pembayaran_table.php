@@ -11,8 +11,13 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('siswa_pembayaran', function (Blueprint $table) {
-            $table->boolean('is_lunas')->default(false)->after('data');
-            $table->index('is_lunas'); // Penting untuk performa filter
+            if (!Schema::hasColumn('siswa_pembayaran', 'is_lunas')) {
+                $table->boolean('is_lunas')
+                    ->default(false)
+                    ->after('data');
+
+                $table->index('is_lunas');
+            }
         });
     }
 
@@ -22,7 +27,8 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('siswa_pembayaran', function (Blueprint $table) {
-            //
+            $table->dropIndex(['is_lunas']);
+            $table->dropColumn('is_lunas');
         });
     }
 };

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VisitController;
 
 Route::get('/', function () {
     // return view('welcome');
@@ -44,11 +45,18 @@ Route::get('/sync/pembayaran/progress', function () {
 
 
 
+
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
 require __DIR__ . '/petugas.php';
 require __DIR__ . '/penanganan.php';
 
+
+Route::prefix('visit')->name('visit.')->group(function () {
+    Route::get('/{token}', [VisitController::class, 'form'])->name('form');
+    Route::post('/{token}', [VisitController::class, 'submit'])->name('submit');
+    Route::get('/thankyou', [VisitController::class, 'thankyou'])->name('thankyou');
+});
 
 
 Route::get('/force-logout', function () {

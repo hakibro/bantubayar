@@ -6,7 +6,7 @@
 
         <div class="max-w-4xl mx-auto space-y-4">
 
-            <button onclick="window.history.back()"
+            <button onclick="tombolKembali()"
                 class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl transition font-medium shadow-sm">
                 <i class="fas fa-arrow-left text-sm"></i>
                 <span>Kembali</span>
@@ -330,6 +330,11 @@
                     }
                 });
             });
+
+            function tombolKembali() {
+                window.history.back();
+                localStorage.setItem('kembali_dari_detail', 'true');
+            }
 
             function toggleAccordion(id) {
                 const content = document.getElementById(`content${id}`);
