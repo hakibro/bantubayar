@@ -10,13 +10,17 @@
                 <p class="text-sm text-gray-500">Sync Data Siswa dari Data Center - Informasi Pembayaran, Lembaga, Kelas.</p>
             </div>
             <div class="flex gap-3">
+                <a href="{{ route('admin.assign.index') }}"
+                    class="px-4 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 flex items-center">
+                    <i class="fas fa-check mr-2"></i> Assign Siswa
+                </a>
                 <a href="javascript:void(0)" onclick="syncSiswa('{{ route('admin.siswa.sync-data-siswa') }}')"
                     class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 flex items-center">
                     <i class="fas fa-database mr-2"></i> Sync Data Siswa
                 </a>
                 <a href="{{ route('admin.sync-pembayaran.index') }}"
                     class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center">
-                    <i class="fas fa-money-bill-wave mr-2"></i> Sinkron Semua Pembayaran (Dev Only)
+                    <i class="fas fa-money-bill-wave mr-2"></i> Sync Semua Pembayaran (Dev Only)
                 </a>
             </div>
 

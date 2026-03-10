@@ -9,6 +9,10 @@
                 <h1 class="text-2xl font-bold">Assign Siswa ke Petugas</h1>
                 <p class="text-sm text-gray-500">Assign siswa ke petugas — gunakan filter untuk mencari.</p>
             </div>
+            <a href="{{ route('admin.siswa.index') }}"
+                class="px-4 py-2 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> Kembali
+            </a>
         </div>
 
         <!-- Filter bar -->

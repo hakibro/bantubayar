@@ -111,12 +111,7 @@
                                     'label' => 'Siswa',
                                     'active' => 'admin.siswa*',
                                 ],
-                                [
-                                    'route' => 'admin.assign.index',
-                                    'icon' => 'fa-check',
-                                    'label' => 'Assign',
-                                    'active' => 'admin.assign*',
-                                ],
+
                                 [
                                     'route' => 'admin.home-visit.select',
                                     'icon' => 'fa-clipboard-check',

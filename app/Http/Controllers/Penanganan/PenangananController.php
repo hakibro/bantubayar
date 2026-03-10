@@ -148,18 +148,18 @@ class PenangananController extends Controller
             }
 
             // jika history telepon terakhir hari ini, tolak
-            // if (
-            //     $data['jenis_penanganan'] === 'phone' &&
-            //     $penanganan->histories()
-            //         ->where('jenis_penanganan', 'phone')
-            //         ->where('created_at', '>=', now()->startOfDay())
-            //         ->exists()
-            // ) {
-            //     return [
-            //         'success' => false,
-            //         'message' => 'Lakukan telepon ulang di hari berikutnya.',
-            //     ];
-            // }
+            if (
+                $data['jenis_penanganan'] === 'phone' &&
+                $penanganan->histories()
+                    ->where('jenis_penanganan', 'phone')
+                    ->where('created_at', '>=', now()->startOfDay())
+                    ->exists()
+            ) {
+                return [
+                    'success' => false,
+                    'message' => 'Lakukan telepon ulang di hari berikutnya.',
+                ];
+            }
 
             $penanganan->addHistory(
                 $data['jenis_penanganan'],
