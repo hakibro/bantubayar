@@ -14,37 +14,40 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $range = $request->get('range', 'current_week'); // Default minggu ini
+        $range = $request->get('range', 'current_week');
         $scope = $user->penanganan()->with('siswa:id,idperson,nama');
-
-        // Tentukan rentang tanggal
-        $startDate = now()->startOfWeek();
-        $endDate = now()->endOfWeek();
 
         // Default Query untuk Statistik
         $statsQuery = (clone $scope);
 
+        // Inisialisasi variabel untuk filter statistik rating (poin 4)
+        $startDate = null;
+        $endDate = now();
+
         if ($range === 'current_week') {
-            // Senin ini jam 00:00:00 s/d sekarang
-            $statsQuery->where('updated_at', '>=', now()->startOfWeek());
+            $startDate = now()->startOfWeek();
+            $statsQuery->where('updated_at', '>=', $startDate);
         } elseif ($range === 'last_week') {
-            // Senin lalu s/d Minggu malam lalu
-            $statsQuery->whereBetween('updated_at', [
-                now()->subWeek()->startOfWeek(),
-                now()->subWeek()->endOfWeek()
-            ]);
+            $startDate = now()->subWeek()->startOfWeek();
+            $endDate = now()->subWeek()->endOfWeek();
+            $statsQuery->whereBetween('updated_at', [$startDate, $endDate]);
+        } elseif ($range === 'current_month') { // FILTER BARU
+            $startDate = now()->startOfMonth();
+            $statsQuery->where('updated_at', '>=', $startDate);
         } elseif ($range === 'older') {
-            // Semua sebelum Senin minggu lalu jam 00:00:00
             $statsQuery->where('updated_at', '<', now()->subWeek()->startOfWeek());
+        } elseif ($range === 'all') { // FILTER BARU
+            // Tidak menambahkan where clause agar menampilkan semua
+            $startDate = null;
         }
 
-        // 1. Summary (Berdasarkan filter waktu)
+        // 1. Summary
         $summaryData = $statsQuery->selectRaw("
-            COUNT(*) as total,
-            COUNT(CASE WHEN status = 'menunggu_respon' THEN 1 END) as menunggu_respon,
-            COUNT(CASE WHEN status = 'selesai' THEN 1 END) as selesai,
-            COUNT(CASE WHEN status = 'menunggu_tindak_lanjut' THEN 1 END) as menunggu_tindak_lanjut
-        ")->first();
+        COUNT(*) as total,
+        COUNT(CASE WHEN status = 'menunggu_respon' THEN 1 END) as menunggu_respon,
+        COUNT(CASE WHEN status = 'selesai' THEN 1 END) as selesai,
+        COUNT(CASE WHEN status = 'menunggu_tindak_lanjut' THEN 1 END) as menunggu_tindak_lanjut
+    ")->first();
 
         $summary = [
             'total' => $summaryData->total ?? 0,
@@ -53,7 +56,7 @@ class DashboardController extends Controller
             'selesai' => $summaryData->selesai ?? 0,
         ];
 
-        // 2. Daftar Kerja Prioritas (Ini biasanya tidak difilter tanggal agar tugas lama tidak hilang)
+        // 2. Daftar Kerja Prioritas
         $tugasAktif = (clone $scope)
             ->whereIn('status', ['menunggu_respon', 'menunggu_tindak_lanjut'])
             ->orderBy('updated_at', 'asc')
@@ -72,8 +75,12 @@ class DashboardController extends Controller
             return false;
         });
 
-        // 4. Statistik & Catatan (Berdasarkan rentang waktu)
-        $ratingQuery = (clone $scope)->whereBetween('updated_at', [$startDate, $endDate])->whereNotNull('rating');
+        // 4. Statistik & Catatan (Menyesuaikan rentang yang dipilih)
+        $ratingQuery = (clone $scope)->whereNotNull('rating');
+
+        if ($startDate) {
+            $ratingQuery->whereBetween('updated_at', [$startDate, $endDate]);
+        }
 
         $statistikRespon = [
             'rata_rata' => round($ratingQuery->avg('rating'), 1) ?? 0,

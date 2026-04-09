@@ -3,11 +3,16 @@
     <i class="fas fa-calendar-alt"></i>
     <span>Menampilkan data:
         <strong>
-            {{ $range == 'current_week'
-                ? 'Senin - Minggu ini'
-                : ($range == 'last_week'
-                    ? 'Senin - Minggu lalu'
-                    : 'Sebelumnya') }}
+            @php
+                echo match ($range) {
+                    'current_week' => 'Senin - Minggu Ini',
+                    'last_week' => 'Senin - Minggu Lalu',
+                    'current_month' => 'Bulan Ini (' . now()->translatedFormat('F') . ')',
+                    'older' => 'Data Lama (Sebelum Minggu Lalu)',
+                    'all' => 'Semua Waktu',
+                    default => 'Rentang Waktu',
+                };
+            @endphp
         </strong>
     </span>
 </div>
@@ -16,7 +21,7 @@
     @php
         $cards = [
             ['Total', $summary['total'], 'bg-blue-600', 'fa-folder'],
-            ['Menunggu', $summary['menunggu_respon'], 'bg-amber-500', 'fa-clock'],
+            ['Aktif', $summary['menunggu_respon'], 'bg-amber-500', 'fa-clock'],
             ['Kesanggupan', $summary['menunggu_tindak_lanjut'], 'bg-rose-500', 'fa-circle-info'],
             ['Selesai', $summary['selesai'], 'bg-emerald-500', 'fa-check-circle'],
         ];

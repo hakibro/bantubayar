@@ -201,11 +201,13 @@ class PenangananController extends Controller
         }
         // Jika hasil = cicilan, pastikan total tunggakan saat ini < total tunggakan saat penanganan dibuat, ambil kategori pembayaran yang sudah lunas
         if ($data['hasil'] === 'cicilan') {
-            if ($siswa->getTotalTunggakan() >= $penanganan->getTotalTunggakan()) {
+            if (abs($siswa->getTotalTunggakan()) > abs($penanganan->getTotalTunggakan())) {
+
                 return response()->json([
                     'success' => false,
                     'message' => "Total tunggakan saat ini Rp " . number_format($siswa->getTotalTunggakan(), 0, ',', '.') . " harus lebih kecil dari total tunggakan saat penanganan dibuat Rp " . number_format($penanganan->getTotalTunggakan(), 0, ',', '.'),
                 ], 400);
+
             }
         }
         // Jika hasil = isi_saldo, pastikan saldo saat ini > saldo saat penanganan dibuat
@@ -373,14 +375,6 @@ class PenangananController extends Controller
         ]);
 
         $kesanggupan = PenangananKesanggupan::where('token', $token)->firstOrFail();
-
-        // optional: cegah submit ulang
-        // if ($kesanggupan->nominal !== null) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'Kesanggupan sudah pernah dikirim'
-        //     ], 422);
-        // }
 
         $kesanggupan->update([
             'nominal' => $data['nominal']

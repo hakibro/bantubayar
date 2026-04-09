@@ -18,7 +18,7 @@
         {{-- QUICK FILTER TABS --}}
         <div class="flex flex-wrap items-center gap-2 mb-6">
             <div class="flex bg-slate-200/60 p-1 rounded-2xl w-fit" id="filter-container">
-                @foreach (['current_week' => 'Minggu Ini', 'last_week' => 'Minggu Lalu', 'older' => 'Sebelumnya'] as $key => $label)
+                @foreach (['current_week' => 'Minggu Ini', 'last_week' => 'Minggu Lalu', 'current_month' => 'Bulan Ini', 'older' => 'Sebelumnya', 'all' => 'Semua'] as $key => $label)
                     <button data-range="{{ $key }}"
                         class="filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all {{ $range == $key ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700' }}">
                         {{ $label }}
@@ -27,13 +27,10 @@
             </div>
         </div>
 
-
-
         {{-- CONTAINER UNTUK AJAX --}}
         <div id="dashboard-content" class="transition-opacity duration-300">
             @include('petugas.dashboard.partials.cards')
         </div>
-
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 

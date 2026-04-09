@@ -215,11 +215,11 @@
 
                                 <div class="flex flex-col gap-1 items-end text-right">
                                     <p
-                                        class="text-xs px-2 py-0.5 rounded-full {{ in_array($riwayatPenanganan->hasil, ['lunas', 'isi_saldo', 'cicilan']) ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' }}">
+                                        class="text-xs px-2 py-0.5 rounded-full {{ in_array($riwayatPenanganan->hasil, ['lunas']) ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' }}">
                                         {{ $riwayatPenanganan->hasil }}
                                     </p>
                                     <div
-                                        class="font-bold text-sm {{ in_array($riwayatPenanganan->hasil, ['lunas', 'isi_saldo', 'cicilan']) ? 'text-success' : 'text-accent' }}">
+                                        class="font-bold text-sm {{ in_array($riwayatPenanganan->hasil, ['lunas']) ? 'text-success' : 'text-accent' }}">
                                         Rp {{ number_format($riwayatPenanganan->getTotalTunggakan(), 0, ',', '.') }}
                                     </div>
 
