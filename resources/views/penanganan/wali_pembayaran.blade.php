@@ -58,7 +58,11 @@
                     class="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-200 rotate-3">
                     <i class="fas fa-mobile-alt text-lg"></i>
                 </div>
-                <h5 class="text-sm font-bold text-indigo-900">Pembayaran Lebih Mudah</h5>
+                <h5 class="text-sm font-bold text-indigo-900">Periode Sebelum 2024-2025 </h5>
+                <p class="text-[11px] text-indigo-700 mt-1 leading-relaxed">
+                    Silahkan menemui <strong>Bendahara Lembaga</strong> untuk melakukan pembayaran.
+                </p>
+                <h5 class="text-sm font-bold text-indigo-900">Periode 2024-2025 dan Setelahnya</h5>
                 <p class="text-[11px] text-indigo-700 mt-1 leading-relaxed">
                     Gunakan aplikasi <strong>Ngalah Mobile</strong> untuk melakukan pembayaran secara instan, cek riwayat,
                     dan mendapatkan bukti bayar digital.
@@ -177,14 +181,14 @@
                             <div class="px-5 pb-5 pt-2 space-y-3">
                                 <div class="h-px bg-gray-100 w-full mb-3"></div>
                                 ${cat.items.map(item => `
-                                                                            <div class="flex justify-between items-center">
-                                                                                <div>
-                                                                                    <p class="text-[10px] font-bold text-gray-700">${item.unit_name}</p>
-                                                                                    <p class="text-[8px] text-gray-400 italic">Jatuh Tempo: ${item.journal_date}</p>
-                                                                                </div>
-                                                                                <span class="text-[10px] font-black text-gray-600">${formatCurrency(item.remaining_balance)}</span>
-                                                                            </div>
-                                                                        `).join('')}
+                                                                                    <div class="flex justify-between items-center">
+                                                                                        <div>
+                                                                                            <p class="text-[10px] font-bold text-gray-700">${item.unit_name}</p>
+                                                                                            <p class="text-[8px] text-gray-400 italic">Jatuh Tempo: ${item.journal_date}</p>
+                                                                                        </div>
+                                                                                        <span class="text-[10px] font-black text-gray-600">${formatCurrency(item.remaining_balance)}</span>
+                                                                                    </div>
+                                                                                `).join('')}
                             </div>
                         </div>
                     `;

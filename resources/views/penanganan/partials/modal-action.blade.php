@@ -195,8 +195,9 @@
                 detailTunggakan +
                 `\n\n *Total Keseluruhan: ${formatRupiah({{ $siswa->getTotalTunggakan() }})}*` +
                 `\n\n Informasi detail: {!! $urlUntukWali !!}` +
-                `\n\nMohon kesediaan Bapak/Ibu untuk melakukan pembayaran atau konfirmasi kepada kami.\n\n` +
-                `Terima kasih atas perhatian dan kerjasamanya`;
+                `\n\n Mohon kesediaan Bapak/Ibu untuk melakukan pembayaran atau konfirmasi kepada kami.` +
+                `\n\n Terima kasih atas perhatian dan kerjasamanya` +
+                `\n\n nb: Pembayaran periode 2024-2025 dan setelahnya dapat dilakukan melalui aplikasi Ngalah Mobile. Untuk periode sebelum 2024-2025 bisa menemui bendahara lembaga. Terima kasih.`;
 
             sendWhatsapp(pesan);
         }
