@@ -22,7 +22,7 @@
         $cards = [
             ['Total', $summary['total'], 'bg-blue-600', 'fa-folder'],
             ['Aktif', $summary['menunggu_respon'], 'bg-amber-500', 'fa-clock'],
-            ['Kesanggupan', $summary['menunggu_tindak_lanjut'], 'bg-rose-500', 'fa-circle-info'],
+            ['Sanggup', $summary['menunggu_tindak_lanjut'], 'bg-rose-500', 'fa-circle-info'],
             ['Selesai', $summary['selesai'], 'bg-emerald-500', 'fa-check-circle'],
         ];
     @endphp

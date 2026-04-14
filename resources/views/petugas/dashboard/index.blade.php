@@ -15,6 +15,67 @@
             </a>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-gray-700 font-bold mb-4 text-center">Proporsi Penanganan Berdasarkan Status Pembayaran</h3>
+                <div class="relative flex justify-center" style="height: 280px;">
+                    <canvas id="pembayaranPieChart"></canvas>
+                </div>
+                <div class="mt-4 text-center text-sm text-gray-500">
+                    @php
+                        $totalLunas =
+                            $statistikSiswa['lunas']['penanganan_aktif'] +
+                            $statistikSiswa['lunas']['penanganan_selesai'];
+                        $totalBelumLunas =
+                            $statistikSiswa['belum_lunas']['penanganan_aktif'] +
+                            $statistikSiswa['belum_lunas']['penanganan_selesai'];
+                    @endphp
+                    Total Kasus Bulan Ini: <strong>{{ $totalLunas + $totalBelumLunas }}</strong>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-blue-500">
+                <h3 class="text-gray-700 font-bold mb-4 text-center">Status Penyelesaian Penanganan (Global)</h3>
+                <div class="relative flex justify-center" style="height: 280px;">
+                    <canvas id="statusPieChart"></canvas>
+                </div>
+                <div class="mt-4 text-center text-sm text-gray-500">
+                    @php
+                        $totalSelesaiGlobal =
+                            $statistikSiswa['lunas']['penanganan_selesai'] +
+                            $statistikSiswa['belum_lunas']['penanganan_selesai'];
+                        $totalAktifGlobal =
+                            $statistikSiswa['lunas']['penanganan_aktif'] +
+                            $statistikSiswa['belum_lunas']['penanganan_aktif'];
+                    @endphp
+                    @if ($totalSelesaiGlobal + $totalAktifGlobal > 0)
+                        Rasio Penyelesaian:
+                        <strong>{{ round(($totalSelesaiGlobal / ($totalSelesaiGlobal + $totalAktifGlobal)) * 100) }}%</strong>
+                    @else
+                        Belum ada data penanganan.
+                    @endif
+                </div>
+            </div>
+
+        </div>
+
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl shadow-md p-5 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-gray-600 font-semibold">Total Seluruh Siswa Terdaftar</h3>
+                    <p class="text-4xl font-black text-green-800">{{ $statistikSiswa['total_siswa'] }}</p>
+                </div>
+                <div class="bg-white rounded-full p-3 shadow text-green-600">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
         {{-- QUICK FILTER TABS --}}
         <div class="flex flex-wrap items-center gap-2 mb-6">
             <div class="flex bg-slate-200/60 p-1 rounded-2xl w-fit" id="filter-container">
@@ -146,8 +207,8 @@
             </div>
         </div>
     </div>
-
     @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -180,6 +241,80 @@
                             container.style.opacity = '1';
                         });
                 });
+            });
+        </script>
+        <script>
+            // Konfigurasi Umum untuk Tooltip & Legend
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.parsed || 0;
+                                let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                let percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            };
+
+            // --- Grafik 1: Pie Chart Berdasarkan Pembayaran ---
+            const ctxPembayaran = document.getElementById('pembayaranPieChart').getContext('2d');
+            new Chart(ctxPembayaran, {
+                type: 'pie', // Atau gunakan 'doughnut' untuk gaya donat
+                data: {
+                    labels: ['Dari Siswa Lunas', 'Dari Siswa Belum Lunas'],
+                    datasets: [{
+                        data: [
+                            {{ $totalLunas }}, // Variabel PHP yang dihitung di HTML atas
+                            {{ $totalBelumLunas }}
+                        ],
+                        backgroundColor: [
+                            '#10b981', // green-500
+                            '#ef4444' // red-500
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: commonOptions
+            });
+
+            // --- Grafik 2: Pie Chart Berdasarkan Status Global ---
+            const ctxStatus = document.getElementById('statusPieChart').getContext('2d');
+            new Chart(ctxStatus, {
+                type: 'doughnut', // Gunakan Doughnut agar terlihat beda dan modern
+                data: {
+                    labels: ['Selesai', 'Masih Aktif'],
+                    datasets: [{
+                        data: [
+                            {{ $totalSelesaiGlobal }},
+                            {{ $totalAktifGlobal }}
+                        ],
+                        backgroundColor: [
+                            '#3b82f6', // blue-500 (Selesai)
+                            '#f59e0b' // amber-500 (Aktif)
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    cutout: '60%' // Mengatur ukuran lubang tengah doughnut
+                }
             });
         </script>
     @endpush

@@ -112,6 +112,10 @@ class Siswa extends Model
     {
         return $this->hasMany(SiswaPembayaran::class, 'siswa_id');
     }
+    public function pembayaranSummary()
+    {
+        return $this->hasOne(SiswaPembayaranSummary::class, 'siswa_id');
+    }
 
     /**
      * Scope untuk mencari berdasarkan status pembayaran global

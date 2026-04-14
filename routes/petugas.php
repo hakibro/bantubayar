@@ -21,4 +21,11 @@ Route::middleware(['auth', 'role:bendahara|petugas'])->prefix('petugas')->name('
     // Sync Single Pembayaran Siswa
     Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
 
+    Route::get('/test-sync/{idperson}', [SiswaController::class, 'syncPembayaranSummary'])->name('siswa.sync-pembayaran-summary');
+
+});
+
+// test route
+Route::get('/sync-kilat/{id}', function ($id) {
+    return app(App\Services\SiswaService::class)->syncPembayaranSummary($id);
 });

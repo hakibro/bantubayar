@@ -196,7 +196,7 @@
                                             {{ $riwayatPenanganan->petugas->name }}
                                         </h4>
                                         <p class="text-xs text-textMuted">
-                                            {{ $riwayatPenanganan->created_at->diffForHumans() }}
+                                            {{ $riwayatPenanganan->updated_at->diffForHumans() }}
                                         </p>
 
                                         {{-- Rating --}}

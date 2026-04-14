@@ -313,6 +313,40 @@ class SiswaService
         }
     }
 
+
+
+    public function getPembayaranSummary($idperson)
+    {
+        $url = $this->paymentUrl . $idperson . '/summary';
+
+        try {
+            $response = Http::timeout(30)->retry(2, 1000)->get($url);
+
+            if (!$response->successful()) {
+                return [
+                    'status' => false,
+                    'message' => 'Gagal mengambil data pembayaran. HTTP ' . $response->status(),
+                    'http_code' => $response->status(),
+                    'data' => []
+                ];
+            }
+
+            $data = $response->json()['data'] ?? [];
+
+            return [
+                'status' => true,
+                'message' => 'Berhasil',
+                'data' => $data,
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => 'API Error: ' . $e->getMessage(),
+                'data' => []
+            ];
+        }
+    }
     public function getPembayaranSiswa($idperson)
     {
         $url = $this->paymentUrl . $idperson;

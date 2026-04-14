@@ -118,7 +118,6 @@
             }
         }
 
-
         function getPhoneNumber(text) {
             // TODO: bagaimana jika ada 2 no hp wali?
             // contoh: 081234123 - ibu, 123412341 - ayah

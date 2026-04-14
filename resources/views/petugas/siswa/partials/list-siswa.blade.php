@@ -40,12 +40,7 @@
             </div>
 
             <div class="flex flex-col gap-2 shrink-0">
-                <button onclick="syncPembayaran({{ $item->id }})"
-                    class="p-2.5 md:px-3 md:py-1.5 text-blue-600 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 transition flex items-center justify-center"
-                    title="Sync Data">
-                    <i class="fas fa-sync-alt text-sm"></i>
-                    <span class="inline ml-2 text-[11px] font-bold uppercase">Sync</span>
-                </button>
+
                 <a href="{{ route('penanganan.show', $item->id) }}"
                     class="p-2.5 md:px-4 md:py-1.5 bg-blue-600 text-white rounded-xl hover:bg-black transition flex items-center justify-center shadow-sm"
                     title="Aksi">

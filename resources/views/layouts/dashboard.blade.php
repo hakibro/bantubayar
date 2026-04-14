@@ -389,7 +389,7 @@
                         setTimeout(() => {
                             element.classList.remove('ring-4', 'ring-blue-400');
                             localStorage.removeItem('syncTargetId');
-                        }, 2000);
+                        }, 1000);
                     }
                 }, 300);
             }

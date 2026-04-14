@@ -149,4 +149,16 @@ class SiswaController extends Controller
         }
         return $values;
     }
+
+    public function syncPembayaranSummary($idperson)
+    {
+        $siswa = Siswa::findOrFail($idperson);
+        $service = new SiswaService();
+        try {
+            $service->syncPembayaranSummary($idperson);
+            return response()->json(['message' => 'Sinkronisasi berhasil']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Sinkronisasi gagal: ' . $e->getMessage()], 500);
+        }
+    }
 }
