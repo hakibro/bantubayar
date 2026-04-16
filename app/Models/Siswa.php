@@ -196,16 +196,99 @@ class Siswa extends Model
         return $belumLunas; // bisa [] atau berisi
     }
 
-    public function getTotalTunggakan(): int
-    {
-        return $this->hitungTotalDariKategori(
-            $this->getKategoriBelumLunas() ?? []
-        );
-    }
+    // public function getTotalTunggakan(): int
+    // {
+    //     return $this->hitungTotalDariKategori(
+    //         $this->getKategoriBelumLunas() ?? []
+    //     );
+    // }
 
     public function getFormattedTotalTunggakanAttribute()
     {
         $total = $this->getTotalTunggakan(); // Memanggil fungsi yang sudah ada di trait Anda
         return 'Rp ' . number_format($total, 0, ',', '.');
+    }
+
+
+
+
+
+    // untuk mengambil data pembayaran sebelum ngalah mobile
+
+    /**
+     * Mendapatkan semua kategori (per periode) yang memiliki sisa tidak nol (tunggakan atau overpaid)
+     * @return array
+     */
+    public function getKategoriSaldoTidakNol(): array
+    {
+        $result = [];
+        foreach ($this->pembayaran as $pay) {
+            $periode = $pay->periode;
+            $data = $pay->data;
+            if (empty($data['categories']))
+                continue;
+
+            foreach ($data['categories'] as $category) {
+                // Hitung ulang summary berdasarkan item jika perlu
+                $totalTagihan = 0;
+                $totalDibayar = 0;
+                $items = $category['items'] ?? [];
+                foreach ($items as $item) {
+                    $totalTagihan += $item['amount_paid'];   // amount_paid adalah tagihan
+                    $totalDibayar += $item['amount_billed']; // amount_billed adalah dibayar
+                }
+                $sisa = $totalDibayar - $totalTagihan; // sisa = dibayar - tagihan (positif = overpaid, negatif = tunggakan)
+
+                if ($sisa != 0) {
+                    $result[] = [
+                        'periode' => $periode,
+                        'category_name' => $category['category_name'] ?? 'Unknown',
+                        'summary' => [
+                            'total_billed' => $totalTagihan,   // tagihan
+                            'total_paid' => $totalDibayar,   // dibayar
+                            'total_remaining' => $sisa,
+                            'fully_paid' => ($sisa >= 0) ? true : false, // jika sisa >=0 berarti tidak kurang bayar
+                        ],
+                        'items' => array_map(function ($item) {
+                            return [
+                                'unit_name' => $item['unit_name'] ?? $item['unit_id'],
+                                'amount_tagihan' => $item['amount_paid'],   // tagihan
+                                'amount_dibayar' => $item['amount_billed'], // dibayar
+                                'remaining_balance' => $item['amount_billed'] - $item['amount_paid'],
+                                'payment_status' => ($item['amount_billed'] - $item['amount_paid']) >= 0 ? 'paid' : 'unpaid',
+                            ];
+                        }, $items),
+                        'kelas_info' => $data['kelas_info'] ?? $pay->kelas_info ?? '-',
+                        'type' => $sisa > 0 ? 'overpaid' : 'tunggakan', // karena sisa = dibayar - tagihan
+                        'sisa' => $sisa,
+                    ];
+                }
+            }
+        }
+        return $result;
+    }
+    /**
+     * Hitung total tunggakan (sisa > 0)
+     */
+    public function getTotalTunggakan(): int
+    {
+        $total = 0;
+        foreach ($this->getKategoriSaldoTidakNol() as $item) {
+            if ($item['type'] === 'tunggakan') {
+                $total += abs($item['sisa']); // ambil nilai absolut tunggakan
+            }
+        }
+        return $total;
+    }
+
+    public function getTotalOverpaid(): int
+    {
+        $total = 0;
+        foreach ($this->getKategoriSaldoTidakNol() as $item) {
+            if ($item['type'] === 'overpaid') {
+                $total += $item['sisa']; // sudah positif
+            }
+        }
+        return $total;
     }
 }

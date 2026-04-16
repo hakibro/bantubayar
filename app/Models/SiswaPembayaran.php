@@ -10,6 +10,7 @@ class SiswaPembayaran extends Model
     protected $fillable = [
         'siswa_id',
         'periode',
+        'kelas_info',
         'data',
         'is_lunas',
     ];

@@ -424,6 +424,7 @@ class SiswaService
             SiswaPembayaran::create([
                 'siswa_id' => $siswa->id,
                 'periode' => $periode['period_id'] ?? null,
+                'kelas_info' => $periode['kelas_info'] ?? null,
                 'data' => $periode, // JSON lengkap periode
             ]);
         }

@@ -27,5 +27,5 @@ Route::middleware(['auth', 'role:bendahara|petugas'])->prefix('petugas')->name('
 
 // test route
 Route::get('/sync-kilat/{id}', function ($id) {
-    return app(App\Services\SiswaService::class)->syncPembayaranSummary($id);
+    return app(App\Services\SiswaService::class)->getPembayaranSummary($id);
 });

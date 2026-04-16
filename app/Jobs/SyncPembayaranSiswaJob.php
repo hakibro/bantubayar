@@ -67,6 +67,7 @@ class SyncPembayaranSiswaJob implements ShouldQueue
                             [
                                 'siswa_id' => $siswa->id,
                                 'periode' => $period['period_id'],
+                                'kelas_info' => $period['kelas_info']
                             ],
                             [
                                 'data' => $period,
