@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use App\Models\SiswaPembayaran;
+use App\Models\SiswaPembayaranSummary; // tambahkan di atas
 use App\Models\SiswaSaldo;
 use App\Jobs\DispatchSyncPembayaranJob;
 use App\Models\Siswa;
@@ -347,6 +348,39 @@ class SiswaService
             ];
         }
     }
+
+    // app/Services/SiswaService.php
+
+
+    public function syncPembayaranSummarySiswa($siswaId)
+    {
+        $siswa = Siswa::find($siswaId);
+        if (!$siswa) {
+            return ['status' => false, 'message' => 'Siswa tidak ditemukan'];
+        }
+
+        $result = $this->getPembayaranSummary($siswa->idperson);
+        if (!$result['status']) {
+            return ['status' => false, 'message' => $result['message']];
+        }
+
+        $data = $result['data'];
+        if (empty($data) || empty($data[0])) {
+            return ['status' => false, 'message' => 'Data summary kosong'];
+        }
+
+        SiswaPembayaranSummary::updateOrCreate(
+            ['siswa_id' => $siswa->id],
+            [
+                'data' => $data[0],
+                'is_lunas' => $data[0]['summary']['fully_paid'] ?? false,
+            ]
+        );
+
+        return ['status' => true, 'message' => 'OK'];
+    }
+
+
     public function getPembayaranSiswa($idperson)
     {
         $url = $this->paymentUrl . $idperson;

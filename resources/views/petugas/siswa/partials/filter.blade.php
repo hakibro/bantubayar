@@ -83,6 +83,11 @@
                             class="hidden md:flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:scale-95 transition shadow-md shadow-blue-200">
                             Terapkan
                         </button>
+
+                        <!-- Tombol untuk memulai sinkronisasi -->
+                        <button type="button" class="btn btn-primary" id="btnSyncSummary">
+                            Sinkronisasi Summary Pembayaran
+                        </button>
                     </div>
                 </div>
             </div>

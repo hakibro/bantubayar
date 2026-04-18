@@ -9,10 +9,16 @@
                 <h1 class="text-2xl font-bold text-slate-800">Halo, {{ Auth::user()->name }} 👋</h1>
                 <p class="text-sm text-slate-500">Berikut adalah ringkasan penanganan Anda hari ini.</p>
             </div>
-            <a href="{{ route('penanganan.index') }}"
-                class="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
-                Lihat Semua Data
-            </a>
+            <div class="flex gap-4">
+                <a href="{{ route('penanganan.index') }}"
+                    class="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                    Lihat Semua Data
+                </a>
+                <a href="{{ route('penanganan.index') }}"
+                    class="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                    Sync All Pembayaran
+                </a>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -63,7 +69,7 @@
         <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl shadow-md p-5 mb-8">
             <div class="flex justify-between items-center">
                 <div>
-                    <h3 class="text-gray-600 font-semibold">Total Seluruh Siswa Terdaftar</h3>
+                    <h3 class="text-gray-600 font-semibold">Total Seluruh Siswa</h3>
                     <p class="text-4xl font-black text-green-800">{{ $statistikSiswa['total_siswa'] }}</p>
                 </div>
                 <div class="bg-white rounded-full p-3 shadow text-green-600">

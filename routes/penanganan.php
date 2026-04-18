@@ -19,6 +19,8 @@ Route::middleware(['auth:web', 'role:bendahara|petugas'])->prefix('penanganan')-
     Route::put('/update/{penanganan}', [PenangananController::class, 'update'])
         ->name('update');
 
+
+
 });
 
 Route::prefix('wali')->name('wali.')->group(function () {

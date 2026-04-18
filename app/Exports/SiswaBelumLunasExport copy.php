@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoSize, WithColumnFormatting
 {
@@ -20,6 +21,7 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
 
     public function collection()
     {
+        // Ambil semua siswa dengan pembayaran periode < 20242025
         $query = Siswa::whereHas('pembayaran', function ($q) {
             $q->where('periode', '<', '20242025');
         })->with([
@@ -28,27 +30,29 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
                     }
                 ]);
 
+        // Filter keyword
         if ($keyword = $this->request->get('keyword')) {
             $query->where(function ($q) use ($keyword) {
                 $q->where('nama', 'like', "%{$keyword}%")
                     ->orWhere('idperson', 'like', "%{$keyword}%");
             });
         }
+        // Filter UnitFormal
         if ($unitFormal = $this->request->get('unit_formal')) {
             $query->where('UnitFormal', $unitFormal);
         }
+        // Filter AsramaPondok
         if ($asramaPondok = $this->request->get('asrama_pondok')) {
             $query->where('AsramaPondok', $asramaPondok);
         }
+        // Filter TingkatDiniyah
         if ($tingkatDiniyah = $this->request->get('tingkat_diniyah')) {
             $query->where('TingkatDiniyah', $tingkatDiniyah);
         }
 
         $siswaList = $query->get();
 
-        // Gunakan array asosiatif untuk mencegah duplikasi
-        $rows = [];
-        $uniqueKeys = [];
+        $rows = collect();
 
         foreach ($siswaList as $siswa) {
             // Mapping periode => kelas_info
@@ -64,6 +68,7 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
                 }
             }
 
+            // Loop semua pembayaran dan kategori
             foreach ($siswa->pembayaran as $pay) {
                 $periode = $pay->periode;
                 $data = $pay->data;
@@ -73,45 +78,38 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
                 foreach ($data['categories'] as $category) {
                     $items = $category['items'] ?? [];
                     foreach ($items as $item) {
+                        // Hitung sisa item = dibayar (amount_billed) - tagihan (amount_paid)
                         $tagihan = $item['amount_paid'] ?? 0;
                         $dibayar = $item['amount_billed'] ?? 0;
                         $sisa = $dibayar - $tagihan;
 
+                        // Hanya tampilkan item yang sisa-nya tidak nol
                         if ($sisa != 0) {
                             $kelasInfo = $kelasInfoMap[$periode] ?? '-';
-                            $itemName = $item['unit_name'] ?? $item['unit_id'] ?? 'Unknown';
-                            $categoryName = $category['category_name'] ?? 'Unknown';
-
-                            // Buat kunci unik untuk mencegah duplikasi
-                            $uniqueKey = $siswa->id . '|' . $periode . '|' . $categoryName . '|' . $itemName;
-
-                            if (!isset($uniqueKeys[$uniqueKey])) {
-                                $uniqueKeys[$uniqueKey] = true;
-                                $rows[] = [
-                                    'idperson' => $siswa->idperson,
-                                    'nama' => $siswa->nama,
-                                    'gender' => $siswa->gender,
-                                    'phone' => $siswa->phone,
-                                    'unit_formal' => $siswa->UnitFormal,
-                                    'kelas_formal' => $siswa->KelasFormal,
-                                    'asrama_pondok' => $siswa->AsramaPondok,
-                                    'kelas_diniyah' => $siswa->KelasDiniyah,
-                                    'periode' => $periode,
-                                    'kelas_info' => $kelasInfo,
-                                    'kategori' => $categoryName,
-                                    'item' => $itemName,
-                                    'tagihan' => $tagihan,
-                                    'dibayar' => $dibayar,
-                                    'sisa' => $sisa,
-                                ];
-                            }
+                            $rows->push([
+                                'idperson' => $siswa->idperson,
+                                'nama' => $siswa->nama,
+                                'gender' => $siswa->gender,
+                                'phone' => $siswa->phone,
+                                'unit_formal' => $siswa->UnitFormal,
+                                'kelas_formal' => $siswa->KelasFormal,
+                                'asrama_pondok' => $siswa->AsramaPondok,
+                                'kelas_diniyah' => $siswa->KelasDiniyah,
+                                'periode' => $periode,
+                                'kelas_info' => $kelasInfo,
+                                'kategori' => $category['category_name'] ?? 'Unknown',
+                                'item' => $item['unit_name'] ?? $item['unit_id'] ?? 'Unknown',
+                                'tagihan' => $tagihan,
+                                'dibayar' => $dibayar,
+                                'sisa' => $sisa, // positif = kelebihan bayar, negatif = tunggakan
+                            ]);
                         }
                     }
                 }
             }
         }
 
-        return collect($rows);
+        return $rows;
     }
 
     public function headings(): array
@@ -138,9 +136,9 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
     public function columnFormats(): array
     {
         return [
-            'M' => '#,##0',
-            'N' => '#,##0',
-            'O' => '#,##0',
+            'M' => '#,##0', // kolom Tagihan (index M, mulai 0: A=0, M=12)
+            'N' => '#,##0', // Dibayar
+            'O' => '#,##0', // Sisa
         ];
     }
 }

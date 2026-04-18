@@ -96,6 +96,11 @@
                                 <i class="fas fa-search md:mr-2"></i>
                                 <span class="hidden md:inline">Cari</span>
                             </button>
+                            <!-- Tombol Sinkronisasi -->
+                            <button type="button" id="btnSyncSummary"
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-200">
+                                Sinkronisasi Summary Pembayaran
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -233,6 +238,31 @@
             {{ $siswa->links() }}
         </div>
 
+    </div>
+
+    <!-- Modal Progress (Tailwind CSS) -->
+    <!-- Modal Progress -->
+    <div id="progressModal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-800">Sinkronisasi Summary Pembayaran</h3>
+                <div class="mt-4">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                            style="width: 0%"></div>
+                    </div>
+                    <p id="progressText" class="mt-3 text-sm text-gray-600">Memulai sinkronisasi...</p>
+                    <p id="progressDetail" class="mt-1 text-xs text-gray-500"></p>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 flex justify-end">
+                <button id="closeModalBtn"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none">
+                    Tutup
+                </button>
+            </div>
+        </div>
     </div>
 
 @endsection
@@ -385,5 +415,89 @@
 
         // Cek saat halaman pertama kali dibuka
         window.addEventListener('load', checkFilterActive);
+    </script>
+
+    <script>
+        const modal = document.getElementById('progressModal');
+        const closeBtn = document.getElementById('closeModalBtn');
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex'; // pastikan flex untuk centering
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+        // Tutup jika klik di luar konten modal (background)
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+
+        document.getElementById('btnSyncSummary').addEventListener('click', function() {
+            openModal();
+            // Reset progress
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').innerText = 'Memulai sinkronisasi...';
+            document.getElementById('progressDetail').innerText = '';
+
+            fetch('{{ route('petugas.siswa.sync-summary-all') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        document.getElementById('progressText').innerText = 'Error: ' + data.message;
+                        return;
+                    }
+
+                    const progressKey = data.progress_key;
+                    let interval = setInterval(() => {
+                        fetch(`/petugas/sync-progress/${progressKey}`)
+                            .then(res => res.json())
+                            .then(progress => {
+                                if (!progress.success) {
+                                    clearInterval(interval);
+                                    document.getElementById('progressText').innerText =
+                                        'Progress tidak ditemukan.';
+                                    return;
+                                }
+
+                                const percent = progress.percentage;
+                                document.getElementById('progressBar').style.width = percent + '%';
+                                document.getElementById('progressText').innerHTML =
+                                    `Memproses ${progress.processed} dari ${progress.total} siswa`;
+                                document.getElementById('progressDetail').innerHTML =
+                                    `Gagal: ${progress.failed}`;
+
+                                if (progress.status === 'completed') {
+                                    clearInterval(interval);
+                                    document.getElementById('progressText').innerHTML =
+                                        'Sinkronisasi selesai!';
+                                    setTimeout(() => location.reload(), 2000);
+                                }
+                            })
+                            .catch(() => {
+                                clearInterval(interval);
+                                document.getElementById('progressText').innerText =
+                                    'Terjadi kesalahan saat cek progress.';
+                            });
+                    }, 3000);
+                })
+                .catch(err => {
+                    document.getElementById('progressText').innerText = 'Gagal memulai sinkronisasi: ' + err
+                        .message;
+                });
+        });
     </script>
 @endpush

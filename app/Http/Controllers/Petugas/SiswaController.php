@@ -9,7 +9,9 @@ use App\Models\Siswa;
 use App\Models\PetugasSiswa;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-
+use App\Jobs\SyncPembayaranSummaryAllJob;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 use Illuminate\Http\Request;
 
@@ -150,15 +152,83 @@ class SiswaController extends Controller
         return $values;
     }
 
-    public function syncPembayaranSummary($idperson)
+    /**
+     * Memulai sinkronisasi summary semua siswa (berdasarkan scope user)
+     */
+    public function syncAllSummary(Request $request)
     {
-        $siswa = Siswa::findOrFail($idperson);
-        $service = new SiswaService();
         try {
-            $service->syncPembayaranSummary($idperson);
-            return response()->json(['message' => 'Sinkronisasi berhasil']);
+            $user = auth()->user();
+            $scope = Siswa::query();
+
+            if ($user->hasRole('petugas')) {
+                $scope->whereHas('petugas', fn($q) => $q->where('users.id', auth()->id()));
+            } else {
+                $lembagaUser = $user->lembaga;
+                $scope->where(fn($q) => $q->where('UnitFormal', $lembagaUser)
+                    ->orWhere('AsramaPondok', $lembagaUser)
+                    ->orWhere('TingkatDiniyah', $lembagaUser));
+            }
+
+            $siswaIds = $scope->pluck('id')->toArray();
+
+            if (empty($siswaIds)) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada siswa dalam lingkup Anda.']);
+            }
+
+            $progressKey = 'sync_summary_' . $user->id . '_' . Str::random(8);
+
+            // 🔥 SIMPAN PROGRESS AWAL (status pending)
+            Cache::put($progressKey, [
+                'total' => count($siswaIds),
+                'processed' => 0,
+                'failed' => 0,
+                'status' => 'pending',
+            ], now()->addHours(1));
+
+            \Log::info('SyncAllSummary - Dispatch Job', [
+                'user_id' => $user->id,
+                'siswa_count' => count($siswaIds),
+                'progress_key' => $progressKey
+            ]);
+
+            // Use Queue::push directly untuk memastikan job ter-queue dengan reliable
+            \Illuminate\Support\Facades\Queue::push(
+                new SyncPembayaranSummaryAllJob($siswaIds, $progressKey)
+            );
+
+            return response()->json(['success' => true, 'progress_key' => $progressKey]);
+
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Sinkronisasi gagal: ' . $e->getMessage()], 500);
+            \Log::error('SyncAllSummary Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
         }
     }
+    public function getSyncProgress($progressKey)
+    {
+        $progress = Cache::get($progressKey);
+
+        if (!$progress) {
+            return response()->json(['success' => false, 'message' => 'Progress tidak ditemukan.'], 404);
+        }
+
+        $percentage = $progress['total'] > 0 ? round(($progress['processed'] / $progress['total']) * 100) : 0;
+
+        return response()->json([
+            'success' => true,
+            'total' => $progress['total'],
+            'processed' => $progress['processed'],
+            'failed' => $progress['failed'],
+            'percentage' => $percentage,
+            'status' => $progress['status'],
+        ]);
+    }
+
 }
