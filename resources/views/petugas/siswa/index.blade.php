@@ -73,7 +73,7 @@
 
                 <div class="p-4 bg-white">
                     <div class="flex items-center gap-2">
-                        <div class="relative flex-grow">
+                        <div class="relative grow">
                             <input type="text" name="search" placeholder="Cari nama atau ID Yayasan..."
                                 class="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none"
                                 value="{{ request('search') }}" />
@@ -98,8 +98,9 @@
                             </button>
                             <!-- Tombol Sinkronisasi -->
                             <button type="button" id="btnSyncSummary"
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-200">
-                                Sinkronisasi Summary Pembayaran
+                                class="flex items-center justify-center h-11 px-5 md:px-6 bg-yellow-500 text-white text-sm font-bold rounded-xl hover:bg-yellow-700 active:scale-95 transition-all shadow-lg shadow-yellow-200">
+                                <i class="fas fa-sync-alt md:mr-2"></i>
+                                <span class="hidden md:inline">Sync All</span>
                             </button>
                         </div>
                     </div>
@@ -256,7 +257,11 @@
                     <p id="progressDetail" class="mt-1 text-xs text-gray-500"></p>
                 </div>
             </div>
-            <div class="bg-gray-50 px-6 py-3 flex justify-end">
+            <div class="bg-gray-50 px-6 py-3 flex justify-end space-x-2">
+                <button id="cancelSyncBtn"
+                    class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 focus:outline-none">
+                    Batalkan
+                </button>
                 <button id="closeModalBtn"
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none">
                     Tutup
@@ -420,84 +425,190 @@
     <script>
         const modal = document.getElementById('progressModal');
         const closeBtn = document.getElementById('closeModalBtn');
+        let progressInterval = null;
+        let currentProgressKey = null;
 
         function openModal() {
             modal.classList.remove('hidden');
-            modal.style.display = 'flex'; // pastikan flex untuk centering
+            modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
 
         function closeModal() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
             modal.classList.add('hidden');
             modal.style.display = 'none';
             document.body.style.overflow = '';
+            // Jangan hapus currentProgressKey atau localStorage agar polling bisa dilanjutkan nanti
         }
 
-        closeBtn.addEventListener('click', closeModal);
-        // Tutup jika klik di luar konten modal (background)
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeModal();
-        });
+        // Fungsi untuk mengambil progress dari server
+        async function fetchProgress(progressKey) {
+            try {
+                const res = await fetch(`/petugas/sync-progress/${progressKey}`);
+                const data = await res.json();
+                return data;
+            } catch (e) {
+                return {
+                    success: false,
+                    message: e.message
+                };
+            }
+        }
 
-        document.getElementById('btnSyncSummary').addEventListener('click', function() {
-            openModal();
-            // Reset progress
-            document.getElementById('progressBar').style.width = '0%';
-            document.getElementById('progressText').innerText = 'Memulai sinkronisasi...';
-            document.getElementById('progressDetail').innerText = '';
+        // Fungsi untuk memulai polling progress
+        function startPolling(progressKey) {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+            currentProgressKey = progressKey;
 
-            fetch('{{ route('petugas.siswa.sync-summary-all') }}', {
+            progressInterval = setInterval(async () => {
+                const progress = await fetchProgress(progressKey);
+                if (!progress.success) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                    document.getElementById('progressText').innerText = 'Progress tidak ditemukan.';
+                    localStorage.removeItem('active_sync_key');
+                    return;
+                }
+
+                const percent = progress.percentage;
+                document.getElementById('progressBar').style.width = percent + '%';
+                document.getElementById('progressText').innerHTML =
+                    `Memproses ${progress.processed} dari ${progress.total} siswa`;
+                document.getElementById('progressDetail').innerHTML = `Gagal: ${progress.failed}`;
+
+                if (progress.status === 'completed') {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                    document.getElementById('progressText').innerHTML = 'Sinkronisasi selesai!';
+                    localStorage.removeItem('active_sync_key');
+                    setTimeout(() => location.reload(), 2000);
+                } else if (progress.status === 'cancelled') {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                    document.getElementById('progressText').innerHTML = 'Sinkronisasi dibatalkan.';
+                    localStorage.removeItem('active_sync_key');
+                    setTimeout(() => location.reload(), 2000);
+                }
+            }, 3000);
+        }
+
+        // Fungsi untuk memulai sinkronisasi baru (memanggil endpoint)
+        async function startNewSync() {
+            try {
+                const res = await fetch('{{ route('petugas.siswa.sync-summary-all') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({})
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.success) {
-                        document.getElementById('progressText').innerText = 'Error: ' + data.message;
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    document.getElementById('progressText').innerText = 'Error: ' + data.message;
+                    return null;
+                }
+                return data.progress_key;
+            } catch (err) {
+                document.getElementById('progressText').innerText = 'Gagal memulai sinkronisasi: ' + err.message;
+                return null;
+            }
+        }
+
+        // Event handler tombol Sync All
+        document.getElementById('btnSyncSummary').addEventListener('click', async () => {
+            // Reset tampilan modal ke default (tanpa menghapus polling nanti)
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').innerText =
+                'Memeriksa sinkronisasi yang sedang berjalan...';
+            document.getElementById('progressDetail').innerText = '';
+            openModal();
+
+            // Cek apakah ada progressKey tersimpan di localStorage
+            let savedKey = localStorage.getItem('active_sync_key');
+            if (savedKey) {
+                // Cek status progres dari savedKey
+                const progress = await fetchProgress(savedKey);
+                if (progress.success && (progress.status === 'pending' || progress.status === 'processing')) {
+                    // Masih ada proses berjalan, lanjutkan polling
+                    currentProgressKey = savedKey;
+                    startPolling(savedKey);
+                    return;
+                } else {
+                    // Progress sudah selesai atau tidak valid, hapus localStorage dan lanjut sync baru
+                    localStorage.removeItem('active_sync_key');
+                }
+            }
+
+            // Tidak ada proses berjalan, mulai sinkronisasi baru
+            document.getElementById('progressText').innerText = 'Memulai sinkronisasi...';
+            const newKey = await startNewSync();
+            if (newKey) {
+                localStorage.setItem('active_sync_key', newKey);
+                startPolling(newKey);
+            }
+        });
+
+        // Event listener tombol Tutup
+        closeBtn.addEventListener('click', closeModal);
+
+        // Event listener tombol Batalkan
+        const cancelBtn = document.getElementById('cancelSyncBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', async () => {
+                if (!currentProgressKey) {
+                    closeModal();
+                    return;
+                }
+                if (!confirm('Yakin ingin membatalkan sinkronisasi?')) return;
+
+                try {
+                    const response = await fetch('{{ route('petugas.siswa.sync-summary-cancel') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            progress_key: currentProgressKey
+                        })
+                    });
+
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        const text = await response.text();
+                        console.error('Response bukan JSON:', text.substring(0, 200));
+                        alert('Terjadi kesalahan pada server. Lihat console untuk detail.');
                         return;
                     }
 
-                    const progressKey = data.progress_key;
-                    let interval = setInterval(() => {
-                        fetch(`/petugas/sync-progress/${progressKey}`)
-                            .then(res => res.json())
-                            .then(progress => {
-                                if (!progress.success) {
-                                    clearInterval(interval);
-                                    document.getElementById('progressText').innerText =
-                                        'Progress tidak ditemukan.';
-                                    return;
-                                }
+                    const data = await response.json();
+                    if (data.success) {
+                        alert(data.message);
+                        if (progressInterval) clearInterval(progressInterval);
+                        localStorage.removeItem('active_sync_key');
+                        closeModal();
+                        location.reload();
+                    } else {
+                        alert('Gagal: ' + data.message);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Error: ' + err.message);
+                }
+            });
+        }
 
-                                const percent = progress.percentage;
-                                document.getElementById('progressBar').style.width = percent + '%';
-                                document.getElementById('progressText').innerHTML =
-                                    `Memproses ${progress.processed} dari ${progress.total} siswa`;
-                                document.getElementById('progressDetail').innerHTML =
-                                    `Gagal: ${progress.failed}`;
-
-                                if (progress.status === 'completed') {
-                                    clearInterval(interval);
-                                    document.getElementById('progressText').innerHTML =
-                                        'Sinkronisasi selesai!';
-                                    setTimeout(() => location.reload(), 2000);
-                                }
-                            })
-                            .catch(() => {
-                                clearInterval(interval);
-                                document.getElementById('progressText').innerText =
-                                    'Terjadi kesalahan saat cek progress.';
-                            });
-                    }, 3000);
-                })
-                .catch(err => {
-                    document.getElementById('progressText').innerText = 'Gagal memulai sinkronisasi: ' + err
-                        .message;
-                });
+        // Tutup modal jika klik di luar konten
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
         });
     </script>
 @endpush

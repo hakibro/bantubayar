@@ -1,5 +1,4 @@
 <?php
-// app/Jobs/SyncPembayaranSummaryAllJob.php
 
 namespace App\Jobs;
 
@@ -19,10 +18,7 @@ class SyncPembayaranSummaryAllJob implements ShouldQueue
     protected $siswaIds;
     protected $progressKey;
 
-    // Timeout untuk job ini (dalam detik) - untuk 1000 siswa dengan API ~1 detik per siswa
-    public $timeout = 3600; // 1 jam
-
-    // Retry configuration
+    public $timeout = 3600;
     public $tries = 1;
 
     public function __construct(array $siswaIds, string $progressKey)
@@ -31,13 +27,25 @@ class SyncPembayaranSummaryAllJob implements ShouldQueue
         $this->progressKey = $progressKey;
     }
 
-    /**
-     * Tambahkan method ini agar sesuai dengan referensi
-     * Menjamin job ini masuk ke antrean yang sama dengan SyncPembayaranSiswaJob
-     */
     public function queue(): string
     {
         return 'sync-pembayaran';
+    }
+
+    /**
+     * Cek apakah job ini dibatalkan
+     */
+    protected function isCancelled(): bool
+    {
+        return Cache::get("sync_summary_cancel_{$this->progressKey}", false);
+    }
+
+    /**
+     * Tandai job sebagai dibatalkan (dipanggil dari controller)
+     */
+    public static function markAsCancelled(string $progressKey): void
+    {
+        Cache::put("sync_summary_cancel_{$progressKey}", true, now()->addHours(1));
     }
 
     public function handle(SiswaService $siswaService)
@@ -46,12 +54,12 @@ class SyncPembayaranSummaryAllJob implements ShouldQueue
         $processed = 0;
         $failed = 0;
 
-        Log::info("SyncPembayaranSummaryAllJob START - Total siswa: {$total}", [
+        Log::info("SyncPembayaranSummaryAllJob START", [
             'progress_key' => $this->progressKey,
-            'siswa_ids' => count($this->siswaIds)
+            'total' => $total
         ]);
 
-        // Ubah status dari pending menjadi processing
+        // Update status menjadi processing
         Cache::put($this->progressKey, [
             'total' => $total,
             'processed' => 0,
@@ -59,20 +67,47 @@ class SyncPembayaranSummaryAllJob implements ShouldQueue
             'status' => 'processing',
         ], now()->addHours(1));
 
-        foreach ($this->siswaIds as $siswaId) {
+        foreach ($this->siswaIds as $index => $siswaId) {
+            // Cek pembatalan sebelum memproses setiap siswa
+            if ($this->isCancelled()) {
+                Log::warning("Job dibatalkan oleh user", [
+                    'progress_key' => $this->progressKey,
+                    'processed' => $processed,
+                    'failed' => $failed
+                ]);
+                // Update status menjadi cancelled
+                Cache::put($this->progressKey, [
+                    'total' => $total,
+                    'processed' => $processed,
+                    'failed' => $failed,
+                    'status' => 'cancelled',
+                ], now()->addHours(1));
+                return;
+            }
+
             try {
                 $result = $siswaService->syncPembayaranSummarySiswa($siswaId);
                 if (!$result['status']) {
-                    // Gunakan increment agar tidak bentrok dengan proses lain
-                    $this->updateProgress($this->progressKey, 'failed');
+                    $failed++;
                 }
             } catch (\Exception $e) {
-                $this->updateProgress($this->progressKey, 'failed');
+                Log::error("Error sync siswa {$siswaId}", ['error' => $e->getMessage()]);
+                $failed++;
             }
 
-            $this->updateProgress($this->progressKey, 'processed');
+            $processed++;
+            // Update progress setiap 10 siswa atau setelah selesai
+            if ($processed % 10 === 0 || $processed === $total) {
+                Cache::put($this->progressKey, [
+                    'total' => $total,
+                    'processed' => $processed,
+                    'failed' => $failed,
+                    'status' => 'processing',
+                ], now()->addHours(1));
+            }
         }
 
+        // Selesai normal
         Cache::put($this->progressKey, [
             'total' => $total,
             'processed' => $processed,
@@ -86,17 +121,8 @@ class SyncPembayaranSummaryAllJob implements ShouldQueue
             'processed' => $processed,
             'failed' => $failed
         ]);
-    }
-    private function updateProgress($key, $type)
-    {
-        $data = Cache::get($key);
-        if ($data) {
-            $data[$type]++;
-            // Update status jika sudah selesai di loop terakhir
-            if ($data['processed'] + $data['failed'] >= $data['total']) {
-                $data['status'] = 'completed';
-            }
-            Cache::put($key, $data, now()->addHours(1));
-        }
+
+        // Hapus flag pembatalan jika ada
+        Cache::forget("sync_summary_cancel_{$this->progressKey}");
     }
 }

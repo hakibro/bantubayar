@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Jobs\SyncPembayaranSummaryAllJob;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 use Illuminate\Http\Request;
 
@@ -210,6 +211,40 @@ class SiswaController extends Controller
                 'message' => 'Error: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Batalkan sinkronisasi summary yang sedang berjalan
+     */
+    public function cancelSyncSummary(Request $request)
+    {
+        $progressKey = $request->input('progress_key');
+        if (!$progressKey) {
+            return response()->json(['success' => false, 'message' => 'Progress key tidak ditemukan.']);
+        }
+
+        // 1. Set flag pembatalan untuk job yang sedang berjalan
+        \App\Jobs\SyncPembayaranSummaryAllJob::markAsCancelled($progressKey);
+
+        // 2. Hapus job yang masih pending di queue (belum diproses)
+        //    Cari job dengan payload yang mengandung progressKey ini
+        $deleted = \DB::table('jobs')
+            ->where('queue', 'sync-pembayaran')
+            ->where('payload', 'like', '%"progressKey":"' . $progressKey . '"%')
+            ->delete();
+
+        // 3. Hapus cache progress (opsional, biar tidak muncul lagi)
+        Cache::forget($progressKey);
+
+        Log::info("Sync summary dibatalkan oleh user", [
+            'progress_key' => $progressKey,
+            'deleted_jobs' => $deleted
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sinkronisasi dibatalkan. ' . $deleted . ' job pending dihapus.'
+        ]);
     }
     public function getSyncProgress($progressKey)
     {

@@ -66,6 +66,18 @@ class SiswaController extends Controller
         if ($request->filled('kamar')) {
             $query->where('KamarPondok', $request->kamar);
         }
+        // filter diniyah
+        if ($request->filled('diniyah')) {
+            if ($request->asrama === '__NULL__') {
+                $query->whereNull('TingkatDiniyah');
+            } else {
+                $query->where('TingkatDiniyah', $request->diniyah);
+            }
+        }
+        // filter kamar
+        if ($request->filled('kelasdiniyah')) {
+            $query->where('KelasDiniyah', $request->kelasdiniyah);
+        }
 
 
 
@@ -88,8 +100,9 @@ class SiswaController extends Controller
         // normal page load -> perlu juga daftar lembaga untuk dropdown (unique)
         $daftarLembaga = Siswa::select('UnitFormal')->distinct()->pluck('UnitFormal')->filter()->sort()->values();
         $daftarAsrama = Siswa::select('AsramaPondok')->distinct()->pluck('AsramaPondok')->filter()->sort()->values();
+        $daftarDiniyah = Siswa::select('TingkatDiniyah')->distinct()->pluck('TingkatDiniyah')->filter()->sort()->values();
 
-        return view('admin.siswa.index', compact('siswa', 'petugas', 'daftarLembaga', 'daftarAsrama'));
+        return view('admin.siswa.index', compact('siswa', 'petugas', 'daftarLembaga', 'daftarAsrama', 'daftarDiniyah'));
 
     }
 
@@ -116,6 +129,18 @@ class SiswaController extends Controller
             ->pluck('KamarPondok');
 
         return response()->json($kamar);
+    }
+    public function kelasDiniyah(Request $request)
+    {
+        $diniyah = $request->diniyah;
+        $kelasDiniyah = Siswa::when($diniyah, fn($q) => $q->where('TingkatDiniyah', $diniyah))
+            ->select('TingkatDiniyah')
+            ->distinct()
+            ->whereNotNull('TingkatDiniyah')
+            ->orderBy('TingkatDiniyah', 'asc')
+            ->pluck('TingkatDiniyah');
+
+        return response()->json($kelasDiniyah);
     }
 
     public function show($id)

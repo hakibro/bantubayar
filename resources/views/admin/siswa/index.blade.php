@@ -33,7 +33,7 @@
                     class="w-full md:w-1/3 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
 
                 <select id="filterLembaga" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
-                    <option value="">Semua Lembaga</option>
+                    <option value="">Lembaga...</option>
                     @foreach ($daftarLembaga as $l)
                         <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
                             {{ $l === '__NULL__' ? 'Tanpa Lembaga' : $l }}
@@ -43,11 +43,11 @@
                 </select>
 
                 <select id="filterKelas" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
-                    <option value="">Semua Kelas</option>
+                    <option value="">Kelas...</option>
                 </select>
 
                 <select id="filterAsrama" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
-                    <option value="">Semua Asrama</option>
+                    <option value="">Asrama...</option>
                     @foreach ($daftarAsrama as $l)
                         <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
                             {{ $l === '__NULL__' ? 'Tanpa Lembaga' : $l }}
@@ -56,7 +56,20 @@
                 </select>
 
                 <select id="filterKamar" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
-                    <option value="">Semua Kamar</option>
+                    <option value="">Kamar...</option>
+                </select>
+
+                <select id="filterDiniyah" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
+                    <option value="">Diniyah...</option>
+                    @foreach ($daftarDiniyah as $l)
+                        <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
+                            {{ $l === '__NULL__' ? 'Tanpa Diniyah' : $l }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <select id="filterKelasDiniyah" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
+                    <option value="">Kelas...</option>
                 </select>
 
 
@@ -221,6 +234,8 @@
                 const filterKelas = document.getElementById('filterKelas');
                 const filterAsrama = document.getElementById('filterAsrama');
                 const filterKamar = document.getElementById('filterKamar');
+                const filterDiniyah = document.getElementById('filterDiniyah');
+                const filterKelasDiniyah = document.getElementById('filterKelasDiniyah');
                 const filterPetugas = document.getElementById('filterPetugas');
                 const tableContainer = document.getElementById('tableContainer');
 
@@ -242,6 +257,8 @@
                         kelas: filterKelas.value,
                         asrama: filterAsrama.value,
                         kamar: filterKamar.value,
+                        diniyah: filterDiniyah.value,
+                        kelasDiniyah: filterKelasDiniyah.value,
                         petugas_id: filterPetugas.value
                     });
 
@@ -268,7 +285,7 @@
                         })
                         .then(r => r.json())
                         .then(kelas => {
-                            filterKelas.innerHTML = `<option value="">Semua Kelas</option>`;
+                            filterKelas.innerHTML = `<option value="">Kelas...</option>`;
                             kelas.forEach(k => {
                                 filterKelas.innerHTML += `<option value="${k}">${k}</option>`;
                             });
@@ -284,9 +301,25 @@
                         })
                         .then(r => r.json())
                         .then(kamar => {
-                            filterKamar.innerHTML = `<option value="">Semua Kamar</option>`;
+                            filterKamar.innerHTML = `<option value="">Kamar...</option>`;
                             kamar.forEach(k => {
                                 filterKamar.innerHTML += `<option value="${k}">${k}</option>`;
+                            });
+                            fetchSiswa();
+                        });
+                });
+                
+                filterDiniyah.addEventListener('change', () => {
+                    fetch(`{{ route('admin.siswa.kelasDiniyah') }}?asrama=${filterDiniyah.value}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(r => r.json())
+                        .then(kelasDiniyah => {
+                            filterKelasDiniyah.innerHTML = `<option value="">Kelas...</option>`;
+                            kelasDiniyah.forEach(k => {
+                                filterKelasDiniyah.innerHTML += `<option value="${k}">${k}</option>`;
                             });
                             fetchSiswa();
                         });
@@ -295,6 +328,7 @@
                 searchInput.addEventListener('keyup', debounce(fetchSiswa, 300));
                 filterKelas.addEventListener('change', fetchSiswa);
                 filterKamar.addEventListener('change', fetchSiswa);
+                filterKelasDiniyah.addEventListener('change', fetchSiswa);
                 filterPetugas.addEventListener('change', fetchSiswa);
 
             });
