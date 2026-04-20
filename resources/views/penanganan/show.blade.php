@@ -294,11 +294,11 @@
 
     @push('scripts')
         <script>
-            const formatCurrency = (num) => new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(num);
+            // const formatCurrency = (num) => new Intl.NumberFormat('id-ID', {
+            //     style: 'currency',
+            //     currency: 'IDR',
+            //     minimumFractionDigits: 0
+            // }).format(num);
 
             // --- Modal Logic ---
             function openModal(type) {
@@ -363,11 +363,11 @@
             });
         </script>
     @endpush
-
     <!-- --- MODALS --- -->
     @include('penanganan.partials.modal-action')
     @include('penanganan.partials.modal-updatehp')
     @include('penanganan.partials.modal-detail')
     @include('penanganan.partials.modal-result')
+
 
 @endsection
