@@ -2,6 +2,7 @@
 use App\Http\Controllers\Petugas\SiswaController;
 use App\Http\Controllers\Petugas\DashboardController;
 use App\Http\Controllers\Admin\SiswaSyncController;
+use App\Services\SiswaService;
 use App\Models\Siswa;
 
 
@@ -19,7 +20,7 @@ Route::middleware(['auth', 'role:bendahara|petugas'])->prefix('petugas')->name('
     Route::post('/siswa/{id}/update', [SiswaController::class, 'update'])->name('siswa.update');
 
     // Sync Single Pembayaran Siswa
-    Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
+    Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncKategoriPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
 
     // Sync All Pembayaran Summary
     Route::post('/sync-summary-all', [SiswaController::class, 'syncAllSummary'])->name('siswa.sync-summary-all');
@@ -27,4 +28,12 @@ Route::middleware(['auth', 'role:bendahara|petugas'])->prefix('petugas')->name('
     Route::post('/sync-summary-cancel', [SiswaController::class, 'cancelSyncSummary'])->name('siswa.sync-summary-cancel');
     Route::get('/test-sync/{idperson}', [SiswaController::class, 'syncPembayaranSummary'])->name('siswa.sync-pembayaran-summary');
 
+});
+
+
+// cek siswaservice fungsi syncpembayaransummarysiswa(idperson)
+Route::get('/test-summary/{idperson}', function (SiswaService $siswaService, $idperson) {
+    $result = $siswaService->syncPembayaranSummarySiswa($idperson);
+
+    dd($result);
 });

@@ -349,9 +349,6 @@ class SiswaService
         }
     }
 
-    // app/Services/SiswaService.php
-
-
     public function syncPembayaranSummarySiswa($siswaId)
     {
         $siswa = Siswa::find($siswaId);
@@ -369,13 +366,33 @@ class SiswaService
             return ['status' => false, 'message' => 'Data summary kosong'];
         }
 
-        SiswaPembayaranSummary::updateOrCreate(
-            ['siswa_id' => $siswa->id],
-            [
-                'data' => $data[0],
-                'is_lunas' => $data[0]['summary']['fully_paid'] ?? false,
-            ]
-        );
+        // SYNC SALDO SISWA
+        $saldoApi = isset($data[0]['saldo'])
+            ? (float) $data[0]['saldo']
+            : null;
+
+        if ($saldoApi !== null) {
+            SiswaSaldo::updateOrCreate(
+                ['siswa_id' => $siswa->id],
+                ['saldo' => $saldoApi]
+            );
+        }
+
+        foreach ($data[0]['periods'] as $period) {
+            // Simpan summary ke tabel SiswaPembayaran per periode
+            SiswaPembayaran::updateOrCreate(
+                [
+                    'siswa_id' => $siswa->id,
+                    'periode' => $period['period_id'] ?? 'summary', // special period for summary
+                ],
+                [
+                    'kelas_info' => $period['kelas_info'] ?? null,
+                    'summary' => $period['summary'] ?? null, // simpan seluruh data summary
+                    'is_lunas' => $period['summary']['fully_paid'] ?? false,
+                ]
+            );
+        }
+
 
         return ['status' => true, 'message' => 'OK'];
     }
@@ -414,7 +431,7 @@ class SiswaService
         }
     }
 
-    public function syncPembayaranSiswa($id)
+    public function syncKategoriPembayaranSiswa($id)
     {
         // 1. Ambil data siswa
         $siswa = Siswa::findOrFail($id);
@@ -438,29 +455,15 @@ class SiswaService
             ];
         }
 
-        // 3. SYNC SALDO SISWA
-        $saldoApi = isset($data[0]['saldo'])
-            ? (float) $data[0]['saldo']
-            : null;
-
-        if ($saldoApi !== null) {
-            SiswaSaldo::updateOrCreate(
-                ['siswa_id' => $siswa->id],
-                ['saldo' => $saldoApi]
+        // lengkapi kode agar menyimpan data pembayaran per kategori ke tabel SiswaPembayaran, abaikan jika data sama.
+        foreach ($data[0]['periods'] as $period) {
+            SiswaPembayaran::updateOrCreate(
+                [
+                    'siswa_id' => $siswa->id,
+                    'periode' => $period['period_id'],
+                ],
+                ['data' => $period['categories'] ?? 'tidak ada categories']
             );
-        }
-
-        // 4. Hapus pembayaran lama
-        SiswaPembayaran::where('siswa_id', $siswa->id)->delete();
-
-        // 5. Insert pembayaran per periode
-        foreach ($data[0]['periods'] as $periode) {
-            SiswaPembayaran::create([
-                'siswa_id' => $siswa->id,
-                'periode' => $periode['period_id'] ?? null,
-                'kelas_info' => $periode['kelas_info'] ?? null,
-                'data' => $periode, // JSON lengkap periode
-            ]);
         }
 
         return [

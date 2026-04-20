@@ -50,9 +50,9 @@ class SiswaSyncController extends Controller
         return response()->json($result);
     }
 
-    public function syncPembayaranSiswa($id)
+    public function syncKategoriPembayaranSiswa($id)
     {
-        $result = $this->service->syncPembayaranSiswa($id);
+        $result = $this->service->syncKategoriPembayaranSiswa($id);
 
         return response()->json($result);
     }
