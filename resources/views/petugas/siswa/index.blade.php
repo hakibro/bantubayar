@@ -426,7 +426,7 @@
         const modal = document.getElementById('progressModal');
         const closeBtn = document.getElementById('closeModalBtn');
         let progressInterval = null;
-        let currentProgressKey = null;
+        let currentBatchId = null;
 
         function openModal() {
             modal.classList.remove('hidden');
@@ -442,16 +442,18 @@
             modal.classList.add('hidden');
             modal.style.display = 'none';
             document.body.style.overflow = '';
-            // Jangan hapus currentProgressKey atau localStorage agar polling bisa dilanjutkan nanti
+            localStorage.removeItem('active_batch_id');
         }
 
-        // Fungsi untuk mengambil progress dari server
-        async function fetchProgress(progressKey) {
+        // Fungsi untuk mengambil progress batch dari server
+        async function fetchBatchProgress(batchId) {
             try {
-                const res = await fetch(`/petugas/sync-progress/${progressKey}`);
+                const res = await fetch(`/petugas/sync-summary-progress/${batchId}`);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 return data;
             } catch (e) {
+                console.error('Fetch progress error:', e);
                 return {
                     success: false,
                     message: e.message
@@ -459,46 +461,42 @@
             }
         }
 
-        // Fungsi untuk memulai polling progress
-        function startPolling(progressKey) {
-            if (progressInterval) {
-                clearInterval(progressInterval);
-            }
-            currentProgressKey = progressKey;
+        // Fungsi untuk memulai polling progress batch
+        function startPolling(batchId) {
+            if (progressInterval) clearInterval(progressInterval);
+            currentBatchId = batchId;
 
             progressInterval = setInterval(async () => {
-                const progress = await fetchProgress(progressKey);
+                const progress = await fetchBatchProgress(batchId);
                 if (!progress.success) {
                     clearInterval(progressInterval);
                     progressInterval = null;
                     document.getElementById('progressText').innerText = 'Progress tidak ditemukan.';
-                    localStorage.removeItem('active_sync_key');
+                    localStorage.removeItem('active_batch_id');
                     return;
                 }
 
-                const percent = progress.percentage;
+                const percent = progress.percentage || 0;
                 document.getElementById('progressBar').style.width = percent + '%';
                 document.getElementById('progressText').innerHTML =
                     `Memproses ${progress.processed} dari ${progress.total} siswa`;
                 document.getElementById('progressDetail').innerHTML = `Gagal: ${progress.failed}`;
 
-                if (progress.status === 'completed') {
+                if (progress.finished) {
                     clearInterval(progressInterval);
                     progressInterval = null;
-                    document.getElementById('progressText').innerHTML = 'Sinkronisasi selesai!';
-                    localStorage.removeItem('active_sync_key');
-                    setTimeout(() => location.reload(), 2000);
-                } else if (progress.status === 'cancelled') {
-                    clearInterval(progressInterval);
-                    progressInterval = null;
-                    document.getElementById('progressText').innerHTML = 'Sinkronisasi dibatalkan.';
-                    localStorage.removeItem('active_sync_key');
+                    if (progress.cancelled) {
+                        document.getElementById('progressText').innerHTML = 'Sinkronisasi dibatalkan.';
+                    } else {
+                        document.getElementById('progressText').innerHTML = 'Sinkronisasi selesai!';
+                    }
+                    localStorage.removeItem('active_batch_id');
                     setTimeout(() => location.reload(), 2000);
                 }
             }, 3000);
         }
 
-        // Fungsi untuk memulai sinkronisasi baru (memanggil endpoint)
+        // Fungsi untuk memulai sinkronisasi baru (mengembalikan batch_id)
         async function startNewSync() {
             try {
                 const res = await fetch('{{ route('petugas.siswa.sync-summary-all') }}', {
@@ -514,7 +512,7 @@
                     document.getElementById('progressText').innerText = 'Error: ' + data.message;
                     return null;
                 }
-                return data.progress_key;
+                return data.batch_id;
             } catch (err) {
                 document.getElementById('progressText').innerText = 'Gagal memulai sinkronisasi: ' + err.message;
                 return null;
@@ -523,46 +521,40 @@
 
         // Event handler tombol Sync All
         document.getElementById('btnSyncSummary').addEventListener('click', async () => {
-            // Reset tampilan modal ke default (tanpa menghapus polling nanti)
             document.getElementById('progressBar').style.width = '0%';
             document.getElementById('progressText').innerText =
-                'Memeriksa sinkronisasi yang sedang berjalan...';
+            'Memeriksa sinkronisasi yang sedang berjalan...';
             document.getElementById('progressDetail').innerText = '';
             openModal();
 
-            // Cek apakah ada progressKey tersimpan di localStorage
-            let savedKey = localStorage.getItem('active_sync_key');
-            if (savedKey) {
-                // Cek status progres dari savedKey
-                const progress = await fetchProgress(savedKey);
-                if (progress.success && (progress.status === 'pending' || progress.status === 'processing')) {
-                    // Masih ada proses berjalan, lanjutkan polling
-                    currentProgressKey = savedKey;
-                    startPolling(savedKey);
+            // Cek apakah ada batch_id tersimpan di localStorage
+            let savedBatchId = localStorage.getItem('active_batch_id');
+            if (savedBatchId) {
+                const progress = await fetchBatchProgress(savedBatchId);
+                if (progress.success && !progress.finished) {
+                    // Batch masih berjalan, lanjutkan polling
+                    currentBatchId = savedBatchId;
+                    startPolling(savedBatchId);
                     return;
                 } else {
-                    // Progress sudah selesai atau tidak valid, hapus localStorage dan lanjut sync baru
-                    localStorage.removeItem('active_sync_key');
+                    localStorage.removeItem('active_batch_id');
                 }
             }
 
-            // Tidak ada proses berjalan, mulai sinkronisasi baru
+            // Mulai sinkronisasi baru
             document.getElementById('progressText').innerText = 'Memulai sinkronisasi...';
-            const newKey = await startNewSync();
-            if (newKey) {
-                localStorage.setItem('active_sync_key', newKey);
-                startPolling(newKey);
+            const newBatchId = await startNewSync();
+            if (newBatchId) {
+                localStorage.setItem('active_batch_id', newBatchId);
+                startPolling(newBatchId);
             }
         });
-
-        // Event listener tombol Tutup
-        closeBtn.addEventListener('click', closeModal);
 
         // Event listener tombol Batalkan
         const cancelBtn = document.getElementById('cancelSyncBtn');
         if (cancelBtn) {
             cancelBtn.addEventListener('click', async () => {
-                if (!currentProgressKey) {
+                if (!currentBatchId) {
                     closeModal();
                     return;
                 }
@@ -577,23 +569,16 @@
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
-                            progress_key: currentProgressKey
+                            batch_id: currentBatchId
                         })
                     });
 
-                    const contentType = response.headers.get('content-type');
-                    if (!contentType || !contentType.includes('application/json')) {
-                        const text = await response.text();
-                        console.error('Response bukan JSON:', text.substring(0, 200));
-                        alert('Terjadi kesalahan pada server. Lihat console untuk detail.');
-                        return;
-                    }
-
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
                     const data = await response.json();
                     if (data.success) {
                         alert(data.message);
                         if (progressInterval) clearInterval(progressInterval);
-                        localStorage.removeItem('active_sync_key');
+                        localStorage.removeItem('active_batch_id');
                         closeModal();
                         location.reload();
                     } else {
@@ -609,6 +594,20 @@
         // Tutup modal jika klik di luar konten
         modal.addEventListener('click', function(e) {
             if (e.target === modal) closeModal();
+        });
+
+        // Saat halaman dimuat, cek apakah ada batch aktif dan polling ulang
+        window.addEventListener('load', async () => {
+            const savedBatchId = localStorage.getItem('active_batch_id');
+            if (savedBatchId) {
+                const progress = await fetchBatchProgress(savedBatchId);
+                if (progress.success && !progress.finished) {
+                    openModal();
+                    startPolling(savedBatchId);
+                } else {
+                    localStorage.removeItem('active_batch_id');
+                }
+            }
         });
     </script>
 @endpush
