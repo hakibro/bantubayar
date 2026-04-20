@@ -84,8 +84,6 @@ class PenangananController extends Controller
     {
         $siswa = Siswa::with('pembayaran')->findOrFail($id_siswa);
 
-
-
         // 2. CEK AKSES PETUGAS (Harus Login)
         if (auth()->check()) {
             $penanganan = Penanganan::where('id_siswa', $id_siswa)

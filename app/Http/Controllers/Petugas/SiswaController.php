@@ -13,6 +13,8 @@ use App\Jobs\SyncPembayaranSummaryAllJob;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
+use App\Jobs\SyncPembayaranSummaryChunkJob; // tambahkan ini
 
 use Illuminate\Http\Request;
 
@@ -154,7 +156,7 @@ class SiswaController extends Controller
     }
 
     /**
-     * Memulai sinkronisasi summary semua siswa (berdasarkan scope user)
+     * Memulai sinkronisasi summary semua siswa (berdasarkan scope user) - dipecah per chunk
      */
     public function syncAllSummary(Request $request)
     {
@@ -178,30 +180,32 @@ class SiswaController extends Controller
             }
 
             $progressKey = 'sync_summary_' . $user->id . '_' . Str::random(8);
+            $total = count($siswaIds);
 
-            // 🔥 SIMPAN PROGRESS AWAL (status pending)
-            Cache::put($progressKey, [
-                'total' => count($siswaIds),
-                'processed' => 0,
-                'failed' => 0,
-                'status' => 'pending',
-            ], now()->addHours(1));
+            // Simpan metadata progress
+            Cache::put($progressKey . '_total', $total, now()->addHours(1));
+            Cache::put($progressKey . '_processed', 0, now()->addHours(1));
+            Cache::put($progressKey . '_failed', 0, now()->addHours(1));
+            Cache::put($progressKey . '_status', 'processing', now()->addHours(1));
 
-            \Log::info('SyncAllSummary - Dispatch Job', [
+            // Bagi siswa menjadi chunk (misal 10 siswa per job)
+            $chunkSize = 10;
+            $chunks = array_chunk($siswaIds, $chunkSize);
+
+            foreach ($chunks as $chunk) {
+                SyncPembayaranSummaryChunkJob::dispatch($chunk, $progressKey, $total);
+            }
+            Log::info('SyncAllSummary - Dispatched chunk jobs', [
                 'user_id' => $user->id,
-                'siswa_count' => count($siswaIds),
+                'total_siswa' => $total,
+                'chunks' => count($chunks),
                 'progress_key' => $progressKey
             ]);
-
-            // Use Queue::push directly untuk memastikan job ter-queue dengan reliable
-            \Illuminate\Support\Facades\Queue::push(
-                new SyncPembayaranSummaryAllJob($siswaIds, $progressKey)
-            );
 
             return response()->json(['success' => true, 'progress_key' => $progressKey]);
 
         } catch (\Exception $e) {
-            \Log::error('SyncAllSummary Error: ' . $e->getMessage(), [
+            Log::error('SyncAllSummary Error: ' . $e->getMessage(), [
                 'exception' => $e,
                 'trace' => $e->getTraceAsString()
             ]);
@@ -213,9 +217,6 @@ class SiswaController extends Controller
         }
     }
 
-    /**
-     * Batalkan sinkronisasi summary yang sedang berjalan
-     */
     public function cancelSyncSummary(Request $request)
     {
         $progressKey = $request->input('progress_key');
@@ -223,18 +224,17 @@ class SiswaController extends Controller
             return response()->json(['success' => false, 'message' => 'Progress key tidak ditemukan.']);
         }
 
-        // 1. Set flag pembatalan untuk job yang sedang berjalan
-        \App\Jobs\SyncPembayaranSummaryAllJob::markAsCancelled($progressKey);
+        // Set flag pembatalan
+        Cache::put($progressKey . '_cancel', true, now()->addHours(1));
 
-        // 2. Hapus job yang masih pending di queue (belum diproses)
-        //    Cari job dengan payload yang mengandung progressKey ini
+        // Hapus semua job yang masih pending di queue dengan progress key ini
         $deleted = \DB::table('jobs')
             ->where('queue', 'sync-pembayaran')
             ->where('payload', 'like', '%"progressKey":"' . $progressKey . '"%')
             ->delete();
 
-        // 3. Hapus cache progress (opsional, biar tidak muncul lagi)
-        Cache::forget($progressKey);
+        // Update status menjadi cancelled
+        Cache::put($progressKey . '_status', 'cancelled', now()->addHours(1));
 
         Log::info("Sync summary dibatalkan oleh user", [
             'progress_key' => $progressKey,
@@ -248,21 +248,24 @@ class SiswaController extends Controller
     }
     public function getSyncProgress($progressKey)
     {
-        $progress = Cache::get($progressKey);
-
-        if (!$progress) {
+        $total = Cache::get($progressKey . '_total');
+        if ($total === null) {
             return response()->json(['success' => false, 'message' => 'Progress tidak ditemukan.'], 404);
         }
 
-        $percentage = $progress['total'] > 0 ? round(($progress['processed'] / $progress['total']) * 100) : 0;
+        $processed = Cache::get($progressKey . '_processed', 0);
+        $failed = Cache::get($progressKey . '_failed', 0);
+        $status = Cache::get($progressKey . '_status', 'processing');
+
+        $percentage = $total > 0 ? round(($processed / $total) * 100) : 0;
 
         return response()->json([
             'success' => true,
-            'total' => $progress['total'],
-            'processed' => $progress['processed'],
-            'failed' => $progress['failed'],
+            'total' => $total,
+            'processed' => $processed,
+            'failed' => $failed,
             'percentage' => $percentage,
-            'status' => $progress['status'],
+            'status' => $status,
         ]);
     }
 

@@ -7,23 +7,13 @@ use App\Models\SiswaPembayaran;
 class SiswaPembayaranObserver
 {
     /**
-     * Sebelum simpan: Hitung status lunas untuk baris periode ini saja.
+     * Sebelum simpan: Hitung status lunas untuk baris periode ini dari kolom summary.
      */
     public function saving(SiswaPembayaran $pembayaran)
     {
-        $data = $pembayaran->data;
-        $isLunas = true;
-
-        if (isset($data['categories']) && is_array($data['categories'])) {
-            foreach ($data['categories'] as $category) {
-                if (($category['summary']['fully_paid'] ?? true) === false) {
-                    $isLunas = false;
-                    break;
-                }
-            }
-        } else {
-            $isLunas = false;
-        }
+        // Ambil dari kolom summary (array) yang berisi fully_paid periode ini
+        $summary = $pembayaran->summary;
+        $isLunas = $summary['fully_paid'] ?? false;
 
         $pembayaran->is_lunas = $isLunas;
     }
@@ -37,7 +27,6 @@ class SiswaPembayaranObserver
 
         if ($siswa) {
             // Cek apakah ada satu saja periode milik siswa ini yang is_lunas-nya false
-            // Jika ada yang false (0), berarti status global siswa adalah belum lunas.
             $masihAdaTunggakan = SiswaPembayaran::where('siswa_id', $siswa->id)
                 ->where('is_lunas', false)
                 ->exists();

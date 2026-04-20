@@ -9,11 +9,13 @@
             <div class="flex justify-between items-start">
                 <div>
                     <h3 class="text-lg font-bold text-gray-800 leading-tight">{{ $siswa->nama }}</h3>
-                    <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                    <div class="flex items-center gap-2 mt-1 text-sm text-gray-500">
                         <span class="bg-gray-100 px-1.5 py-0.5 rounded font-mono">ID: {{ $siswa->idperson }}</span>
                         <span>•</span>
-                        <i class="fas fa-phone-alt text-green-500"></i>
-                        {{ $siswa->phone ?? '-' }}
+                        <span class="bg-gray-100 px-1.5 py-0.5 rounded font-mono"> <i class="fas fa-phone "></i>
+                            {{ $siswa->phone ?? 'Belum ada No. WA' }}</span>
+
+
                     </div>
                 </div>
                 <button onclick="closeModal('detail')"
@@ -22,7 +24,7 @@
                 </button>
             </div>
 
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center justify-start gap-3">
                 <div class="flex items-center gap-3 p-2 rounded-lg bg-blue-50/50">
                     <i class="fas fa-school text-blue-600 w-5 text-center"></i>
                     <div>

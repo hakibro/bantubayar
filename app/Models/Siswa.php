@@ -36,7 +36,6 @@ class Siswa extends Model
     /**
      * Scope pencarian sederhana berdasarkan nama atau idperson
      */
-
     public function scopeSearch($query, $keyword)
     {
         return $query->where(function ($q) use ($keyword) {
@@ -112,10 +111,7 @@ class Siswa extends Model
     {
         return $this->hasMany(SiswaPembayaran::class, 'siswa_id');
     }
-    public function pembayaranSummary()
-    {
-        return $this->hasOne(SiswaPembayaranSummary::class, 'siswa_id');
-    }
+
 
     /**
      * Scope untuk mencari berdasarkan status pembayaran global
@@ -135,17 +131,14 @@ class Siswa extends Model
      */
     public function getStatusPembayaranBadgeAttribute(): string
     {
-        // Jika data pembayaran belum ada sama sekali (Belum Sinkron)
         if (is_null($this->getKategoriBelumLunas())) {
             return 'border-yellow-400 text-yellow-600';
         }
 
-        // Jika is_lunas true (Lunas)
         if ($this->is_lunas) {
             return 'border-green-400 text-green-600';
         }
 
-        // Jika is_lunas false (Belum Lunas)
         return 'border-red-400 text-red-600';
     }
 
@@ -161,21 +154,24 @@ class Siswa extends Model
         return $this->is_lunas ? 'Lunas' : 'Belum Lunas';
     }
 
-
+    /**
+     * Mendapatkan daftar kategori yang belum lunas dari semua periode pembayaran siswa.
+     *
+     * @return array|null  Null jika belum sinkron, array kosong jika semua lunas.
+     */
     public function getKategoriBelumLunas(): ?array
     {
         if (!$this->pembayaran()->exists()) {
-            return null; // BELUM SYNC
+            return null;
         }
 
         $belumLunas = [];
 
         foreach ($this->pembayaran as $pay) {
-            $data = $pay->data ?? [];
+            $categories = $pay->data ?? [];
 
-            foreach ($data['categories'] ?? [] as $category) {
+            foreach ($categories as $category) {
                 if (($category['summary']['fully_paid'] ?? true) === false) {
-
                     $unpaidItems = array_filter(
                         $category['items'] ?? [],
                         fn($item) =>
@@ -193,27 +189,8 @@ class Siswa extends Model
             }
         }
 
-        return $belumLunas; // bisa [] atau berisi
+        return $belumLunas;
     }
-
-    // public function getTotalTunggakan(): int
-    // {
-    //     return $this->hitungTotalDariKategori(
-    //         $this->getKategoriBelumLunas() ?? []
-    //     );
-    // }
-
-    public function getFormattedTotalTunggakanAttribute()
-    {
-        $total = $this->getTotalTunggakan(); // Memanggil fungsi yang sudah ada di trait Anda
-        return 'Rp ' . number_format($total, 0, ',', '.');
-    }
-
-
-
-
-
-    // untuk mengambil data pembayaran sebelum ngalah mobile
 
     /**
      * Mendapatkan semua kategori (per periode) yang memiliki sisa tidak nol (tunggakan atau overpaid)
@@ -224,42 +201,52 @@ class Siswa extends Model
         $result = [];
         foreach ($this->pembayaran as $pay) {
             $periode = $pay->periode;
-            $data = $pay->data;
-            if (empty($data['categories']))
-                continue;
+            $categories = $pay->data ?? [];
 
-            foreach ($data['categories'] as $category) {
-                // Hitung ulang summary berdasarkan item jika perlu
-                $totalTagihan = 0;
-                $totalDibayar = 0;
-                $items = $category['items'] ?? [];
-                foreach ($items as $item) {
-                    $totalTagihan += $item['amount_paid'];   // amount_paid adalah tagihan
-                    $totalDibayar += $item['amount_billed']; // amount_billed adalah dibayar
+            if (empty($categories)) {
+                continue;
+            }
+
+            foreach ($categories as $category) {
+                // Gunakan summary dari kategori jika ada
+                $summary = $category['summary'] ?? [];
+                if (!empty($summary)) {
+                    $totalTagihan = $summary['total_billed'] ?? 0;
+                    $totalDibayar = $summary['total_paid'] ?? 0;
+                    $sisa = $summary['total_remaining'] ?? ($totalDibayar - $totalTagihan);
+                } else {
+                    // Hitung manual dari items
+                    $totalTagihan = 0;
+                    $totalDibayar = 0;
+                    $items = $category['items'] ?? [];
+                    foreach ($items as $item) {
+                        $totalTagihan += $item['amount_paid'] ?? 0;
+                        $totalDibayar += $item['amount_billed'] ?? 0;
+                    }
+                    $sisa = $totalDibayar - $totalTagihan;
                 }
-                $sisa = $totalDibayar - $totalTagihan; // sisa = dibayar - tagihan (positif = overpaid, negatif = tunggakan)
 
                 if ($sisa != 0) {
                     $result[] = [
                         'periode' => $periode,
                         'category_name' => $category['category_name'] ?? 'Unknown',
                         'summary' => [
-                            'total_billed' => $totalTagihan,   // tagihan
-                            'total_paid' => $totalDibayar,   // dibayar
+                            'total_billed' => $totalTagihan,
+                            'total_paid' => $totalDibayar,
                             'total_remaining' => $sisa,
-                            'fully_paid' => ($sisa >= 0) ? true : false, // jika sisa >=0 berarti tidak kurang bayar
+                            'fully_paid' => ($sisa >= 0),
                         ],
                         'items' => array_map(function ($item) {
                             return [
                                 'unit_name' => $item['unit_name'] ?? $item['unit_id'],
-                                'amount_tagihan' => $item['amount_paid'],   // tagihan
-                                'amount_dibayar' => $item['amount_billed'], // dibayar
-                                'remaining_balance' => $item['amount_billed'] - $item['amount_paid'],
-                                'payment_status' => ($item['amount_billed'] - $item['amount_paid']) >= 0 ? 'paid' : 'unpaid',
+                                'amount_tagihan' => $item['amount_paid'] ?? 0,
+                                'amount_dibayar' => $item['amount_billed'] ?? 0,
+                                'remaining_balance' => ($item['amount_billed'] ?? 0) - ($item['amount_paid'] ?? 0),
+                                'payment_status' => (($item['amount_billed'] ?? 0) - ($item['amount_paid'] ?? 0)) >= 0 ? 'paid' : 'unpaid',
                             ];
-                        }, $items),
-                        'kelas_info' => $data['kelas_info'] ?? $pay->kelas_info ?? '-',
-                        'type' => $sisa > 0 ? 'overpaid' : 'tunggakan', // karena sisa = dibayar - tagihan
+                        }, $category['items'] ?? []),
+                        'kelas_info' => $pay->kelas_info ?? '-',
+                        'type' => $sisa > 0 ? 'overpaid' : 'tunggakan',
                         'sisa' => $sisa,
                     ];
                 }
@@ -267,28 +254,35 @@ class Siswa extends Model
         }
         return $result;
     }
+
     /**
      * Hitung total tunggakan (sisa > 0)
      */
+    /**
+     * Hitung total tunggakan (total_remaining positif) dari semua periode
+     */
     public function getTotalTunggakan(): int
     {
-        $total = 0;
-        foreach ($this->getKategoriSaldoTidakNol() as $item) {
-            if ($item['type'] === 'tunggakan') {
-                $total += abs($item['sisa']); // ambil nilai absolut tunggakan
-            }
-        }
-        return $total;
+        return (int) $this->pembayaran->sum(function ($pay) {
+            return $pay->summary['total_remaining'] ?? 0;
+        });
     }
 
+    /**
+     * Hitung total overpaid (total_remaining negatif) dari semua periode
+     */
     public function getTotalOverpaid(): int
     {
-        $total = 0;
-        foreach ($this->getKategoriSaldoTidakNol() as $item) {
-            if ($item['type'] === 'overpaid') {
-                $total += $item['sisa']; // sudah positif
-            }
-        }
-        return $total;
+        return (int) $this->pembayaran->sum(function ($pay) {
+            $remaining = $pay->summary['total_remaining'] ?? 0;
+            // Hanya jumlahkan jika nilainya negatif (overpaid)
+            return $remaining < 0 ? abs($remaining) : 0;
+        });
+    }
+
+    public function getFormattedTotalTunggakanAttribute()
+    {
+        $total = $this->getTotalTunggakan();
+        return 'Rp ' . number_format($total, 0, ',', '.');
     }
 }

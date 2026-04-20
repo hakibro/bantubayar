@@ -48,11 +48,27 @@
                                 @else
                                     Lunas
                                 @endif
+
                                 <button onclick="syncPembayaran({{ $siswa->id }})"
                                     class="relative ml-1 mt-2 w-4 h-4 text-lg  text-blue-500 hover:text-blue-800 active:scale-95 transition-all duration-200">
                                     <i class="fas fa-sync absolute bottom-1"></i>
                                 </button>
                             </h2>
+                            {{-- <h2
+                                class="text-4xl font-bold text-accent tracking-tight
+                            {{ $siswa->getTotalTunggakan() < 0 || $siswa->getKategoriBelumLunas() === null ? 'text-accent' : 'text-success' }}">
+                                @if (is_null($siswa->getKategoriBelumLunas()))
+                                    Belum Sinkron
+                                @elseif ($siswa->getTotalTunggakan() < 0)
+                                    Rp {{ number_format($siswa->getTotalTunggakan(), 0, ',', '.') }}
+                                @else
+                                    Lunas
+                                @endif
+                                <button onclick="syncPembayaran({{ $siswa->id }})"
+                                    class="relative ml-1 mt-2 w-4 h-4 text-lg  text-blue-500 hover:text-blue-800 active:scale-95 transition-all duration-200">
+                                    <i class="fas fa-sync absolute bottom-1"></i>
+                                </button>
+                            </h2> --}}
                             @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
                                 <p class="text-sm text-gray-500 font-medium mt-2">Saat penanganan: Rp
                                     {{ number_format($penangananTerakhir->getTotalTunggakan(), 0, ',', '.') }}</p>
