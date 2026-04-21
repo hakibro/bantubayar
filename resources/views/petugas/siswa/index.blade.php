@@ -447,8 +447,16 @@
 
         // Fungsi untuk mengambil progress batch dari server
         async function fetchBatchProgress(batchId) {
+            // Pastikan batchId ada sebelum fetch
+            if (!batchId) {
+                console.error('Batch ID tidak ditemukan');
+                return {
+                    success: false,
+                    message: 'ID Kosong'
+                };
+            }
             try {
-                const res = await fetch(`/petugas/sync-summary-progress/${batchId}`);
+                const res = await fetch(`/petugas/siswa/sync-summary-progress/${batchId}`);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 return data;
@@ -512,6 +520,7 @@
                     document.getElementById('progressText').innerText = 'Error: ' + data.message;
                     return null;
                 }
+                console.log('Sinkronisasi dimulai, batch_id:', data.batch_id);
                 return data.batch_id;
             } catch (err) {
                 document.getElementById('progressText').innerText = 'Gagal memulai sinkronisasi: ' + err.message;
@@ -523,7 +532,7 @@
         document.getElementById('btnSyncSummary').addEventListener('click', async () => {
             document.getElementById('progressBar').style.width = '0%';
             document.getElementById('progressText').innerText =
-            'Memeriksa sinkronisasi yang sedang berjalan...';
+                'Memeriksa sinkronisasi yang sedang berjalan...';
             document.getElementById('progressDetail').innerText = '';
             openModal();
 

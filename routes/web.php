@@ -5,6 +5,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VisitController;
+use Illuminate\Support\Facades\Bus;
+use App\Jobs\SyncPembayaranSummarySiswaJob;
 
 Route::get('/', function () {
     // return view('welcome');
@@ -71,4 +73,40 @@ Route::get('/force-logout', function () {
 
 Route::get('/viewfilter', function () {
     return view('petugas.siswa.partials.filter');
+});
+
+
+// test job sync pembayaran summary siswa
+
+
+// 1. Test Trigger Batch
+Route::get('/debug-start-batch', function () {
+    // Ambil 5 ID siswa saja untuk tes
+    $siswaIds = \App\Models\Siswa::limit(5)->pluck('id')->toArray();
+
+    $jobs = [];
+    foreach ($siswaIds as $id) {
+        $jobs[] = new SyncPembayaranSummarySiswaJob($id);
+    }
+
+    $batch = Bus::batch($jobs)->dispatch();
+
+    return "Batch Berhasil Dibuat! ID: " . $batch->id . " <br> Silakan buka: /debug-check-batch/" . $batch->id;
+});
+
+// 2. Test Cek Batch secara Manual
+Route::get('/debug-check-batch/{id}', function ($id) {
+    $batch = Bus::findBatch($id);
+
+    if (!$batch) {
+        return "Gagal: Batch dengan ID {$id} tidak ditemukan di database.";
+    }
+
+    return response()->json([
+        'id' => $batch->id,
+        'total' => $batch->totalJobs,
+        'pending' => $batch->pendingJobs,
+        'failed' => $batch->failedJobs,
+        'finished' => $batch->finished(),
+    ]);
 });
