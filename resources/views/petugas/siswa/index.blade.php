@@ -447,24 +447,45 @@
 
         // Fungsi untuk mengambil progress batch dari server
         async function fetchBatchProgress(batchId) {
-            // Pastikan batchId ada sebelum fetch
-            if (!batchId) {
-                console.error('Batch ID tidak ditemukan');
-                return {
-                    success: false,
-                    message: 'ID Kosong'
-                };
-            }
+            if (!batchId) return {
+                success: false,
+                message: 'ID Kosong'
+            };
+
             try {
-                const res = await fetch(`/petugas/siswa/sync-summary-progress/${batchId}`);
+                let url = "{{ route('petugas.siswa.sync-summary-progress', ':id') }}";
+                url = url.replace(':id', batchId);
+
+                const res = await fetch(url);
+
+                // Jika server mengirim status 423 (Locked) atau 429 (Too Many Requests)
+                if (res.status === 423 || res.status === 429) {
+                    return {
+                        success: false,
+                        isBusy: true,
+                        message: 'Petugas lain sedang melakukan sinkronisasi. Mohon tunggu beberapa saat hingga proses tersebut selesai.'
+                    };
+                }
+
                 if (!res.ok) throw new Error('HTTP ' + res.status);
+
                 const data = await res.json();
+
+                // Jika server mengirim info busy di dalam body JSON (alternatif status code)
+                if (data.status === 'busy') {
+                    return {
+                        success: false,
+                        isBusy: true,
+                        message: data.message || 'Proses sinkronisasi lain sedang berjalan.'
+                    };
+                }
+
                 return data;
             } catch (e) {
                 console.error('Fetch progress error:', e);
                 return {
                     success: false,
-                    message: e.message
+                    message: 'Gagal mengambil data: ' + e.message
                 };
             }
         }
@@ -480,25 +501,21 @@
                     clearInterval(progressInterval);
                     progressInterval = null;
                     document.getElementById('progressText').innerText = 'Progress tidak ditemukan.';
-                    localStorage.removeItem('active_batch_id');
                     return;
                 }
 
                 const percent = progress.percentage || 0;
                 document.getElementById('progressBar').style.width = percent + '%';
                 document.getElementById('progressText').innerHTML =
-                    `Memproses ${progress.processed} dari ${progress.total} siswa`;
+                    `Memproses ${progress.processed} dari ${progress.total} siswa (${percent}%)`;
                 document.getElementById('progressDetail').innerHTML = `Gagal: ${progress.failed}`;
 
                 if (progress.finished) {
                     clearInterval(progressInterval);
                     progressInterval = null;
-                    if (progress.cancelled) {
-                        document.getElementById('progressText').innerHTML = 'Sinkronisasi dibatalkan.';
-                    } else {
-                        document.getElementById('progressText').innerHTML = 'Sinkronisasi selesai!';
-                    }
-                    localStorage.removeItem('active_batch_id');
+                    document.getElementById('progressText').innerHTML = progress.cancelled ?
+                        'Sinkronisasi dibatalkan.' :
+                        'Sinkronisasi selesai!';
                     setTimeout(() => location.reload(), 2000);
                 }
             }, 3000);
@@ -516,11 +533,17 @@
                     body: JSON.stringify({})
                 });
                 const data = await res.json();
+
+                // ✅ Jika server bilang sudah ada batch aktif, langsung polling batch tersebut
+                if (!data.success && data.batch_id) {
+                    document.getElementById('progressText').innerText =
+                        'Melanjutkan sinkronisasi yang sedang berjalan...';
+                    return data.batch_id;
+                }
                 if (!data.success) {
                     document.getElementById('progressText').innerText = 'Error: ' + data.message;
                     return null;
                 }
-                console.log('Sinkronisasi dimulai, batch_id:', data.batch_id);
                 return data.batch_id;
             } catch (err) {
                 document.getElementById('progressText').innerText = 'Gagal memulai sinkronisasi: ' + err.message;
@@ -536,27 +559,21 @@
             document.getElementById('progressDetail').innerText = '';
             openModal();
 
-            // Cek apakah ada batch_id tersimpan di localStorage
-            let savedBatchId = localStorage.getItem('active_batch_id');
-            if (savedBatchId) {
-                const progress = await fetchBatchProgress(savedBatchId);
-                if (progress.success && !progress.finished) {
-                    // Batch masih berjalan, lanjutkan polling
-                    currentBatchId = savedBatchId;
-                    startPolling(savedBatchId);
-                    return;
-                } else {
-                    localStorage.removeItem('active_batch_id');
-                }
+            // ✅ Cek batch aktif milik user ini dari SERVER, bukan localStorage
+            const checkRes = await fetch('{{ route('petugas.siswa.sync-summary-active-batch') }}');
+            const checkData = await checkRes.json();
+
+            if (checkData.success && checkData.batch_id) {
+                // User ini masih punya batch berjalan, lanjutkan polling
+                currentBatchId = checkData.batch_id;
+                startPolling(checkData.batch_id);
+                return;
             }
 
-            // Mulai sinkronisasi baru
+            // Mulai sync baru
             document.getElementById('progressText').innerText = 'Memulai sinkronisasi...';
             const newBatchId = await startNewSync();
-            if (newBatchId) {
-                localStorage.setItem('active_batch_id', newBatchId);
-                startPolling(newBatchId);
-            }
+            if (newBatchId) startPolling(newBatchId);
         });
 
         // Event listener tombol Batalkan
@@ -607,15 +624,11 @@
 
         // Saat halaman dimuat, cek apakah ada batch aktif dan polling ulang
         window.addEventListener('load', async () => {
-            const savedBatchId = localStorage.getItem('active_batch_id');
-            if (savedBatchId) {
-                const progress = await fetchBatchProgress(savedBatchId);
-                if (progress.success && !progress.finished) {
-                    openModal();
-                    startPolling(savedBatchId);
-                } else {
-                    localStorage.removeItem('active_batch_id');
-                }
+            const checkRes = await fetch('{{ route('petugas.siswa.sync-summary-active-batch') }}');
+            const checkData = await checkRes.json();
+            if (checkData.success && checkData.batch_id) {
+                openModal();
+                startPolling(checkData.batch_id);
             }
         });
     </script>

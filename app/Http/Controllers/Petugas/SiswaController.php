@@ -160,14 +160,29 @@ class SiswaController extends Controller
     /**
      * Memulai sinkronisasi summary semua siswa (berdasarkan scope user) - dipecah per chunk
      */
-    public function syncAllSummary(Request $request)
+    function syncAllSummary(Request $request)
     {
         try {
-            $user = auth()->user();
-            $scope = Siswa::query();
 
+            $user = auth()->user();
+            $userCacheKey = 'sync_batch_user_' . $user->id;  // ✅ key per user
+
+            // Cek apakah user ini sudah punya batch aktif
+            $existingBatchId = Cache::get($userCacheKey);
+            if ($existingBatchId) {
+                $existingBatch = Bus::findBatch($existingBatchId);
+                if ($existingBatch && !$existingBatch->finished()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Anda sudah memiliki sinkronisasi yang sedang berjalan.',
+                        'batch_id' => $existingBatchId,
+                    ]);
+                }
+            }
+
+            $scope = Siswa::query();
             if ($user->hasRole('petugas')) {
-                $scope->whereHas('petugas', fn($q) => $q->where('users.id', auth()->id()));
+                $scope->whereHas('petugas', fn($q) => $q->where('users.id', $user->id));
             } else {
                 $lembagaUser = $user->lembaga;
                 $scope->where(fn($q) => $q->where('UnitFormal', $lembagaUser)
@@ -181,53 +196,65 @@ class SiswaController extends Controller
                 return response()->json(['success' => false, 'message' => 'Tidak ada siswa dalam lingkup Anda.']);
             }
 
-            // Hapus job lama di queue sync-pembayaran (opsional)
-            \DB::table('jobs')->where('queue', 'sync-pembayaran')->delete();
+            // ✅ HAPUS: Tidak lagi delete semua job di queue (bisa milik user lain!)
+            // \DB::table('jobs')->where('queue', 'sync-pembayaran')->delete();
 
-            // Kumpulkan job per siswa
-            $jobs = [];
-            foreach ($siswaIds as $siswaId) {
-                $jobs[] = new SyncPembayaranSummarySiswaJob($siswaId);
-            }
+            $jobs = collect($siswaIds)->map(fn($id) => new SyncPembayaranSummarySiswaJob($id))->all();
 
-            // Buat batch
             $batch = Bus::batch($jobs)
                 ->onQueue('sync-pembayaran')
                 ->onConnection('database')
-                ->before(function (Batch $batch) {
-                    Log::info('Sync summary batch started', ['batch_id' => $batch->id]);
+                ->before(function (Batch $batch) use ($user, $userCacheKey) {
+                    Log::info('Sync summary batch started', ['batch_id' => $batch->id, 'user_id' => $user->id]);
                 })
                 ->progress(function (Batch $batch) {
-                    // Optional: bisa simpan progress ke cache untuk polling
                     Cache::put('sync_summary_batch_' . $batch->id, [
                         'processed' => $batch->processedJobs(),
                         'failed' => $batch->failedJobs,
-                        'total' => $batch->totalJobs
+                        'total' => $batch->totalJobs,
                     ], now()->addHours(1));
                 })
-                ->then(function (Batch $batch) {
+                ->then(function (Batch $batch) use ($userCacheKey) {
                     Log::info('Sync summary batch completed', ['batch_id' => $batch->id]);
+                    Cache::forget($userCacheKey);  // ✅ Bersihkan cache user setelah selesai
                 })
-                ->catch(function (Batch $batch, \Throwable $e) {
+                ->catch(function (Batch $batch, \Throwable $e) use ($userCacheKey) {
                     Log::error('Sync summary batch failed', ['batch_id' => $batch->id, 'error' => $e->getMessage()]);
+                    Cache::forget($userCacheKey);
                 })
                 ->dispatch();
 
+            // ✅ Simpan batch_id per user di server-side Cache
+            Cache::put($userCacheKey, $batch->id, now()->addHours(2));
+
             return response()->json([
                 'success' => true,
-                'message' => 'Proses sinkronisasi summary dimulai dengan batch.',
-                'batch_id' => $batch->id
+                'message' => 'Proses sinkronisasi summary dimulai.',
+                'batch_id' => $batch->id,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('SyncAllSummary Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ], 500);
+            Log::error('SyncAllSummary Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function getActiveBatch()
+    {
+        $userCacheKey = 'sync_batch_user_' . auth()->id();
+        $batchId = Cache::get($userCacheKey);
+
+        if (!$batchId) {
+            return response()->json(['success' => false, 'batch_id' => null]);
+        }
+
+        $batch = Bus::findBatch($batchId);
+        if (!$batch || $batch->finished()) {
+            Cache::forget($userCacheKey);
+            return response()->json(['success' => false, 'batch_id' => null]);
+        }
+
+        return response()->json(['success' => true, 'batch_id' => $batchId]);
     }
 
     public function cancelSyncSummary(Request $request)
@@ -253,12 +280,19 @@ class SiswaController extends Controller
             return response()->json(['success' => false, 'message' => 'Batch tidak ditemukan.'], 404);
         }
 
+
+        // Hitung percentage secara manual
+        $percentage = $batch->totalJobs > 0
+            ? round(($batch->processedJobs() / $batch->totalJobs) * 100, 1)
+            : 0;
+
         return response()->json([
             'success' => true,
             'total' => $batch->totalJobs,
             'processed' => $batch->processedJobs(),
             'failed' => $batch->failedJobs,
             'pending' => $batch->pendingJobs,
+            'percentage' => $percentage,
             'finished' => $batch->finished(),
             'cancelled' => $batch->cancelled(),
         ]);
