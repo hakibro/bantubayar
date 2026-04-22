@@ -16,6 +16,7 @@ Route::middleware(['auth', 'role:bendahara|petugas'])->prefix('petugas')->name('
     Route::post('/siswa/sync-summary-all', [SiswaController::class, 'syncAllSummary'])->name('siswa.sync-summary-all');
     Route::post('/siswa/sync-summary-cancel', [SiswaController::class, 'cancelSyncSummary'])->name('siswa.sync-summary-cancel');
     Route::get('/siswa/sync-summary-active-batch', [SiswaController::class, 'getActiveBatch'])->name('siswa.sync-summary-active-batch');
+    Route::get('/siswa/sync-summary-check-other', [SiswaController::class, 'checkOtherActiveSync'])->name('siswa.sync-summary-check-other');
     Route::get('/siswa/sync-summary-progress/{batchId}', [SiswaController::class, 'getSyncSummaryProgress'])->name('siswa.sync-summary-progress');
     Route::get('/siswa/sync-pembayaran-siswa/{id}', [SiswaSyncController::class, 'syncKategoriPembayaranSiswa'])->name('siswa.sync-pembayaran-siswa');
 

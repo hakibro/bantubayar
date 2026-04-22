@@ -457,7 +457,7 @@ class SiswaService
 
         // lengkapi kode agar menyimpan data pembayaran per kategori ke tabel SiswaPembayaran, abaikan jika data sama.
         foreach ($data[0]['periods'] as $period) {
-            SiswaPembayaran::updateOrCreate(
+            SiswaPembayaran::update(
                 [
                     'siswa_id' => $siswa->id,
                     'periode' => $period['period_id'],

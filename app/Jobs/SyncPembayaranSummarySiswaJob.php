@@ -31,6 +31,10 @@ class SyncPembayaranSummarySiswaJob implements ShouldQueue
 
     public function handle(SiswaService $siswaService)
     {
+        if ($this->batch() && $this->batch()->cancelled()) {
+            return;
+        }
+
         try {
             $result = $siswaService->syncPembayaranSummarySiswa($this->siswaId);
             if (!$result['status']) {

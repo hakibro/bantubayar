@@ -270,6 +270,47 @@
         </div>
     </div>
 
+    <!-- Modal Waiting (Petugas Lain Sedang Sync) -->
+    <div id="waitingModal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                        <i class="fas fa-clock text-amber-500 text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Sinkronisasi Sedang Berjalan</h3>
+                        <p class="text-xs text-gray-500">Silakan tunggu hingga selesai</p>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p id="waitingUserText" class="text-sm text-amber-800 font-medium"></p>
+                    <div class="mt-3 flex items-center gap-2">
+                        <i class="fas fa-spinner fa-spin text-amber-500 text-xs"></i>
+                        <span class="text-xs text-amber-700">
+                            Sudah berjalan selama: <span id="waitingElapsed" class="font-bold font-mono">00:00</span>
+                        </span>
+                    </div>
+                    <div class="mt-2 text-xs text-amber-600">
+                        Progress: <span id="waitingProgress">-</span>
+                    </div>
+                </div>
+
+                <p class="mt-3 text-xs text-gray-400 text-center">
+                    Halaman akan otomatis terbuka untuk sync setelah proses selesai.
+                </p>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 flex justify-end">
+                <button id="closeWaitingBtn"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('scripts')
@@ -424,13 +465,20 @@
 
     <script>
         const modal = document.getElementById('progressModal');
-        const closeBtn = document.getElementById('closeModalBtn');
+        const waitingModal = document.getElementById('waitingModal');
         let progressInterval = null;
         let currentBatchId = null;
+        let waitingInterval = null;
+        let elapsedInterval = null;
 
+        /* ─────────────────────────────────────────
+           HELPER: buka / tutup modal
+           Tidak pakai class "hidden" + display bersamaan —
+           pilih salah satu saja agar tidak saling override.
+        ───────────────────────────────────────── */
         function openModal() {
             modal.classList.remove('hidden');
-            modal.style.display = 'flex';
+            modal.classList.add('flex');
             document.body.style.overflow = 'hidden';
         }
 
@@ -440,57 +488,78 @@
                 progressInterval = null;
             }
             modal.classList.add('hidden');
-            modal.style.display = 'none';
+            modal.classList.remove('flex');
             document.body.style.overflow = '';
-            localStorage.removeItem('active_batch_id');
         }
 
-        // Fungsi untuk mengambil progress batch dari server
+        function openWaitingModal() {
+            waitingModal.classList.remove('hidden');
+            waitingModal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeWaitingModal() {
+            if (elapsedInterval) {
+                clearInterval(elapsedInterval);
+                elapsedInterval = null;
+            }
+            if (waitingInterval) {
+                clearInterval(waitingInterval);
+                waitingInterval = null;
+            }
+            waitingModal.classList.add('hidden');
+            waitingModal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        /* ─────────────────────────────────────────
+           Isi konten waiting modal & mulai timer
+        ───────────────────────────────────────── */
+        function fillWaitingModal(data) {
+            document.getElementById('waitingUserText').innerText =
+                `${data.user_name} sedang melakukan sinkronisasi ${data.total} data siswa.`;
+
+            // Reset & mulai elapsed timer
+            if (elapsedInterval) clearInterval(elapsedInterval);
+            const startedAt = data.started_at * 1000;
+            elapsedInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+                const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const ss = String(elapsed % 60).padStart(2, '0');
+                document.getElementById('waitingElapsed').innerText = `${mm}:${ss}`;
+            }, 1000);
+
+            // Update progress awal
+            document.getElementById('waitingProgress').innerText =
+                `${data.processed} dari ${data.total} siswa diproses`;
+        }
+
+        /* ─────────────────────────────────────────
+           Fetch progress batch milik user sendiri
+        ───────────────────────────────────────── */
         async function fetchBatchProgress(batchId) {
             if (!batchId) return {
                 success: false,
                 message: 'ID Kosong'
             };
-
             try {
                 let url = "{{ route('petugas.siswa.sync-summary-progress', ':id') }}";
                 url = url.replace(':id', batchId);
-
                 const res = await fetch(url);
-
-                // Jika server mengirim status 423 (Locked) atau 429 (Too Many Requests)
-                if (res.status === 423 || res.status === 429) {
-                    return {
-                        success: false,
-                        isBusy: true,
-                        message: 'Petugas lain sedang melakukan sinkronisasi. Mohon tunggu beberapa saat hingga proses tersebut selesai.'
-                    };
-                }
-
                 if (!res.ok) throw new Error('HTTP ' + res.status);
-
-                const data = await res.json();
-
-                // Jika server mengirim info busy di dalam body JSON (alternatif status code)
-                if (data.status === 'busy') {
-                    return {
-                        success: false,
-                        isBusy: true,
-                        message: data.message || 'Proses sinkronisasi lain sedang berjalan.'
-                    };
-                }
-
-                return data;
+                return await res.json();
             } catch (e) {
                 console.error('Fetch progress error:', e);
                 return {
                     success: false,
-                    message: 'Gagal mengambil data: ' + e.message
+                    message: e.message
                 };
             }
         }
 
-        // Fungsi untuk memulai polling progress batch
+        /* ─────────────────────────────────────────
+           Polling progress batch user sendiri
+        ───────────────────────────────────────── */
         function startPolling(batchId) {
             if (progressInterval) clearInterval(progressInterval);
             currentBatchId = batchId;
@@ -521,7 +590,9 @@
             }, 3000);
         }
 
-        // Fungsi untuk memulai sinkronisasi baru (mengembalikan batch_id)
+        /* ─────────────────────────────────────────
+           Mulai sync baru ke server
+        ───────────────────────────────────────── */
         async function startNewSync() {
             try {
                 const res = await fetch('{{ route('petugas.siswa.sync-summary-all') }}', {
@@ -533,9 +604,8 @@
                     body: JSON.stringify({})
                 });
                 const data = await res.json();
-
-                // ✅ Jika server bilang sudah ada batch aktif, langsung polling batch tersebut
                 if (!data.success && data.batch_id) {
+                    // Sudah ada batch aktif milik user ini
                     document.getElementById('progressText').innerText =
                         'Melanjutkan sinkronisasi yang sedang berjalan...';
                     return data.batch_id;
@@ -551,82 +621,158 @@
             }
         }
 
-        // Event handler tombol Sync All
-        document.getElementById('btnSyncSummary').addEventListener('click', async () => {
-            document.getElementById('progressBar').style.width = '0%';
-            document.getElementById('progressText').innerText =
-                'Memeriksa sinkronisasi yang sedang berjalan...';
-            document.getElementById('progressDetail').innerText = '';
-            openModal();
+        /* ─────────────────────────────────────────
+           Polling: cek apakah petugas LAIN sudah selesai
+           Jika selesai → tutup waiting → langsung mulai sync sendiri
+        ───────────────────────────────────────── */
+        function startWaitingPolling() {
+            if (waitingInterval) clearInterval(waitingInterval);
 
-            // ✅ Cek batch aktif milik user ini dari SERVER, bukan localStorage
-            const checkRes = await fetch('{{ route('petugas.siswa.sync-summary-active-batch') }}');
-            const checkData = await checkRes.json();
-
-            if (checkData.success && checkData.batch_id) {
-                // User ini masih punya batch berjalan, lanjutkan polling
-                currentBatchId = checkData.batch_id;
-                startPolling(checkData.batch_id);
-                return;
-            }
-
-            // Mulai sync baru
-            document.getElementById('progressText').innerText = 'Memulai sinkronisasi...';
-            const newBatchId = await startNewSync();
-            if (newBatchId) startPolling(newBatchId);
-        });
-
-        // Event listener tombol Batalkan
-        const cancelBtn = document.getElementById('cancelSyncBtn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', async () => {
-                if (!currentBatchId) {
-                    closeModal();
-                    return;
-                }
-                if (!confirm('Yakin ingin membatalkan sinkronisasi?')) return;
-
+            waitingInterval = setInterval(async () => {
                 try {
-                    const response = await fetch('{{ route('petugas.siswa.sync-summary-cancel') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            batch_id: currentBatchId
-                        })
-                    });
+                    const res = await fetch('{{ route('petugas.siswa.sync-summary-check-other') }}');
+                    const data = await res.json();
 
-                    if (!response.ok) throw new Error('HTTP ' + response.status);
-                    const data = await response.json();
-                    if (data.success) {
-                        alert(data.message);
-                        if (progressInterval) clearInterval(progressInterval);
-                        localStorage.removeItem('active_batch_id');
-                        closeModal();
-                        location.reload();
+                    if (!data.has_other) {
+                        clearInterval(waitingInterval);
+                        waitingInterval = null;
+
+                        // ✅ Update teks di waiting modal dulu sebelum tutup
+                        document.getElementById('waitingUserText').innerText =
+                            'Sinkronisasi petugas lain selesai.';
+                        document.getElementById('waitingProgress').innerText =
+                            'Mempersiapkan sinkronisasi Anda...';
+
+                        setTimeout(async () => {
+                            closeWaitingModal();
+
+                            // Reset konten modal progress
+                            document.getElementById('progressBar').style.width = '0%';
+                            document.getElementById('progressText').innerText =
+                                'Memulai sinkronisasi Anda...';
+                            document.getElementById('progressDetail').innerText = '';
+                            openModal();
+
+                            // ✅ Tunggu startNewSync selesai SEBELUM startPolling
+                            const newBatchId = await startNewSync();
+
+                            if (newBatchId) {
+                                setTimeout(() => startPolling(newBatchId), 1000);
+                            } else {
+                                // ✅ Tangani jika gagal dapat batch_id
+                                document.getElementById('progressText').innerText =
+                                    'Gagal memulai sinkronisasi. Silakan coba lagi.';
+                            }
+                        }, 300);
+
                     } else {
-                        alert('Gagal: ' + data.message);
+                        document.getElementById('waitingProgress').innerText =
+                            `${data.processed} dari ${data.total} siswa diproses`;
                     }
-                } catch (err) {
-                    console.error(err);
-                    alert('Error: ' + err.message);
+                } catch (e) {
+                    console.error('Waiting poll error:', e);
                 }
-            });
+            }, 4000);
         }
 
-        // Tutup modal jika klik di luar konten
+        /* ─────────────────────────────────────────
+           Tombol-tombol
+        ───────────────────────────────────────── */
+        // Tutup modal progress (sync sendiri)
+        document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+
+        // Tutup modal waiting — hentikan polling, jangan auto-sync
+        document.getElementById('closeWaitingBtn').addEventListener('click', closeWaitingModal);
+
+        // Klik backdrop modal progress
         modal.addEventListener('click', function(e) {
             if (e.target === modal) closeModal();
         });
 
-        // Saat halaman dimuat, cek apakah ada batch aktif dan polling ulang
+        // Klik backdrop modal waiting
+        waitingModal.addEventListener('click', function(e) {
+            if (e.target === waitingModal) closeWaitingModal();
+        });
+
+        // Batalkan sync
+        document.getElementById('cancelSyncBtn').addEventListener('click', async () => {
+            if (!currentBatchId) {
+                closeModal();
+                return;
+            }
+            if (!confirm('Yakin ingin membatalkan sinkronisasi?')) return;
+
+            try {
+                const response = await fetch('{{ route('petugas.siswa.sync-summary-cancel') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        batch_id: currentBatchId
+                    })
+                });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const data = await response.json();
+                if (data.success) {
+                    if (progressInterval) clearInterval(progressInterval);
+                    closeModal();
+                    location.reload();
+                } else {
+                    alert('Gagal: ' + data.message);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        });
+
+        /* ─────────────────────────────────────────
+           Tombol Sync All — alur utama
+        ───────────────────────────────────────── */
+        document.getElementById('btnSyncSummary').addEventListener('click', async () => {
+            // 1. Cek batch aktif milik user sendiri
+            const myRes = await fetch('{{ route('petugas.siswa.sync-summary-active-batch') }}');
+            const myData = await myRes.json();
+            if (myData.success && myData.batch_id) {
+                document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('progressText').innerText = 'Melanjutkan sinkronisasi Anda...';
+                document.getElementById('progressDetail').innerText = '';
+                openModal();
+                startPolling(myData.batch_id);
+                return;
+            }
+
+            // 2. Cek apakah petugas lain sedang sync
+            const otherRes = await fetch('{{ route('petugas.siswa.sync-summary-check-other') }}');
+            const otherData = await otherRes.json();
+            if (otherData.has_other) {
+                fillWaitingModal(otherData);
+                openWaitingModal();
+                startWaitingPolling();
+                return;
+            }
+
+            // 3. Tidak ada yang sync, mulai baru
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').innerText = 'Memulai sinkronisasi...';
+            document.getElementById('progressDetail').innerText = '';
+            openModal();
+            const newBatchId = await startNewSync();
+            if (newBatchId) startPolling(newBatchId);
+        });
+
+        /* ─────────────────────────────────────────
+           On page load — resume jika ada batch aktif
+        ───────────────────────────────────────── */
         window.addEventListener('load', async () => {
             const checkRes = await fetch('{{ route('petugas.siswa.sync-summary-active-batch') }}');
             const checkData = await checkRes.json();
             if (checkData.success && checkData.batch_id) {
+                document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('progressText').innerText = 'Melanjutkan sinkronisasi Anda...';
+                document.getElementById('progressDetail').innerText = '';
                 openModal();
                 startPolling(checkData.batch_id);
             }

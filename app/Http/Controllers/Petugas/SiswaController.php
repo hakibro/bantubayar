@@ -214,18 +214,32 @@ class SiswaController extends Controller
                         'total' => $batch->totalJobs,
                     ], now()->addHours(1));
                 })
-                ->then(function (Batch $batch) use ($userCacheKey) {
-                    Log::info('Sync summary batch completed', ['batch_id' => $batch->id]);
-                    Cache::forget($userCacheKey);  // ✅ Bersihkan cache user setelah selesai
-                })
-                ->catch(function (Batch $batch, \Throwable $e) use ($userCacheKey) {
-                    Log::error('Sync summary batch failed', ['batch_id' => $batch->id, 'error' => $e->getMessage()]);
+                ->then(function (Batch $batch) use ($userCacheKey, $user) {
                     Cache::forget($userCacheKey);
+                    // ✅ Hapus dari daftar global
+                    $all = Cache::get('sync_all_active_batches', []);
+                    unset($all[$user->id]);
+                    Cache::put('sync_all_active_batches', $all, now()->addHours(2));
+                })
+                ->catch(function (Batch $batch, \Throwable $e) use ($userCacheKey, $user) {
+                    Cache::forget($userCacheKey);
+                    // ✅ Hapus dari daftar global
+                    $all = Cache::get('sync_all_active_batches', []);
+                    unset($all[$user->id]);
+                    Cache::put('sync_all_active_batches', $all, now()->addHours(2));
                 })
                 ->dispatch();
 
             // ✅ Simpan batch_id per user di server-side Cache
             Cache::put($userCacheKey, $batch->id, now()->addHours(2));
+
+            $allActiveBatches = Cache::get('sync_all_active_batches', []);
+            $allActiveBatches[$user->id] = [
+                'batch_id' => $batch->id,
+                'started_at' => now()->timestamp,
+                'user_name' => $user->name,
+            ];
+            Cache::put('sync_all_active_batches', $allActiveBatches, now()->addHours(2));
 
             return response()->json([
                 'success' => true,
@@ -237,6 +251,38 @@ class SiswaController extends Controller
             Log::error('SyncAllSummary Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function checkOtherActiveSync()
+    {
+        $currentUserId = auth()->id();
+
+        // Cari semua cache key batch user lain yang sedang aktif
+        // Kita simpan daftar active batch di cache global
+        $allActiveBatches = Cache::get('sync_all_active_batches', []);
+
+        foreach ($allActiveBatches as $userId => $batchInfo) {
+            if ($userId == $currentUserId)
+                continue;
+
+            $batch = Bus::findBatch($batchInfo['batch_id']);
+            if ($batch && !$batch->finished()) {
+                return response()->json([
+                    'success' => true,
+                    'has_other' => true,
+                    'started_at' => $batchInfo['started_at'], // unix timestamp
+                    'user_name' => $batchInfo['user_name'],
+                    'total' => $batch->totalJobs,
+                    'processed' => $batch->processedJobs(),
+                ]);
+            }
+
+            // Batch sudah selesai, hapus dari daftar
+            unset($allActiveBatches[$userId]);
+            Cache::put('sync_all_active_batches', $allActiveBatches, now()->addHours(2));
+        }
+
+        return response()->json(['success' => true, 'has_other' => false]);
     }
 
     public function getActiveBatch()
@@ -263,15 +309,39 @@ class SiswaController extends Controller
         if (!$batchId) {
             return response()->json(['success' => false, 'message' => 'Batch ID tidak ditemukan.']);
         }
+
         $batch = Bus::findBatch($batchId);
         if (!$batch) {
             return response()->json(['success' => false, 'message' => 'Batch tidak ditemukan.']);
         }
+
         if (!$batch->finished()) {
             $batch->cancel();
-            return response()->json(['success' => true, 'message' => 'Sinkronisasi dibatalkan.']);
         }
-        return response()->json(['success' => false, 'message' => 'Batch sudah selesai.']);
+
+        // ✅ Hapus job di queue yang memiliki batch_id ini
+        // Job Laravel batch menyimpan payload JSON yang mengandung batchId
+        \DB::table('jobs')
+            ->where('queue', 'sync-pembayaran')
+            ->get()
+            ->each(function ($job) use ($batchId) {
+                $payload = json_decode($job->payload, true);
+                $jobBatchId = $payload['data']['batchId'] ?? null;
+                if ($jobBatchId === $batchId) {
+                    \DB::table('jobs')->where('id', $job->id)->delete();
+                }
+            });
+
+        // ✅ Bersihkan cache user & global
+        $user = auth()->user();
+        $userCacheKey = 'sync_batch_user_' . $user->id;
+        Cache::forget($userCacheKey);
+
+        $all = Cache::get('sync_all_active_batches', []);
+        unset($all[$user->id]);
+        Cache::put('sync_all_active_batches', $all, now()->addHours(2));
+
+        return response()->json(['success' => true, 'message' => 'Sinkronisasi dibatalkan.']);
     }
     public function getSyncSummaryProgress($batchId)
     {
