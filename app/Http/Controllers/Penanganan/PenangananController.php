@@ -103,9 +103,12 @@ class PenangananController extends Controller
                 : collect();
 
 
+            // info petugas yang login
+            $petugasLogin = Auth::user();
+
             return view(
                 'penanganan.show', // View detail penanganan untuk petugas
-                compact('siswa', 'penanganan', 'riwayatAksi', 'penangananTerakhir', 'urlUntukWali')
+                compact('siswa', 'penanganan', 'riwayatAksi', 'penangananTerakhir', 'urlUntukWali', 'petugasLogin')
             );
         }
 

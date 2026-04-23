@@ -138,9 +138,14 @@
 
         function hubungiWali() {
             let pesan = '';
+
+            let namaPetugas = @json($petugasLogin->lembaga ?? 'Petugas Sekolah');
+
             if (currentActionType === 'chat') {
                 pesan =
-                    'Assalamu’alaikum Bapak/Ibu, saya ingin menginformasikan mengenai pembayaran ananda {{ $siswa->nama }}. Mohon kesediaan Bapak/Ibu untuk merespon pesan ini. Terima kasih';
+                    `Assalamu’alaikum Wr. Wb. Selamat pagi Bapak/Ibu Wali Murid dari ananda {{ $siswa->nama }}.
+Mohon maaf mengganggu waktunya. Saya ${namaPetugas}.
+Kami bermaksud menginformasikan terkait administrasi sekolah ananda. Agar komunikasi lancar ke depannya, mohon berkenan menyimpan nomor ini nggih. Jika sudah luang, mohon respon pesan ini agar kami bisa menyampaikan detail informasinya. Terima kasih banyak.`;
                 sendWhatsapp(pesan);
             } else {
                 sendWhatsapp();

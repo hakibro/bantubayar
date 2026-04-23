@@ -202,8 +202,8 @@
                     </div>
                     <div>
                         <h4 class="font-bold text-sm text-gray-800">${escapeHtml(cat.category_name)}</h4>
-                        <p class="text-xs text-gray-500">Tagih: ${formatCurrency(cat.summary.total_billed)}</p>
-                        <p class="text-xs text-gray-500">Bayar: ${formatCurrency(cat.summary.total_paid)}</p>
+                        <p class="text-xs text-gray-500">Tagih: ${formatCurrency(cat.summary.total_paid)}</p>
+                        <p class="text-xs text-gray-500">Bayar: ${formatCurrency(cat.summary.total_billed)}</p>
                     </div>
                 </div>
                 <div class="text-right flex items-center gap-4">
