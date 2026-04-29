@@ -9,6 +9,8 @@ use App\Exports\SiswaBelumLunasExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class CustomController extends Controller
 {
@@ -94,5 +96,98 @@ class CustomController extends Controller
     public function export(Request $request)
     {
         return Excel::download(new SiswaBelumLunasExport($request), 'siswa_belum_lunas_' . date('Y-m-d_His') . '.xlsx');
+    }
+
+    public function tesSiswa()
+    {
+        // try {
+        //     DB::connection('mysql_second')->getPdo();
+        //     return "Koneksi Berhasil!";
+        // } catch (\Exception $e) {
+        //     return "Gagal Koneksi: " . $e->getMessage();
+        // }
+
+
+        $idperson = '221207';
+
+        try {
+            $db = DB::connection('mysql_second');
+
+            // 1. Ambil Data Dasar (Nama & Saldo)
+            $namaSiswa = $db->table('daruttaqwa_person.tbl_person')->where('idperson', $idperson)->value('nama');
+            $saldo = $db->table('duwit.person')->where('idperson', $idperson)->value('saldo');
+
+            // 2. Ambil Histori Kelas
+            $historyKelas = $db->select("
+                SELECT tk.idperiode, tk.keterangan as kelas, td.title
+                FROM daruttaqwa_sisda.tbl_siswa ts 
+                JOIN daruttaqwa_sisda.tbl_kelas tk ON tk.idkelas = ts.idkelas 
+                JOIN daruttaqwa_referensi.tbl_departemen td ON td.idunit = tk.idunit 
+                WHERE ts.idperson = ? 
+                GROUP BY tk.idperiode, tk.keterangan, td.title
+            ", [$idperson]);
+
+            // 3. Ambil Data Pembayaran (Filter periode dihapus agar mengambil semua)
+            $pembayaran = $db->select("
+                SELECT iis.idperiode, iis.jml_kredit, iis.jml_debet, iis.lunas, iis.tgl_jurnal, tim.judul
+                FROM daruttaqwa_trans.ips_siswa iis 
+                JOIN daruttaqwa_trans.tbl_ips_unit tiu ON tiu.ipsunit = iis.ipsunit 
+                JOIN daruttaqwa_trans.tbl_ips_main tim ON tim.ipsmain = tiu.ipsmain
+                JOIN daruttaqwa_referensi.tbl_departemen td ON td.idunit = iis.idunit  
+                WHERE iis.idperson = ? 
+                AND iis.status = '1'
+                ORDER BY iis.idperiode DESC, iis.tgl_jurnal ASC
+            ", [$idperson]);
+
+            // --- PROSES PENGGABUNGAN DATA BERDASARKAN PERIODE ---
+
+            $dataPeriode = [];
+
+            // Masukkan data kelas ke dalam grup periode
+            foreach ($historyKelas as $h) {
+                $dataPeriode[$h->idperiode]['info_kelas'] = [
+                    'kelas' => $h->kelas,
+                    'unit' => $h->title
+                ];
+            }
+
+            // Masukkan data pembayaran ke dalam grup periode
+            foreach ($pembayaran as $p) {
+                // Jika info_kelas belum ada (misal ada transaksi di periode lama tapi data kelas tidak ada)
+                // kita inisialisasi agar tidak error
+                if (!isset($dataPeriode[$p->idperiode])) {
+                    $dataPeriode[$p->idperiode]['info_kelas'] = [
+                        'kelas' => 'Tidak Terdata',
+                        'unit' => '-'
+                    ];
+                }
+
+                $dataPeriode[$p->idperiode]['list_pembayaran'][] = [
+                    'item' => $p->judul,
+                    'kategori' => $p->judul,
+                    'tagihan' => $p->jml_kredit,
+                    'bayar' => $p->jml_debet,
+                    'lunas' => $p->lunas,
+                    'tgl_jurnal' => $p->tgl_jurnal
+                ];
+            }
+
+            // Response Akhir
+            return response()->json([
+                'status' => 'success',
+                'siswa' => [
+                    'idperson' => $idperson,
+                    'nama' => $namaSiswa ?? 'Tidak Ditemukan',
+                    'saldo' => $saldo ?? 0,
+                ],
+                'riwayat_per_periode' => $dataPeriode
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

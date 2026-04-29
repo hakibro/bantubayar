@@ -1,8 +1,16 @@
 ### Todo:
 
-- ubah logika simpan aksi agar update juga timestamp penanganan
+- Hapus Sync!
+- Ambil data langsung dari database daruttaqwa\_?
+- Update semua Model
+- Update semua controller
+
+- Tambahkan Settings di admin:
+    - Kecualikan Item (untuk validasi manual): Lembaga -> Kategori -> item
 
 ### Done:
+
+- ubah logika simpan aksi agar update juga timestamp penanganan
 
 - index list penanganan dengan filter by [status, hasil, sudah ditangani, created_at, kesanggupan], hapus duplikat nama siswa karena penanganan > 1, update tampilan list,
 

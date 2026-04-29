@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Bus;
 use App\Jobs\SyncPembayaranSummarySiswaJob;
+use Illuminate\Support\Facades\DB;
 
 Route::get('/', function () {
     // return view('welcome');
@@ -110,3 +111,14 @@ Route::get('/debug-check-batch/{id}', function ($id) {
         'finished' => $batch->finished(),
     ]);
 });
+
+
+Route::get('/siswa_tes', [\App\Http\Controllers\Custom\CustomController::class, 'tesSiswa']);
+// Route::get('/siswa_tes', function () {
+//     try {
+//         DB::connection('mysql_second')->getPdo();
+//         return "Koneksi Berhasil!";
+//     } catch (\Exception $e) {
+//         return "Gagal Koneksi: " . $e->getMessage();
+//     }
+// });
