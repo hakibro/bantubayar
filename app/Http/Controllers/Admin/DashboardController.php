@@ -15,10 +15,47 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Statistik Siswa
-        $totalSiswa = Siswa::count();
-        $siswaLunas = Siswa::where('is_lunas', true)->count();
-        $siswaBelumLunas = Siswa::where('is_lunas', false)->count();
+
+
+        $baseSiswaQuery = Siswa::query();
+        // Total semua siswa
+        $totalSiswa = (clone $baseSiswaQuery)->count();
+
+        // Siswa LUNAS — join langsung, tidak pluck semua ID ke PHP
+        $lunasQuery = (clone $baseSiswaQuery)
+            ->join('v_status_lunas_siswa as sl', 'sl.idperson', '=', 'v_siswa.idperson')
+            ->where('sl.is_lunas', 1);
+        $siswaLunas = (clone $lunasQuery)->count();
+
+        // Penanganan dari siswa lunas (pakai subquery, bukan whereIn array)
+        $penangananLunasAktif = Penanganan::whereIn('id_siswa', (clone $lunasQuery)->select('v_siswa.idperson'))
+            ->whereIn('status', ['menunggu_respon', 'menunggu_tindak_lanjut'])
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->count();
+        $penangananLunasSelesai = Penanganan::whereIn('id_siswa', (clone $lunasQuery)->select('v_siswa.idperson'))
+            ->where('status', 'selesai')
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->count();
+
+        // Siswa BELUM LUNAS
+        $belumLunasQuery = (clone $baseSiswaQuery)
+            ->join('v_status_lunas_siswa as sl', 'sl.idperson', '=', 'v_siswa.idperson')
+            ->where('sl.is_lunas', 0);
+        $siswaBelumLunas = (clone $belumLunasQuery)->count();
+
+        // Penanganan dari siswa belum lunas (pakai subquery)
+        $penangananBelumLunasAktif = Penanganan::whereIn('id_siswa', (clone $belumLunasQuery)->select('v_siswa.idperson'))
+            ->whereIn('status', ['menunggu_respon', 'menunggu_tindak_lanjut'])
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->count();
+        $penangananBelumLunasSelesai = Penanganan::whereIn('id_siswa', (clone $belumLunasQuery)->select('v_siswa.idperson'))
+            ->where('status', 'selesai')
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->count();
 
         // Statistik Pengguna
         $totalPetugas = User::role('petugas')->count();

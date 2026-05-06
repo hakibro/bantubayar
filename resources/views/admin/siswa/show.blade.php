@@ -35,8 +35,8 @@
                 </div>
                 <div>
                     <strong>Status Pembayaran:</strong>
-                    <p class="{{ $siswa->is_lunas ? 'text-green-600' : 'text-red-600' }} font-semibold">
-                        {{ $siswa->is_lunas ? 'Lunas' : 'Belum Lunas' }}
+                    <p class="{{ $siswa->statusLunas?->is_lunas ? 'text-green-600' : 'text-red-600' }} font-semibold">
+                        {{ $siswa->statusLunas?->is_lunas ? 'Lunas' : 'Belum Lunas' }}
                     </p>
                 </div>
             </div>
@@ -103,7 +103,8 @@
                                         <td class="p-2">{{ $item->nama_unit }}</td>
                                         <td class="p-2 text-right">{{ number_format($item->jml_kredit, 0, ',', '.') }}</td>
                                         <td class="p-2 text-right">{{ number_format($item->jml_debet, 0, ',', '.') }}</td>
-                                        <td class="p-2 text-right text-red-600 font-semibold">{{ number_format($item->selisih, 0, ',', '.') }}</td>
+                                        <td class="p-2 text-right text-red-600 font-semibold">
+                                            {{ number_format($item->selisih, 0, ',', '.') }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
