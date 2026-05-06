@@ -2,17 +2,15 @@
 
 namespace App\Models;
 
+use App\Services\PembayaranService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Traits\Pembayaran;
-
-
 
 class Penanganan extends Model
 {
-    use HasFactory, SoftDeletes, Pembayaran;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'penanganan';
 
@@ -29,12 +27,12 @@ class Penanganan extends Model
 
     protected $casts = [
         'jenis_pembayaran' => 'array',
-        'rating' => 'integer',
+        'rating'           => 'integer',
     ];
 
     public function siswa()
     {
-        return $this->belongsTo(Siswa::class, 'id_siswa');
+        return $this->belongsTo(Siswa::class, 'id_siswa', 'idperson');
     }
 
     public function petugas()
@@ -46,83 +44,81 @@ class Penanganan extends Model
     {
         return $this->hasMany(PenangananKesanggupan::class);
     }
+
     public function kesanggupanTerakhir()
     {
         return $this->hasOne(PenangananKesanggupan::class)->latestOfMany();
     }
 
-    public function getTanggalKesanggupanFormattedAttribute()
+    public function getTanggalKesanggupanFormattedAttribute(): string
     {
-        return $this->kesanggupanTerakhir ? \Carbon\Carbon::parse($this->kesanggupanTerakhir->tanggal)->format('Y-m-d') : '';
+        return $this->kesanggupanTerakhir
+            ? \Carbon\Carbon::parse($this->kesanggupanTerakhir->tanggal)->format('Y-m-d')
+            : '';
     }
 
     public function histories()
     {
         return $this->hasMany(PenangananHistory::class);
     }
+
     public function lastHistory()
     {
         return $this->hasOne(PenangananHistory::class)->latest();
     }
 
     /**
-     * Ambil penanganan aktif atau buat baru
+     * Ambil penanganan aktif atau buat baru.
+     * jenis_pembayaran diisi dari query langsung ke daruttaqwa_trans.
      */
     public static function getOrCreateForSiswa(Siswa $siswa): self
     {
-        $penanganan = self::where('id_siswa', $siswa->id)
+        $penanganan = self::where('id_siswa', $siswa->idperson)
             ->latest()
             ->first();
 
         if (!$penanganan || $penanganan->status === 'selesai') {
+            $service    = app(PembayaranService::class);
+            $belumLunas = $service->getDetailBelumLunas((string) $siswa->idperson);
+
             $penanganan = self::create([
-                'id_siswa' => $siswa->id,
-                'id_petugas' => Auth::id(),
-                'jenis_pembayaran' => $siswa->getKategoriBelumLunas(),
-                'saldo' => $siswa->saldo->saldo ?? 0,
-                'status' => 'menunggu_respon',
+                'id_siswa'         => $siswa->idperson,
+                'id_petugas'       => Auth::id(),
+                'jenis_pembayaran' => array_map(fn($row) => (array) $row, $belumLunas),
+                'saldo'            => $siswa->saldo ?? 0,
+                'status'           => 'menunggu_respon',
             ]);
         }
 
         return $penanganan;
     }
 
-    /**
-     * Tambah history penanganan
-     */
     public function addHistory(string $jenis, ?string $catatan = null): void
     {
         $this->histories()->create([
             'jenis_penanganan' => $jenis,
-            'catatan' => $catatan,
+            'catatan'          => $catatan,
         ]);
     }
 
+    /**
+     * Total kurang bayar dari snapshot jenis_pembayaran.
+     * Mendukung format baru (field 'selisih') dan format lama (nested 'items'→'remaining_balance').
+     */
     public function getTotalTunggakan(): int
     {
-        return $this->hitungTotalDariKategori(
-            $this->jenis_pembayaran ?? []
-        );
+        $items = $this->jenis_pembayaran ?? [];
+
+        if (empty($items)) return 0;
+
+        // Format baru dari PembayaranService: flat array dengan field 'selisih'
+        if (isset($items[0]['selisih'])) {
+            return (int) collect($items)->sum('selisih');
+        }
+
+        // Format lama dari API: nested items → remaining_balance
+        return (int) collect($items)
+            ->flatMap(fn($k) => $k['items'] ?? [])
+            ->sum(fn($i) => (int) ($i['remaining_balance'] ?? 0));
     }
-
-
-    // ambil kategori pembayaran yang sudah lunas
-    public function getKategoriYangSudahLunas(Siswa $siswa): array
-    {
-        $belumLunasKeys = collect($siswa->getKategoriBelumLunas() ?? [])
-            ->map(fn($k) => ($k['category_name'] ?? '') . '|' . ($k['periode'] ?? ''));
-
-        return collect($this->jenis_pembayaran ?? [])
-            ->reject(
-                fn($k) =>
-                $belumLunasKeys->contains(
-                    ($k['category_name'] ?? '') . '|' . ($k['periode'] ?? '')
-                )
-            )
-            ->values()
-            ->all();
-    }
-
-
-
 }

@@ -14,14 +14,6 @@
                     class="px-4 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 flex items-center">
                     <i class="fas fa-check mr-2"></i> Assign Siswa
                 </a>
-                <a href="javascript:void(0)" onclick="syncSiswa('{{ route('admin.siswa.sync-data-siswa') }}')"
-                    class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 flex items-center">
-                    <i class="fas fa-database mr-2"></i> Sync Data Siswa
-                </a>
-                <a href="{{ route('admin.sync-pembayaran.index') }}"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center">
-                    <i class="fas fa-money-bill-wave mr-2"></i> Sync Semua Pembayaran (Dev Only)
-                </a>
             </div>
 
         </div>
@@ -79,6 +71,12 @@
                     @foreach ($petugas as $p)
                         <option value="{{ $p->id }}">{{ $p->name }}</option>
                     @endforeach
+                </select>
+
+                <select id="filterPembayaran" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
+                    <option value="">Status Pembayaran...</option>
+                    <option value="lunas">Lunas</option>
+                    <option value="belum_lunas">Belum Lunas</option>
                 </select>
             </div>
         </div>
@@ -237,6 +235,7 @@
                 const filterDiniyah = document.getElementById('filterDiniyah');
                 const filterKelasDiniyah = document.getElementById('filterKelasDiniyah');
                 const filterPetugas = document.getElementById('filterPetugas');
+                const filterPembayaran = document.getElementById('filterPembayaran');
                 const tableContainer = document.getElementById('tableContainer');
 
 
@@ -259,7 +258,8 @@
                         kamar: filterKamar.value,
                         diniyah: filterDiniyah.value,
                         kelasDiniyah: filterKelasDiniyah.value,
-                        petugas_id: filterPetugas.value
+                        petugas_id: filterPetugas.value,
+                        pembayaran_status: filterPembayaran.value,
                     });
 
                     fetch(`{{ route('admin.siswa.index') }}?${params.toString()}`, {
@@ -308,7 +308,7 @@
                             fetchSiswa();
                         });
                 });
-                
+
                 filterDiniyah.addEventListener('change', () => {
                     fetch(`{{ route('admin.siswa.kelasDiniyah') }}?asrama=${filterDiniyah.value}`, {
                             headers: {
@@ -319,7 +319,8 @@
                         .then(kelasDiniyah => {
                             filterKelasDiniyah.innerHTML = `<option value="">Kelas...</option>`;
                             kelasDiniyah.forEach(k => {
-                                filterKelasDiniyah.innerHTML += `<option value="${k}">${k}</option>`;
+                                filterKelasDiniyah.innerHTML +=
+                                    `<option value="${k}">${k}</option>`;
                             });
                             fetchSiswa();
                         });
@@ -330,6 +331,7 @@
                 filterKamar.addEventListener('change', fetchSiswa);
                 filterKelasDiniyah.addEventListener('change', fetchSiswa);
                 filterPetugas.addEventListener('change', fetchSiswa);
+                filterPembayaran.addEventListener('change', fetchSiswa);
 
             });
         </script>

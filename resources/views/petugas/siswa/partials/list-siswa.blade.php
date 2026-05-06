@@ -22,7 +22,7 @@
                     </span>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-graduation-cap text-blue-400"></i>
-                        <span>{{ $item->UnitFormal ?? '-' }} - {{ $item->KelasFormal ?? '-' }}</span>
+                        <span>{{ $item->unit_formal ?? '-' }} - {{ $item->kelas_formal ?? '-' }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-home text-green-400"></i>
@@ -30,7 +30,7 @@
                     </div>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-atom text-amber-400"></i>
-                        <span>{{ $item->TingkatDiniyah ?? '-' }} - {{ $item->KelasDiniyah ?? '' }}</span>
+                        <span>{{ $item->TingkatMadin ?? '-' }} - {{ $item->KelasMadin ?? '' }}</span>
                     </div>
                 </div>
                 @include('petugas.siswa.partials.status-siswa')

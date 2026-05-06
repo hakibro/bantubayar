@@ -73,11 +73,11 @@
             </tr>
             <tr>
                 <td>Lembaga</td>
-                <td>: {{ $homeVisit->siswa->UnitFormal ?? '-' }}</td>
+                <td>: {{ $homeVisit->siswa->unit_formal ?? '-' }}</td>
             </tr>
             <tr>
                 <td>Kelas</td>
-                <td>: {{ $homeVisit->siswa->KelasFormal ?? '-' }}</td>
+                <td>: {{ $homeVisit->siswa->kelas_formal ?? '-' }}</td>
             </tr>
             <tr>
                 <td>Asrama</td>
@@ -88,12 +88,8 @@
                 <td>: {{ $homeVisit->siswa->KamarPondok ?? '-' }}</td>
             </tr>
             <tr>
-                <td>No. HP Wali</td>
-                <td>: {{ $homeVisit->siswa->phone ?? '-' }}</td>
-            </tr>
-            <tr>
                 <td>Total Tunggakan</td>
-                <td>: Rp {{ number_format($homeVisit->siswa->getTotalTunggakan(), 0, ',', '.') }}</td>
+                <td>: Rp {{ number_format($totalTunggakan, 0, ',', '.') }}</td>
             </tr>
         </table>
 

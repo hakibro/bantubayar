@@ -28,8 +28,8 @@
                     <input type="checkbox" class="checkItem w-4 h-4" value="{{ $item->id }}">
                 </td>
                 <td class="px-4 py-3">{{ $item->nama }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ $item->UnitFormal ?? 'Tidak ada' }} -
-                    {{ $item->KelasFormal ?? 'Tidak ada' }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ $item->unit_formal ?? 'Tidak ada' }} -
+                    {{ $item->kelas_formal ?? 'Tidak ada' }}</td>
                 <td class="px-4 py-3 text-gray-600">{{ $item->AsramaPondok ?? 'Tidak ada' }} -
                     {{ $item->KamarPondok ?? 'Tidak ada' }}</td>
                 <td class="px-4 py-3 text-gray-600">

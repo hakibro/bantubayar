@@ -13,7 +13,7 @@
                         <span class="bg-gray-100 px-1.5 py-0.5 rounded font-mono">ID: {{ $siswa->idperson }}</span>
                         <span>•</span>
                         <span class="bg-gray-100 px-1.5 py-0.5 rounded font-mono"> <i class="fas fa-phone "></i>
-                            {{ $siswa->phone ?? 'Belum ada No. WA' }}</span>
+                            {{ $siswa->phone?->phone ?? 'Belum ada No. WA' }}</span>
 
 
                     </div>
@@ -29,8 +29,8 @@
                     <i class="fas fa-school text-blue-600 w-5 text-center"></i>
                     <div>
                         <p class="text-[10px] uppercase text-blue-500 font-bold leading-none mb-1">Formal</p>
-                        <p class="text-sm text-gray-700 font-medium">{{ $siswa->UnitFormal ?? '-' }} •
-                            {{ $siswa->KelasFormal ?? '-' }}</p>
+                        <p class="text-sm text-gray-700 font-medium">{{ $siswa->unit_formal ?? '-' }} •
+                            {{ $siswa->kelas_formal ?? '-' }}</p>
                     </div>
                 </div>
 
@@ -47,8 +47,8 @@
                     <i class="fas fa-mosque text-emerald-600 w-5 text-center"></i>
                     <div>
                         <p class="text-[10px] uppercase text-emerald-500 font-bold leading-none mb-1">Diniyah</p>
-                        <p class="text-sm text-gray-700 font-medium">{{ $siswa->TingkatDiniyah ?? '-' }} •
-                            {{ $siswa->KelasDiniyah ?? '-' }}</p>
+                        <p class="text-sm text-gray-700 font-medium">{{ $siswa->TingkatMadin ?? '-' }} •
+                            {{ $siswa->KelasMadin ?? '-' }}</p>
                     </div>
                 </div>
             </div>
@@ -66,11 +66,11 @@
                         <div class="flex flex-col md:flex-row justify-between w-full md:justify-start md:gap-10">
                             <div class="flex flex-col text-center md:text-left">
                                 <p class="text-blue-200 text-xs font-medium mb-1">Total Tagihan</p>
-                                <h3 id="summaryTotalPaid" class="text-xl font-bold">Rp 0</h3>
+                                <h3 id="summaryTotalBilled" class="text-xl font-bold">Rp 0</h3>
                             </div>
                             <div class="flex flex-col text-center md:text-left">
                                 <p class="text-blue-200 text-xs font-medium mb-1">Total Bayar</p>
-                                <h3 id="summaryTotalBilled" class="text-xl font-bold">Rp 0</h3>
+                                <h3 id="summaryTotalPaid" class="text-xl font-bold">Rp 0</h3>
                             </div>
                         </div>
                         <div class="flex flex-col items-center md:items-start w-full md:w-auto">
@@ -92,8 +92,53 @@
 
 @push('scripts')
     <script>
-        // Data pembayaran dari PHP (collection of SiswaPembayaran)
-        const paymentData = @json($siswa->pembayaran ?? []);
+        @php
+            $paymentData = collect($summary ?? [])
+                ->map(function ($sum) use ($detailPembayaran) {
+                    $periodItems = collect($detailPembayaran)->where('idperiode', $sum->idperiode);
+                    $categories = $periodItems
+                        ->groupBy('judul')
+                        ->map(function ($items, $judul) {
+                            $totalRemaining = $items->sum('selisih');
+                            return [
+                                'category_name' => $judul,
+                                'summary' => [
+                                    'total_billed' => $items->sum('jml_kredit'),
+                                    'total_paid' => $items->sum('jml_debet'),
+                                    'total_remaining' => $totalRemaining,
+                                    'fully_paid' => $totalRemaining == 0,
+                                ],
+                                'items' => $items
+                                    ->map(
+                                        fn($i) => [
+                                            'unit_name' => $i->nama_unit,
+                                            'amount_billed' => $i->jml_kredit,
+                                            'amount_paid' => $i->jml_debet,
+                                            'remaining_balance' => $i->selisih,
+                                            'journal_date' => $i->tgl_jurnal,
+                                        ],
+                                    )
+                                    ->values()
+                                    ->toArray(),
+                            ];
+                        })
+                        ->values()
+                        ->toArray();
+                    return [
+                        'periode' => $sum->idperiode,
+                        'kelas_info' => $sum->kelas_history ?? '-',
+                        'summary' => [
+                            'total_billed' => $sum->total_kredit,
+                            'total_paid' => $sum->total_debet,
+                            'total_remaining' => $sum->sisa_tagihan,
+                            'fully_paid' => $sum->lunas == 1,
+                        ],
+                        'data' => $categories,
+                    ];
+                })
+                ->toArray();
+        @endphp
+        const paymentData = @json($paymentData);
         let activePeriodIndex = 0;
 
         function formatCurrency(value) {
@@ -160,8 +205,8 @@
             });
 
             // Render summary periode
-            document.getElementById('summaryTotalBilled').innerText = formatCurrency(summaryData.total_billed || 0);
             document.getElementById('summaryTotalPaid').innerText = formatCurrency(summaryData.total_paid || 0);
+            document.getElementById('summaryTotalBilled').innerText = formatCurrency(summaryData.total_billed || 0);
             document.getElementById('kelasInfo').innerText = period.kelas_info || '-';
             const remaining = summaryData.total_remaining || 0;
             const remEl = document.getElementById('summaryRemaining');
@@ -202,8 +247,8 @@
                     </div>
                     <div>
                         <h4 class="font-bold text-sm text-gray-800">${escapeHtml(cat.category_name)}</h4>
-                        <p class="text-xs text-gray-500">Tagih: ${formatCurrency(cat.summary.total_paid)}</p>
-                        <p class="text-xs text-gray-500">Bayar: ${formatCurrency(cat.summary.total_billed)}</p>
+                        <p class="text-xs text-gray-500">Tagih: ${formatCurrency(cat.summary.total_billed)}</p>
+                        <p class="text-xs text-gray-500">Bayar: ${formatCurrency(cat.summary.total_paid)}</p>
                     </div>
                 </div>
                 <div class="text-right flex items-center gap-4">
@@ -232,7 +277,7 @@
                             <div>
                                 <span class="font-medium text-gray-700 block">${escapeHtml(item.unit_name)}</span>
                                 <div class="text-[10px] text-gray-400 mt-1">
-                                    Tagih: ${formatCurrency(item.amount_paid)} &bull; Bayar: ${formatCurrency(item.amount_billed)}
+                                    Tagih: ${formatCurrency(item.amount_billed)} &bull; Bayar: ${formatCurrency(item.amount_paid)}
                                 </div>
                             </div>
                             <div class="text-right">

@@ -30,7 +30,8 @@
                         <i class="fas fa-check-circle text-green-500 text-xl"></i>
                     </div>
                 </div>
-                <p class="text-xs text-gray-400 mt-2">{{ number_format(($siswaLunas / max($totalSiswa, 1)) * 100, 1) }}% dari
+                <p class="text-xs text-gray-400 mt-2">{{ number_format(($siswaLunas / max($totalSiswa, 1)) * 100, 1) }}%
+                    dari
                     total</p>
             </div>
 
@@ -47,18 +48,7 @@
                 </div>
             </div>
 
-            <!-- Siswa Belum Sync -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm text-gray-500 uppercase">Belum Sync</p>
-                        <p class="text-3xl font-bold">{{ number_format($siswaBelumSync) }}</p>
-                    </div>
-                    <div class="bg-yellow-100 p-3 rounded-full">
-                        <i class="fas fa-sync-alt text-yellow-500 text-xl"></i>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
         <!-- Baris Kedua -->
@@ -118,24 +108,7 @@
 
         <!-- Grafik / Informasi Tambahan (Opsional) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Progress Sinkronisasi Pembayaran -->
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <h3 class="font-semibold text-lg mb-4">Progress Sinkronisasi Pembayaran</h3>
-                @php
-                    $totalSync = \App\Models\Siswa::has('pembayaran')->count();
-                    $percentSync = $totalSiswa > 0 ? round(($totalSync / $totalSiswa) * 100, 1) : 0;
-                @endphp
-                <div class="flex items-center">
-                    <div class="w-full bg-gray-200 rounded-full h-4">
-                        <div class="bg-primary h-4 rounded-full" style="width: {{ $percentSync }}%"></div>
-                    </div>
-                    <span class="ml-3 font-bold">{{ $percentSync }}%</span>
-                </div>
-                <p class="text-sm text-gray-500 mt-2">{{ number_format($totalSync) }} dari
-                    {{ number_format($totalSiswa) }} siswa sudah tersinkronisasi</p>
-                <a href="{{ route('admin.sync-pembayaran.index') }}"
-                    class="inline-block mt-4 text-primary hover:underline">Kelola Sinkronisasi →</a>
-            </div>
+
 
             <!-- Tautan Cepat -->
             <div class="bg-white rounded-xl shadow-sm p-6">
@@ -157,10 +130,7 @@
                         class="bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition">
                         <i class="fas fa-home text-teal-500 mr-2"></i> Home Visit
                     </a>
-                    <a href="{{ route('admin.sync-pembayaran.index') }}"
-                        class="bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition">
-                        <i class="fas fa-sync text-yellow-500 mr-2"></i> Sinkronisasi
-                    </a>
+
                 </div>
             </div>
         </div>

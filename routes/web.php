@@ -5,8 +5,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VisitController;
-use Illuminate\Support\Facades\Bus;
-use App\Jobs\SyncPembayaranSummarySiswaJob;
 use Illuminate\Support\Facades\DB;
 
 Route::get('/', function () {
@@ -25,25 +23,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::post('/sync/pembayaran', function () {
-    \App\Jobs\DispatchSyncPembayaranJob::dispatch();
-
-    return response()->json([
-        'status' => true,
-        'message' => 'Proses sync pembayaran dimulai.'
-    ]);
-});
-
-Route::get('/sync/pembayaran/progress', function () {
-    $total = Cache::get('sync_total', 0);
-    $done = Cache::get('sync_done', 0);
-
-    return [
-        'total' => $total,
-        'done' => $done,
-        'percent' => $total > 0 ? round(($done / $total) * 100, 2) : 0
-    ];
-});
 
 
 
@@ -77,40 +56,6 @@ Route::get('/viewfilter', function () {
 });
 
 
-// test job sync pembayaran summary siswa
-
-
-// 1. Test Trigger Batch
-Route::get('/debug-start-batch', function () {
-    // Ambil 5 ID siswa saja untuk tes
-    $siswaIds = \App\Models\Siswa::limit(5)->pluck('id')->toArray();
-
-    $jobs = [];
-    foreach ($siswaIds as $id) {
-        $jobs[] = new SyncPembayaranSummarySiswaJob($id);
-    }
-
-    $batch = Bus::batch($jobs)->dispatch();
-
-    return "Batch Berhasil Dibuat! ID: " . $batch->id . " <br> Silakan buka: /debug-check-batch/" . $batch->id;
-});
-
-// 2. Test Cek Batch secara Manual
-Route::get('/debug-check-batch/{id}', function ($id) {
-    $batch = Bus::findBatch($id);
-
-    if (!$batch) {
-        return "Gagal: Batch dengan ID {$id} tidak ditemukan di database.";
-    }
-
-    return response()->json([
-        'id' => $batch->id,
-        'total' => $batch->totalJobs,
-        'pending' => $batch->pendingJobs,
-        'failed' => $batch->failedJobs,
-        'finished' => $batch->finished(),
-    ]);
-});
 
 
 Route::get('/siswa_tes', [\App\Http\Controllers\Custom\CustomController::class, 'tesSiswa']);

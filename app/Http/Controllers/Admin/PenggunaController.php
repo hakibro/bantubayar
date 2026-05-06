@@ -39,15 +39,15 @@ class PenggunaController extends Controller
 
     public function create()
     {
-        $lembagaRaw = Siswa::select('UnitFormal', 'AsramaPondok', 'TingkatDiniyah')->get();
+        $lembagaRaw = Siswa::select('unit_formal', 'AsramaPondok', 'TingkatMadin')->get();
 
         $lembaga = [
-            'UnitFormal' => $lembagaRaw->pluck('UnitFormal')->filter()->unique()->sort()->values(),
+            'UnitFormal' => $lembagaRaw->pluck('unit_formal')->filter()->unique()->sort()->values(),
             'AsramaPondok' => $lembagaRaw->pluck('AsramaPondok')->filter()->unique()->sort()->values(),
-            'TingkatDiniyah' => $lembagaRaw->pluck('TingkatDiniyah')->filter()->unique()->sort()->values(),
+            'TingkatDiniyah' => $lembagaRaw->pluck('TingkatMadin')->filter()->unique()->sort()->values(),
         ];
 
-        $roles = Role::all(); // ambil semua role
+        $roles = Role::all();
 
         return view('admin.petugas.create', compact('lembaga', 'roles'));
     }
@@ -76,14 +76,14 @@ class PenggunaController extends Controller
 
     public function edit($id)
     {
-        $lembagaRaw = Siswa::select('UnitFormal', 'AsramaPondok', 'TingkatDiniyah')->get();
+        $lembagaRaw = Siswa::select('unit_formal', 'AsramaPondok', 'TingkatMadin')->get();
 
         $lembaga = [
-            'UnitFormal' => $lembagaRaw->pluck('UnitFormal')->filter()->unique()->sort()->values(),
+            'UnitFormal' => $lembagaRaw->pluck('unit_formal')->filter()->unique()->sort()->values(),
             'AsramaPondok' => $lembagaRaw->pluck('AsramaPondok')->filter()->unique()->sort()->values(),
-            'TingkatDiniyah' => $lembagaRaw->pluck('TingkatDiniyah')->filter()->unique()->sort()->values(),
+            'TingkatDiniyah' => $lembagaRaw->pluck('TingkatMadin')->filter()->unique()->sort()->values(),
         ];
-        $roles = Role::all(); // semua role
+        $roles = Role::all();
         $petugas = User::findOrFail($id);
         return view('admin.petugas.edit', compact('petugas', 'lembaga', 'roles'));
     }

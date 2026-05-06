@@ -22,7 +22,7 @@
                     </span>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-graduation-cap text-blue-400"></i>
-                        <span>{{ $item->siswa->UnitFormal ?? '-' }} - {{ $item->siswa->KelasFormal ?? '-' }}</span>
+                        <span>{{ $item->siswa->unit_formal ?? '-' }} - {{ $item->siswa->kelas_formal ?? '-' }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-home text-green-400"></i>
@@ -30,7 +30,7 @@
                     </div>
                     <div class="flex items-center gap-1">
                         <i class="fas fa-atom text-amber-400"></i>
-                        <span>{{ $item->siswa->TingkatDiniyah ?? '-' }} - {{ $item->siswa->KelasDiniyah ?? '' }}</span>
+                        <span>{{ $item->siswa->TingkatMadin ?? '-' }} - {{ $item->siswa->KelasMadin ?? '' }}</span>
                     </div>
                 </div>
                 @include('penanganan.partials.status-siswa')
@@ -52,12 +52,6 @@
             </div>
 
             <div class="flex flex-col gap-2 shrink-0">
-                <button onclick="syncPembayaran({{ $item->siswa->id }})"
-                    class="p-2.5 md:px-3 md:py-1.5 text-blue-600 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 transition flex items-center justify-center"
-                    title="Sync Data">
-                    <i class="fas fa-sync-alt text-sm"></i>
-                    <span class="inline ml-2 text-[11px] font-bold uppercase">Sync</span>
-                </button>
                 <a href="{{ route('penanganan.show', $item->siswa->id) }}"
                     class="p-2.5 md:px-4 md:py-1.5 bg-blue-600 text-white rounded-xl hover:bg-black transition flex items-center justify-center shadow-sm"
                     title="Aksi">

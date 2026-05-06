@@ -5,20 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\HomeVisit;
 use App\Models\Siswa;
+use App\Services\PembayaranService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class HomeVisitController extends Controller
 {
-    /**
-     * Halaman pilih siswa untuk home visit
-     */
     public function select(Request $request)
     {
         $query = Siswa::query();
 
-        // Filter search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -27,21 +24,18 @@ class HomeVisitController extends Controller
             });
         }
 
-        // Filter lembaga
         if ($request->filled('lembaga')) {
             if ($request->lembaga === '__NULL__') {
-                $query->whereNull('UnitFormal');
+                $query->whereNull('unit_formal');
             } else {
-                $query->where('UnitFormal', $request->lembaga);
+                $query->where('unit_formal', $request->lembaga);
             }
         }
 
-        // Filter kelas
         if ($request->filled('kelas')) {
-            $query->where('KelasFormal', $request->kelas);
+            $query->where('kelas_formal', $request->kelas);
         }
 
-        // Filter asrama
         if ($request->filled('asrama')) {
             if ($request->asrama === '__NULL__') {
                 $query->whereNull('AsramaPondok');
@@ -50,18 +44,15 @@ class HomeVisitController extends Controller
             }
         }
 
-        // Filter kamar
         if ($request->filled('kamar')) {
             $query->where('KamarPondok', $request->kamar);
         }
 
         $siswa = $query->orderBy('nama')->paginate(40)->withQueryString();
 
-        // Data untuk dropdown filter
-        $daftarLembaga = Siswa::select('UnitFormal')->distinct()->pluck('UnitFormal')->filter()->sort()->values();
-        $daftarAsrama = Siswa::select('AsramaPondok')->distinct()->pluck('AsramaPondok')->filter()->sort()->values();
+        $daftarLembaga = Siswa::select('unit_formal')->distinct()->pluck('unit_formal')->filter()->sort()->values();
+        $daftarAsrama  = Siswa::select('AsramaPondok')->distinct()->pluck('AsramaPondok')->filter()->sort()->values();
 
-        // Jika request AJAX, kembalikan partial table
         if ($request->ajax()) {
             return view('admin.home-visit.partials.table', compact('siswa'))->render();
         }
@@ -69,81 +60,65 @@ class HomeVisitController extends Controller
         return view('admin.home-visit.select', compact('siswa', 'daftarLembaga', 'daftarAsrama'));
     }
 
-    /**
-     * Form tambah home visit untuk siswa tertentu
-     */
-    public function create(Request $request)
+    public function create(Request $request, PembayaranService $pembayaranService)
     {
-        $request->validate(['siswa_id' => 'required|exists:siswa,id']);
+        $request->validate(['siswa_id' => 'required|exists:v_siswa,idperson']);
         $siswa = Siswa::findOrFail($request->siswa_id);
+        $totalTunggakan = $pembayaranService->getTotalBelumLunas((string) $siswa->idperson);
 
-        return view('admin.home-visit.create', compact('siswa'));
+        return view('admin.home-visit.create', compact('siswa', 'totalTunggakan'));
     }
 
-    /**
-     * Simpan home visit baru
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'siswa_id' => 'required|exists:siswa,id',
+            'siswa_id'     => 'required|exists:v_siswa,idperson',
             'petugas_nama' => 'required|string|max:255',
-            'petugas_hp' => 'required|string|max:20',
+            'petugas_hp'   => 'required|string|max:20',
             'tanggal_visit' => 'nullable|date',
         ]);
 
         $homeVisit = HomeVisit::create([
-            'siswa_id' => $request->siswa_id,
-            'admin_id' => auth()->id(),
+            'siswa_id'     => $request->siswa_id,
+            'admin_id'     => auth()->id(),
             'petugas_nama' => $request->petugas_nama,
-            'petugas_hp' => $request->petugas_hp,
+            'petugas_hp'   => $request->petugas_hp,
             'tanggal_visit' => $request->tanggal_visit,
-            'token' => Str::uuid(),
-            'status' => 'dijadwalkan',
+            'token'        => Str::uuid(),
+            'status'       => 'dijadwalkan',
         ]);
 
         return redirect()->route('admin.home-visit.show', $homeVisit->id)
             ->with('success', 'Home visit berhasil dijadwalkan.');
     }
 
-    /**
-     * Detail home visit
-     */
     public function show($id)
     {
         $homeVisit = HomeVisit::with('siswa')->findOrFail($id);
         return view('admin.home-visit.show', compact('homeVisit'));
     }
 
-    /**
-     * Cetak surat tugas PDF
-     */
-    public function cetak($id)
+    public function cetak($id, PembayaranService $pembayaranService)
     {
         $homeVisit = HomeVisit::with('siswa')->findOrFail($id);
-        $pdf = Pdf::loadView('admin.home-visit.cetak', compact('homeVisit'));
+        $totalTunggakan = $pembayaranService->getTotalBelumLunas((string) $homeVisit->siswa->idperson);
+        $pdf = Pdf::loadView('admin.home-visit.cetak', compact('homeVisit', 'totalTunggakan'));
         return $pdf->download('surat-tugas-' . $homeVisit->siswa->nama . '.pdf');
     }
 
-    /**
-     * Ambil data kelas untuk filter (AJAX)
-     */
     public function kelas(Request $request)
     {
         $lembaga = $request->lembaga;
-        $kelas = Siswa::when($lembaga, fn($q) => $q->where('UnitFormal', $lembaga))
-            ->select('KelasFormal')
+        $kelas = Siswa::when($lembaga, fn($q) => $q->where('unit_formal', $lembaga))
+            ->select('kelas_formal')
             ->distinct()
-            ->whereNotNull('KelasFormal')
-            ->orderBy('KelasFormal')
-            ->pluck('KelasFormal');
+            ->whereNotNull('kelas_formal')
+            ->orderBy('kelas_formal')
+            ->pluck('kelas_formal');
 
         return response()->json($kelas);
     }
 
-    /**
-     * Ambil data kamar untuk filter (AJAX)
-     */
     public function kamar(Request $request)
     {
         $asrama = $request->asrama;

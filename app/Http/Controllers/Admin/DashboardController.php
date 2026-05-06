@@ -19,7 +19,6 @@ class DashboardController extends Controller
         $totalSiswa = Siswa::count();
         $siswaLunas = Siswa::where('is_lunas', true)->count();
         $siswaBelumLunas = Siswa::where('is_lunas', false)->count();
-        $siswaBelumSync = Siswa::whereDoesntHave('pembayaran')->count();
 
         // Statistik Pengguna
         $totalPetugas = User::role('petugas')->count();
@@ -33,7 +32,6 @@ class DashboardController extends Controller
             'totalSiswa',
             'siswaLunas',
             'siswaBelumLunas',
-            'siswaBelumSync',
             'totalPetugas',
             'totalBendahara',
             'penangananAktif',

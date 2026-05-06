@@ -39,36 +39,15 @@
                             <p class="text-sm text-gray-500 font-medium mb-1">Total Tunggakan</p>
 
                             <h2
-                                class="text-4xl font-bold text-accent tracking-tight
-                            {{ $siswa->getTotalTunggakan() < 0 || $siswa->getKategoriBelumLunas() === null ? 'text-accent' : 'text-success' }}">
-                                @if (is_null($siswa->getKategoriBelumLunas()))
-                                    Belum Sinkron
-                                @elseif ($siswa->getTotalTunggakan() < 0)
-                                    Rp {{ number_format($siswa->getTotalTunggakan(), 0, ',', '.') }}
+                                class="text-4xl font-bold tracking-tight
+                            {{ !$siswa->is_lunas && $totalTunggakan > 0 ? 'text-accent' : 'text-success' }}">
+                                @if (!$siswa->is_lunas && $totalTunggakan > 0)
+                                    Rp {{ number_format($totalTunggakan, 0, ',', '.') }}
                                 @else
                                     Lunas
                                 @endif
 
-                                <button onclick="syncPembayaran({{ $siswa->id }})"
-                                    class="relative ml-1 mt-2 w-4 h-4 text-lg  text-blue-500 hover:text-blue-800 active:scale-95 transition-all duration-200">
-                                    <i class="fas fa-sync absolute bottom-1"></i>
-                                </button>
                             </h2>
-                            {{-- <h2
-                                class="text-4xl font-bold text-accent tracking-tight
-                            {{ $siswa->getTotalTunggakan() < 0 || $siswa->getKategoriBelumLunas() === null ? 'text-accent' : 'text-success' }}">
-                                @if (is_null($siswa->getKategoriBelumLunas()))
-                                    Belum Sinkron
-                                @elseif ($siswa->getTotalTunggakan() < 0)
-                                    Rp {{ number_format($siswa->getTotalTunggakan(), 0, ',', '.') }}
-                                @else
-                                    Lunas
-                                @endif
-                                <button onclick="syncPembayaran({{ $siswa->id }})"
-                                    class="relative ml-1 mt-2 w-4 h-4 text-lg  text-blue-500 hover:text-blue-800 active:scale-95 transition-all duration-200">
-                                    <i class="fas fa-sync absolute bottom-1"></i>
-                                </button>
-                            </h2> --}}
                             @if ($penangananTerakhir && $penangananTerakhir->status !== 'selesai')
                                 <p class="text-sm text-gray-500 font-medium mt-2">Saat penanganan: Rp
                                     {{ number_format($penangananTerakhir->getTotalTunggakan(), 0, ',', '.') }}</p>
@@ -122,7 +101,7 @@
                     @if (
                         $penangananTerakhir &&
                             $penangananTerakhir->hasil === 'lunas' &&
-                            $siswa->getTotalTunggakan() == 0 &&
+                            $siswa->is_lunas &&
                             $penangananTerakhir->updated_at->isSameMonth(now()))
                         <span class="text-gray-400 text-sm italic"> Sudah ditangani oleh
                             {{ $penangananTerakhir->petugas->name }}.</span>
@@ -310,12 +289,6 @@
 
     @push('scripts')
         <script>
-            // const formatCurrency = (num) => new Intl.NumberFormat('id-ID', {
-            //     style: 'currency',
-            //     currency: 'IDR',
-            //     minimumFractionDigits: 0
-            // }).format(num);
-
             // --- Modal Logic ---
             function openModal(type) {
                 const modal = document.getElementById(`modal${type.charAt(0).toUpperCase() + type.slice(1)}`);
@@ -358,25 +331,6 @@
                 content.classList.toggle('active');
                 icon.classList.toggle('rotate-180');
             }
-
-            document.addEventListener('DOMContentLoaded', () => {
-                const hasSynced = localStorage.getItem('synced_siswa_{{ $siswa->id }}');
-
-                if (!hasSynced) {
-                    // Set flag agar tidak loop sebelum fungsi dipanggil
-                    localStorage.setItem('synced_siswa_{{ $siswa->id }}', 'true');
-
-                    // Panggil fungsi (pastikan nama sudah sama: syncPembayaran)
-                    syncPembayaran({{ $siswa->id }});
-
-                } else {
-                    // Opsional: Hapus flag setelah beberapa saat jika ingin bisa sync lagi nanti
-                    // localStorage.removeItem('synced_siswa_{{ $siswa->id }}');
-                    console.log('has synced in local storage? ' + localStorage.getItem(
-                        'synced_siswa_{{ $siswa->id }}'));
-
-                }
-            });
         </script>
     @endpush
     <!-- --- MODALS --- -->

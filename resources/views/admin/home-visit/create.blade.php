@@ -11,13 +11,12 @@
                     <h2 class="font-semibold text-lg mb-2">Data Siswa</h2>
                     <p><span class="text-gray-600">Nama:</span> {{ $siswa->nama }}</p>
                     <p><span class="text-gray-600">ID Person:</span> {{ $siswa->idperson }}</p>
-                    <p><span class="text-gray-600">Lembaga:</span> {{ $siswa->UnitFormal ?? '-' }}</p>
-                    <p><span class="text-gray-600">Kelas:</span> {{ $siswa->KelasFormal ?? '-' }}</p>
+                    <p><span class="text-gray-600">Lembaga:</span> {{ $siswa->unit_formal ?? '-' }}</p>
+                    <p><span class="text-gray-600">Kelas:</span> {{ $siswa->kelas_formal ?? '-' }}</p>
                     <p><span class="text-gray-600">Asrama:</span> {{ $siswa->AsramaPondok ?? '-' }}</p>
                     <p><span class="text-gray-600">Kamar:</span> {{ $siswa->KamarPondok ?? '-' }}</p>
-                    <p><span class="text-gray-600">No. HP:</span> {{ $siswa->phone ?? '-' }}</p>
                     <p><span class="text-gray-600">Total Tunggakan:</span> Rp
-                        {{ number_format($siswa->getTotalTunggakan(), 0, ',', '.') }}</p>
+                        {{ number_format($totalTunggakan, 0, ',', '.') }}</p>
                 </div>
 
                 <!-- Form -->

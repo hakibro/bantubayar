@@ -6,6 +6,7 @@
             <th class="px-4 py-3 text-left">Nama</th>
             <th class="px-4 py-3 text-left">Lembaga Formal</th>
             <th class="px-4 py-3 text-left">Pondok</th>
+            <th class="px-4 py-3 text-left">Madin</th>
             <th class="px-4 py-3 text-left">Petugas Saat Ini</th>
             <th class="px-4 py-3 text-center">Aksi</th>
         </tr>
@@ -16,11 +17,19 @@
         @forelse ($siswa as $item)
             <tr class="border-b hover:bg-gray-50">
 
-                <td class="px-4 py-3">{{ $item->nama }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ $item->UnitFormal ?? 'Tidak ada' }} -
-                    {{ $item->KelasFormal ?? 'Tidak ada' }}</td>
+                <td class="px-4 py-3">{{ $item->nama }}
+                    @if ($item->is_lunas === 1)
+                        <span class="text-xs bg-green-600 text-white rounded-full px-3 py-1">Lunas</span>
+                    @else
+                        <span class="text-xs bg-red-600 text-white rounded-full px-2 py-1">Belum Lunas</span>
+                    @endif
+                </td>
+                <td class="px-4 py-3 text-gray-600">{{ $item->unit_formal ?? 'Tidak ada' }} -
+                    {{ $item->kelas_formal ?? 'Tidak ada' }}</td>
                 <td class="px-4 py-3 text-gray-600">{{ $item->AsramaPondok ?? 'Tidak ada' }} -
                     {{ $item->KamarPondok ?? 'Tidak ada' }}</td>
+                <td class="px-4 py-3 text-gray-600">{{ $item->TingkatMadin ?? 'Tidak ada' }} -
+                    {{ $item->KelasMadin ?? 'Tidak ada' }}</td>
                 <td class="px-4 py-3 text-gray-600">
                     @php $assigned = $item->petugas->first(); @endphp
                     {{ $assigned ? $assigned->name : '—' }}

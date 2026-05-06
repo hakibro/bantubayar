@@ -22,7 +22,7 @@
                     </div>
                     <div>
                         <h2 class="text-sm font-bold text-gray-800">{{ $siswa->nama }}</h2>
-                        <p class="text-xs text-gray-500">ID: {{ $siswa->idperson }} • {{ $siswa->UnitFormal }}</p>
+                        <p class="text-xs text-gray-500">ID: {{ $siswa->idperson }} • {{ $siswa->unit_formal }}</p>
                     </div>
                 </div>
             </div>
@@ -97,7 +97,23 @@
 
 @push('scripts')
     <script>
-        const paymentData = @json($pembayaran ?? []);
+        @php
+        $waliPaymentData = collect($belumLunas ?? [])
+            ->groupBy('idperiode')
+            ->flatMap(fn($periodItems, $periode) =>
+                $periodItems->groupBy('judul')->map(fn($items, $judul) => [
+                    'periode'      => $periode,
+                    'category_name'=> $judul,
+                    'summary'      => ['total_remaining' => $items->sum('selisih')],
+                    'items'        => $items->map(fn($i) => [
+                        'unit_name'       => $i->nama_unit,
+                        'remaining_balance'=> $i->selisih,
+                        'journal_date'    => $i->tgl_jurnal,
+                    ])->values()->toArray(),
+                ])->values()
+            )->values()->toArray();
+        @endphp
+        const paymentData = @json($waliPaymentData);
 
         function formatCurrency(val) {
             return new Intl.NumberFormat('id-ID', {

@@ -4,13 +4,12 @@ namespace App\Http\Controllers\Penanganan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Penanganan;
-use App\Models\PenangananHistory;
 use App\Models\PenangananKesanggupan;
 use App\Models\Siswa;
+use App\Services\PembayaranService;
 use App\Services\SiswaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
 
@@ -20,7 +19,6 @@ class PenangananController extends Controller
     {
         $query = auth()->user()->penanganan()->with('siswa');
 
-        // Filter Search (Nama Siswa atau ID)
         if ($request->filled('search')) {
             $query->whereHas('siswa', function ($q) use ($request) {
                 $q->where('nama', 'like', '%' . $request->search . '%')
@@ -28,51 +26,38 @@ class PenangananController extends Controller
             });
         }
 
-        // Filter Status Penanganan
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         } else {
             $query->where('status', '!=', 'selesai');
         }
 
-        // 3. Filter Waktu Dibuat
         if ($request->filled('waktuDibuat') && is_numeric($request->waktuDibuat)) {
             $hari = (int) $request->waktuDibuat;
-
             if ($hari > 7) {
-                // Logika: Data yang dibuat sebelum atau tepat 8 hari yang lalu (tumpukan lama)
                 $query->whereDate('created_at', '<=', now()->subDays(8));
             } else {
-                // Logika: Tepat X hari yang lalu (1-7 hari)
                 $query->whereDate('created_at', now()->subDays($hari));
             }
         }
-        // 3. Filter Waktu Diperbarui (Berdasarkan Riwayat Terakhir)
+
         if ($request->filled('waktuDiperbarui') && is_numeric($request->waktuDiperbarui)) {
             $hari = (int) $request->waktuDiperbarui;
-
             if ($hari > 7) {
-                // Logika: Data yang dibuat sebelum atau tepat 8 hari yang lalu (tumpukan lama)
                 $query->whereDate('updated_at', '<=', now()->subDays(8));
             } else {
-                // Logika: Tepat X hari yang lalu (1-7 hari)
                 $query->whereDate('updated_at', now()->subDays($hari));
             }
         }
 
-        // 4. Filter Penanganan Terlambat (Berdasarkan update terakhir)
         if ($request->filled('terlambat') && is_numeric($request->terlambat)) {
             $hari = (int) $request->terlambat;
-
-            // Kita cari yang statusnya belum selesai DAN 
-            // terakhir diupdate (disentuh petugas) sudah lebih dari X hari yang lalu
             $query->where('status', '!=', 'selesai')
                 ->where('updated_at', '<=', now()->subDays($hari)->endOfDay());
         }
 
         $listPenanganan = $query->orderBy('status', 'asc')->paginate(40);
 
-        // Jika AJAX, kirim hanya bagian tabelnya saja
         if ($request->ajax()) {
             return view('penanganan.partials.list-siswa', compact('listPenanganan'))->render();
         }
@@ -80,11 +65,10 @@ class PenangananController extends Controller
         return view('penanganan.index', compact('listPenanganan'));
     }
 
-    public function show(Request $request, $id_siswa)
+    public function show(Request $request, PembayaranService $pembayaranService, $id_siswa)
     {
-        $siswa = Siswa::with('pembayaran')->findOrFail($id_siswa);
+        $siswa = Siswa::findOrFail($id_siswa);
 
-        // 2. CEK AKSES PETUGAS (Harus Login)
         if (auth()->check()) {
             $penanganan = Penanganan::where('id_siswa', $id_siswa)
                 ->with('petugas')
@@ -92,9 +76,9 @@ class PenangananController extends Controller
                 ->get();
 
             $urlUntukWali = URL::temporarySignedRoute(
-                'penanganan.show', // Nama route Anda
-                now()->addDays(30), // Link berlaku 30 hari
-                ['id_siswa' => $siswa->id]
+                'penanganan.show',
+                now()->addDays(30),
+                ['id_siswa' => $siswa->idperson]
             );
 
             $penangananTerakhir = $penanganan->first();
@@ -102,28 +86,35 @@ class PenangananController extends Controller
                 ? $penangananTerakhir->histories()->latest()->get()
                 : collect();
 
-
-            // info petugas yang login
             $petugasLogin = Auth::user();
+            $summary = $pembayaranService->getSummaryPerPeriode((string) $siswa->idperson);
+            $detailPembayaran = $pembayaranService->getDetailPembayaran((string) $siswa->idperson);
+            $belumLunas = $pembayaranService->getDetailBelumLunas((string) $siswa->idperson);
+            $totalTunggakan = $pembayaranService->getTotalBelumLunas((string) $siswa->idperson);
+
 
             return view(
-                'penanganan.show', // View detail penanganan untuk petugas
-                compact('siswa', 'penanganan', 'riwayatAksi', 'penangananTerakhir', 'urlUntukWali', 'petugasLogin')
+                'penanganan.show',
+                compact(
+                    'siswa',
+                    'penanganan',
+                    'riwayatAksi',
+                    'penangananTerakhir',
+                    'urlUntukWali',
+                    'petugasLogin',
+                    'summary',
+                    'detailPembayaran',
+                    'belumLunas',
+                    'totalTunggakan'
+                )
             );
         }
 
-        // 1. CEK AKSES WALI SISWA (Tanpa Login via Signed URL)
-        // if ($request->hasValidSignature() || app()->environment('local')) {
         if ($request->hasValidSignature()) {
-            // Ambil data pembayaran untuk ditampilkan ke wali
-
-            // dd($siswa->getKategoriBelumLunas());
-
-            $pembayaran = $siswa->getKategoriBelumLunas();
-            return view('penanganan.wali_pembayaran', compact('siswa', 'pembayaran'));
+            $belumLunas = $pembayaranService->getDetailBelumLunas((string) $siswa->idperson);
+            return view('penanganan.wali_pembayaran', compact('siswa', 'belumLunas'));
         }
 
-        // Jika tidak keduanya, tolak akses
         abort(403, 'Akses ditolak. Link tidak valid atau Anda tidak memiliki akses.');
     }
 
@@ -131,7 +122,7 @@ class PenangananController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'id_siswa' => 'required|exists:siswa,id',
+            'id_siswa' => 'required|exists:v_siswa,idperson',
             'jenis_penanganan' => 'required|string',
             'catatan' => 'nullable|string',
         ]);
@@ -140,7 +131,6 @@ class PenangananController extends Controller
             $siswa = Siswa::findOrFail($data['id_siswa']);
             $penanganan = Penanganan::getOrCreateForSiswa($siswa);
 
-            // skip jika bukan petugas yang membuat penanganan
             if ($penanganan->id_petugas !== Auth::id()) {
                 return [
                     'success' => false,
@@ -148,7 +138,6 @@ class PenangananController extends Controller
                 ];
             }
 
-            // jika history telepon terakhir hari ini, tolak
             if (
                 $data['jenis_penanganan'] === 'phone' &&
                 $penanganan->histories()
@@ -171,15 +160,13 @@ class PenangananController extends Controller
                 'success' => true,
                 'message' => 'Aksi Penanganan berhasil disimpan',
             ];
-
-
         });
+
         return response()->json($result, $result['success'] ? 200 : 422);
     }
 
 
-
-    public function saveHasil(Request $request)
+    public function saveHasil(Request $request, PembayaranService $pembayaranService)
     {
         $data = $request->validate([
             'id_penanganan' => 'required|exists:penanganan,id',
@@ -191,59 +178,51 @@ class PenangananController extends Controller
         $penanganan = Penanganan::findOrFail($data['id_penanganan']);
         $siswa = Siswa::findOrFail($penanganan->id_siswa);
 
-        // Jika hasil penanganan lunas, pastikan tidak ada tunggakan
         if ($data['hasil'] === 'lunas') {
-            if ($siswa->getTotalTunggakan() < 0) {
+            if (!$siswa->is_lunas) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Siswa masih memiliki tunggakan sebesar Rp " . number_format($siswa->getTotalTunggakan(), 0, ',', '.'),
+                    'message' => 'Status pembayaran siswa belum lunas di sistem keuangan.',
                 ], 400);
             }
         }
-        // Jika hasil = cicilan, pastikan total tunggakan saat ini < total tunggakan saat penanganan dibuat, ambil kategori pembayaran yang sudah lunas
+
         if ($data['hasil'] === 'cicilan') {
-            if (abs($siswa->getTotalTunggakan()) > abs($penanganan->getTotalTunggakan())) {
+            $currentTotal = $pembayaranService->getTotalBelumLunas((string) $siswa->idperson);
+            $penangananTotal = $penanganan->getTotalTunggakan();
 
+            if ($penangananTotal > 0 && $currentTotal >= $penangananTotal) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Total tunggakan saat ini Rp " . number_format($siswa->getTotalTunggakan(), 0, ',', '.') . " harus lebih kecil dari total tunggakan saat penanganan dibuat Rp " . number_format($penanganan->getTotalTunggakan(), 0, ',', '.'),
+                    'message' => 'Total kurang bayar saat ini Rp ' . number_format($currentTotal, 0, ',', '.') .
+                        ' harus lebih kecil dari saat penanganan dibuat Rp ' .
+                        number_format($penangananTotal, 0, ',', '.'),
                 ], 400);
-
             }
         }
-        // Jika hasil = isi_saldo, pastikan saldo saat ini > saldo saat penanganan dibuat
+
         if ($data['hasil'] === 'isi_saldo') {
-            if ($siswa->saldo->saldo <= $penanganan->saldo) {
+            if ($siswa->saldo <= $penanganan->saldo) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Saldo saat ini Rp " . number_format($siswa->saldo?->saldo, 0, ',', '.') . " harus lebih besar dari saldo saat penanganan dibuat Rp " . number_format($penanganan->saldo, 0, ',', '.'),
+                    'message' => 'Saldo saat ini Rp ' . number_format($siswa->saldo, 0, ',', '.') .
+                        ' harus lebih besar dari saldo saat penanganan dibuat Rp ' .
+                        number_format($penanganan->saldo, 0, ',', '.'),
                 ], 400);
             }
         }
-
-
-        // Jika hasil = tidak_ada_respon atau hp_tidak aktif, pastikan tindak lanjut minimal 3 kali,
 
         if (in_array($data['hasil'], ['tidak_ada_respon', 'hp_tidak_aktif'])) {
+            $jumlahChat = $penanganan->histories()->where('jenis_penanganan', 'chat')->count();
+            $jumlahTelepon = $penanganan->histories()->where('jenis_penanganan', 'phone')->count();
 
-            // hitung jenis penanganan
-            $jumlahChat = $penanganan->histories()
-                ->where('jenis_penanganan', 'chat')
-                ->count();
-
-            $jumlahTelepon = $penanganan->histories()
-                ->where('jenis_penanganan', 'phone')
-                ->count();
-
-
-            // validasi minimal aksi
             if ($jumlahChat < 1 || $jumlahTelepon < 2) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Minimal 1x chat dan 2x telepon sebelum memilih hasil ini.',
                 ], 422);
             }
-            // Jika hp tidak aktif → arahkan update nomor
+
             if ($data['hasil'] === 'hp_tidak_aktif') {
                 return response()->json([
                     'success' => false,
@@ -262,51 +241,35 @@ class PenangananController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Hasil penanganan berhasil disimpan.", // Fungsikan pesan sukses dan error
+            'message' => 'Hasil penanganan berhasil disimpan.',
         ]);
     }
 
     public function updatePhone(Request $request, SiswaService $siswaService)
     {
         $data = $request->validate([
-            'id_siswa' => 'required|exists:siswa,id',
+            'id_siswa' => 'required|exists:v_siswa,idperson',
             'wali' => 'required|string',
             'phone' => 'required|string',
         ]);
 
         $siswa = Siswa::findOrFail($data['id_siswa']);
 
-        // TODO: pastikan mengupdate no.hp sesuai wali terutama jika ada 2 no hp
-        $siswa->update([
-            'phone' => $data['phone'] . ' - ' . $data['wali'],
-        ]);
-
-        \DB::transaction(function () use ($data) {
-            $siswa = Siswa::findOrFail($data['id_siswa']);
+        \DB::transaction(function () use ($data, $siswa) {
             $penanganan = Penanganan::getOrCreateForSiswa($siswa);
-            // skip jika bukan petugas yang membuat penanganan
+
             if ($penanganan->id_petugas !== Auth::id()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sedang ditangani oleh' . Auth::getName(),
-                ]);
+                return;
             }
+
             $penanganan->addHistory(
                 'update phone',
                 trim('Update No. HP ke ' . $data['phone'] . ' - ' . ($data['wali'] ?? ''))
             );
-
         });
 
-
-
-        // Update via SISDA API
         try {
-            $result = $siswaService->updateTelepon(
-                $siswa->idperson,
-                $data['wali'],
-                $data['phone']
-            );
+            $siswaService->updateTelepon($siswa->idperson, $data['wali'], $data['phone']);
 
             return response()->json([
                 'success' => true,
@@ -318,7 +281,6 @@ class PenangananController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
-
     }
 
 
@@ -331,36 +293,27 @@ class PenangananController extends Controller
                 'tanggal_kesanggupan' => 'required|date',
             ]);
 
-            // Gunakan firstOrCreate agar jika ID & Tanggal sama, tidak buat baris baru
-            // Kita tidak menyertakan 'token' di pencarian agar tidak selalu buat baru
             $kesanggupan = PenangananKesanggupan::firstOrCreate(
                 [
                     'penanganan_id' => $data['penanganan_id'],
                     'tanggal' => $data['tanggal_kesanggupan'],
                 ],
                 [
-                    'token' => \Str::uuid(), // Ini hanya diisi jika data baru dibuat
+                    'token' => \Str::uuid(),
                 ]
             );
 
-            // Update status penanganan utama
-            $kesanggupan->penanganan()->update([
-                'status' => 'menunggu_tindak_lanjut',
-            ]);
+            $kesanggupan->penanganan()->update(['status' => 'menunggu_tindak_lanjut']);
 
             return response()->json([
                 'success' => true,
-                'is_duplicate' => !$kesanggupan->wasRecentlyCreated, // Info tambahan jika perlu
+                'is_duplicate' => !$kesanggupan->wasRecentlyCreated,
                 'link' => route('wali.kesanggupan.form', $kesanggupan->token)
             ]);
-
         } catch (\Throwable $e) {
-            // ... (log error tetap sama)
             return response()->json(['success' => false, 'message' => 'Server error'], 500);
         }
     }
-
-
 
     public function formKesanggupan($token)
     {
@@ -371,15 +324,11 @@ class PenangananController extends Controller
     public function submitKesanggupan(Request $request, $token)
     {
         $data = $request->validate([
-            // Ubah min:0 menjadi min:1 atau gt:0 agar tidak menerima 0
             'nominal' => 'required|numeric|min:1',
         ]);
 
         $kesanggupan = PenangananKesanggupan::where('token', $token)->firstOrFail();
-
-        $kesanggupan->update([
-            'nominal' => $data['nominal']
-        ]);
+        $kesanggupan->update(['nominal' => $data['nominal']]);
 
         return response()->json([
             'success' => true,

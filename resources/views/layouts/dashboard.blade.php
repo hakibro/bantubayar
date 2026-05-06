@@ -344,29 +344,7 @@
             document.getElementById("errorModal").classList.add("hidden");
         }
 
-        function syncPembayaran(id) {
-            // 1. Simpan ID siswa yang sedang di-sync ke localStorage
-            localStorage.setItem('syncTargetId', 'siswa-' + id);
 
-            document.getElementById("loadingModal").classList.remove("hidden");
-
-            fetch("{{ url('petugas/siswa/sync-pembayaran-siswa') }}/" + id, {
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.status) throw new Error(data.message);
-                    location.reload();
-                })
-                .catch(err => {
-                    localStorage.removeItem('syncTargetId'); // Hapus jika gagal
-                    document.getElementById("loadingModal").classList.add("hidden");
-                    document.getElementById("errorMessage").innerText = err.message || 'Gagal sync';
-                    document.getElementById("errorModal").classList.remove("hidden");
-                });
-        }
 
         document.addEventListener("DOMContentLoaded", function() {
             const targetId = localStorage.getItem('syncTargetId');

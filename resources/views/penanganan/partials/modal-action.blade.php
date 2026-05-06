@@ -30,7 +30,7 @@
                     <i class="fas fa-comment text-xl"></i> Hubungi Wali
                 </button>
 
-                @if ($siswa->getTotalTunggakan() < 0)
+                @if (!$siswa->is_lunas && collect($belumLunas)->sum('selisih') > 0)
                     <button id="btnSendPayment" onclick="kirimTunggakan()"
                         class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md shadow-green-200">
                         <i class="fas fa-paper-plane text-xl"></i> Kirim Tunggakan
@@ -132,7 +132,7 @@
         }
 
         function sendWhatsapp(content = '') {
-            const phone = getPhoneNumber("{{ $siswa->phone }}");
+            const phone = getPhoneNumber("{{ $siswa->phone?->phone ?? '' }}");
             window.open(`https://wa.me/${phone}?text=${encodeURIComponent(content)}`, '_blank');
         }
 
@@ -143,7 +143,7 @@
 
             if (currentActionType === 'chat') {
                 pesan =
-                    `Assalamu’alaikum Wr. Wb. Selamat pagi Bapak/Ibu Wali Murid dari ananda {{ $siswa->nama }}.
+                    `Assalamu’alaikum Wr. Wb. Selamat pagi Bapak/Ibu Wali Murid dari ananda {!! $siswa->nama !!}.
 Mohon maaf mengganggu waktunya. Saya ${namaPetugas}.
 Kami bermaksud menginformasikan terkait administrasi sekolah ananda. Agar komunikasi lancar ke depannya, mohon berkenan menyimpan nomor ini nggih. Jika sudah luang, mohon respon pesan ini agar kami bisa menyampaikan detail informasinya. Terima kasih banyak.`;
                 sendWhatsapp(pesan);
@@ -154,50 +154,36 @@ Kami bermaksud menginformasikan terkait administrasi sekolah ananda. Agar komuni
 
         function formatTunggakanPerPeriode(tunggakan) {
             let result = {};
-
-            // Group by periode
-            tunggakan.forEach(category => {
-                if (!result[category.periode]) {
-                    result[category.periode] = [];
-                }
-                result[category.periode].push(category);
+            tunggakan.forEach(item => {
+                if (!result[item.idperiode]) result[item.idperiode] = {};
+                if (!result[item.idperiode][item.judul]) result[item.idperiode][item.judul] = [];
+                result[item.idperiode][item.judul].push(item);
             });
 
             let text = '';
-
-            Object.keys(result).forEach(periode => {
+            Object.keys(result).sort().forEach(periode => {
                 text += `*Periode ${periode}*\n\n`;
-
-                result[periode].forEach(category => {
-                    if (category.summary.total_remaining === 0) return;
-
-                    text += `${category.category_name}\n`;
-
-                    category.items.forEach(item => {
-                        if (item.remaining_balance < 0) {
-                            text +=
-                                `- ${item.unit_name} : ${formatRupiah(item.remaining_balance)}\n`;
-                        }
+                Object.keys(result[periode]).forEach(judul => {
+                    text += `${judul}\n`;
+                    result[periode][judul].forEach(item => {
+                        text += `- ${item.nama_unit} : ${formatRupiah(item.selisih)}\n`;
                     });
-
-                    // text +=
-                    //     `Total ${category.category_name} : ${formatRupiah(category.summary.total_remaining)}\n`;
                 });
                 text += `______________________________ \n\n`;
             });
-
             return text.trim();
         }
 
 
         function kirimTunggakan() {
-            // TODO: gunakan url khusus menampilkan detail pembayaran siswa jika diakses wali, menuju penanganan jika diakses petugas
-            const detailTunggakan = formatTunggakanPerPeriode(@json($siswa->getKategoriBelumLunas()));
+            const belumLunas = @json($belumLunas ?? []);
+            const totalTunggakan = belumLunas.reduce((sum, i) => sum + i.selisih, 0);
+            const detailTunggakan = formatTunggakanPerPeriode(belumLunas);
             const pesan =
-                `Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} \n\n` +
+                `Assalamu’alaikum Bapak/Ibu Wali {!! $siswa->nama !!} \n\n` +
                 `Berikut kami sampaikan rincian pembayaran belum lunas:\n\n` +
                 detailTunggakan +
-                `\n\n *Total Keseluruhan: ${formatRupiah({{ $siswa->getTotalTunggakan() }})}*` +
+                `\n\n *Total Keseluruhan: ${formatRupiah(totalTunggakan)}*` +
                 `\n\n Informasi detail: {!! $urlUntukWali !!}` +
                 `\n\n Mohon kesediaan Bapak/Ibu untuk melakukan pembayaran atau konfirmasi kepada kami.` +
                 `\n\n Terima kasih atas perhatian dan kerjasamanya` +
@@ -207,7 +193,7 @@ Kami bermaksud menginformasikan terkait administrasi sekolah ananda. Agar komuni
         }
 
         function kirimApresiasi() {
-            const pesan = `Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} \n\n` +
+            const pesan = `Assalamu’alaikum Bapak/Ibu Wali {!! $siswa->nama !!} \n\n` +
                 `Kami mengucapkan terima kasih atas pembayaran yang telah dilakukan. Dengan ini kami informasikan bahwa *pembayaran Anda telah kami terima dan dinyatakan LUNAS.* \n` +
                 `Semoga kerja sama yang baik ini dapat terus terjalin.\n\n` +
                 `Wassalamu’alaikum warahmatullahi wabarakatuh.`;
@@ -258,13 +244,13 @@ Kami bermaksud menginformasikan terkait administrasi sekolah ananda. Agar komuni
                         return;
                     }
 
-                    const pesan = `Assalamu’alaikum Bapak/Ibu Wali {{ $siswa->nama }} 🙏
+                    const pesan = `Assalamu’alaikum Bapak/Ibu Wali {!! $siswa->nama !!} \n 
 
 Mohon kesediaan Bapak/Ibu untuk mengisi Form Kesanggupan Pembayaran melalui link berikut:
 
 ${res.link}
 
-Terima kasih atas perhatian dan kerja samanya 🙏`;
+Terima kasih atas perhatian dan kerja samanya`;
 
                     sendWhatsapp(pesan);
 

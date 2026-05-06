@@ -2,8 +2,8 @@
     <tr>
         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $item->idperson }}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ $item->nama }}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $item->UnitFormal ?? '-' }}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $item->KelasFormal ?? '-' }}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $item->unit_formal ?? '-' }}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $item->kelas_formal ?? '-' }}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $item->AsramaPondok ?? '-' }}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $item->KamarPondok ?? '-' }}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">
