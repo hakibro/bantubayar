@@ -66,7 +66,7 @@
 
                                 <div class="flex-grow min-w-0">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <h3 class="font-bold text-slate-800 truncate">{{ $item->siswa->nama }}</h3>
+                                        <h3 class="font-bold text-slate-800 truncate">{{ $item->siswa?->nama ?? '—' }}</h3>
                                         @if ($isTerlambat)
                                             <span
                                                 class="bg-red-100 text-red-600 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">Terlambat</span>
@@ -84,7 +84,7 @@
                                 </div>
 
                                 <div class="shrink-0 flex items-center gap-3">
-                                    <a href="{{ route('penanganan.show', $item->siswa->id) }}"
+                                    <a href="{{ route('penanganan.show', $item->id_siswa) }}"
                                         class="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-600 transition-all group-hover:translate-x-1">
                                         Tangani <i class="fas fa-chevron-right text-[10px]"></i>
                                     </a>
@@ -135,7 +135,7 @@
                         @foreach ($catatanTerbaru as $catatan)
                             <div class="border-l-2 border-slate-700 pl-4 py-1">
                                 <p class="text-[11px] font-bold text-blue-400 mb-1 capitalize">Wali
-                                    {{ $catatan->siswa->nama }}</p>
+                                    {{ $catatan->siswa?->nama ?? '—' }}</p>
                                 <p class="text-xs text-slate-300 italic italic leading-relaxed">
                                     "{{ Str::limit($catatan->catatan, 60) }}"</p>
                                 <div class="flex mt-2 text-[10px] text-yellow-500">

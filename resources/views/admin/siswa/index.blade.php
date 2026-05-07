@@ -27,9 +27,7 @@
                 <select id="filterLembaga" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
                     <option value="">Lembaga...</option>
                     @foreach ($daftarLembaga as $l)
-                        <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
-                            {{ $l === '__NULL__' ? 'Tanpa Lembaga' : $l }}
-                        </option>
+                        <option value="{{ $l }}">{{ $l }}</option>
                     @endforeach
                     <option value="__NULL__">Tidak di Lembaga Formal</option>
                 </select>
@@ -41,9 +39,7 @@
                 <select id="filterAsrama" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
                     <option value="">Asrama...</option>
                     @foreach ($daftarAsrama as $l)
-                        <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
-                            {{ $l === '__NULL__' ? 'Tanpa Lembaga' : $l }}
-                        </option>
+                        <option value="{{ $l }}">{{ $l }}</option>
                     @endforeach
                 </select>
 
@@ -54,9 +50,7 @@
                 <select id="filterDiniyah" class="w-full md:w-1/4 px-4 py-2 border rounded-lg">
                     <option value="">Diniyah...</option>
                     @foreach ($daftarDiniyah as $l)
-                        <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
-                            {{ $l === '__NULL__' ? 'Tanpa Diniyah' : $l }}
-                        </option>
+                        <option value="{{ $l }}">{{ $l }}</option>
                     @endforeach
                 </select>
 

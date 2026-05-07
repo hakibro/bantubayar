@@ -1,20 +1,25 @@
 ### Todo:
 
-- Hapus Sync!
-- Ambil data langsung dari database daruttaqwa\_?
-- Update semua Model
-- Update semua controller
+- Petugas:
+    - cari siswa di list siswa erorr.
+    - tambahkan filter siswa, buat view lembaga -> kelas, asrama -> kamar, tingkat diniyah -> kelas diniyah.
 
 - Tambahkan Settings di admin:
     - Kecualikan Item (untuk validasi manual): Lembaga -> Kategori -> item
 
 ### Done:
 
+- Hapus Sync!
+- Ambil data langsung dari database daruttaqwa\_?
+- Update semua Model
+- Update semua controller
+
 - ubah logika simpan aksi agar update juga timestamp penanganan
 
 - index list penanganan dengan filter by [status, hasil, sudah ditangani, created_at, kesanggupan], hapus duplikat nama siswa karena penanganan > 1, update tampilan list,
 
 Admin:
+e
 
 - detailkan sync siswa: update/delete siapa, field apa yang di update.
 

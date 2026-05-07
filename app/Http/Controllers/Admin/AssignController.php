@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\LembagaKelas;
 use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -63,34 +64,30 @@ class AssignController extends Controller
             return view('admin.assign.partials.table', compact('siswa', 'petugas'))->render();
         }
 
-        $daftarLembaga = Siswa::select('unit_formal')->distinct()->pluck('unit_formal')->filter()->sort()->values();
-        $daftarAsrama  = Siswa::select('AsramaPondok')->distinct()->pluck('AsramaPondok')->filter()->sort()->values();
+        $daftarLembaga = LembagaKelas::formal()->distinct()->orderBy('title')->pluck('title');
+        $daftarAsrama  = LembagaKelas::asrama()->distinct()->orderBy('idtingkat')->pluck('idtingkat');
 
         return view('admin.assign.index', compact('siswa', 'petugas', 'daftarLembaga', 'daftarAsrama'));
     }
 
     public function kelas(Request $request)
     {
-        $lembaga = $request->lembaga;
-        $kelas = Siswa::when($lembaga, fn($q) => $q->where('unit_formal', $lembaga))
-            ->select('kelas_formal')
+        $kelas = LembagaKelas::formal()
+            ->when($request->lembaga, fn($q) => $q->where('title', $request->lembaga))
             ->distinct()
-            ->whereNotNull('kelas_formal')
-            ->orderBy('kelas_formal')
-            ->pluck('kelas_formal');
+            ->orderBy('keterangan')
+            ->pluck('keterangan');
 
         return response()->json($kelas);
     }
 
     public function kamar(Request $request)
     {
-        $asrama = $request->asrama;
-        $kamar = Siswa::when($asrama, fn($q) => $q->where('AsramaPondok', $asrama))
-            ->select('KamarPondok')
+        $kamar = LembagaKelas::asrama()
+            ->when($request->asrama, fn($q) => $q->where('idtingkat', $request->asrama))
             ->distinct()
-            ->whereNotNull('KamarPondok')
-            ->orderBy('KamarPondok')
-            ->pluck('KamarPondok');
+            ->orderBy('idrombel')
+            ->pluck('idrombel');
 
         return response()->json($kamar);
     }

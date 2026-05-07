@@ -35,9 +35,7 @@
                         <option value="" class="text-gray-500 font-medium">Semua Lembaga</option>
 
                         @foreach ($daftarLembaga as $l)
-                            <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
-                                {{ $l === '__NULL__' ? 'Tanpa Lembaga' : $l }}
-                            </option>
+                            <option value="{{ $l }}">{{ $l }}</option>
                         @endforeach
 
                         <option value="__NULL__" class="text-gray-600 font-medium">Tidak di Lembaga Formal</option>
@@ -64,9 +62,7 @@
 
                         <option value="" class="text-gray-500 font-medium">Semua Asrama</option>
                         @foreach ($daftarAsrama as $l)
-                            <option value="{{ $l === '__NULL__' ? '__NULL__' : $l }}">
-                                {{ $l === '__NULL__' ? 'Tanpa Asrama' : $l }}
-                            </option>
+                            <option value="{{ $l }}">{{ $l }}</option>
                         @endforeach
                     </select>
                 </div>

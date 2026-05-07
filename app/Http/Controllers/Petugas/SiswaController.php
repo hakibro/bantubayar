@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Petugas;
 
 use App\Http\Controllers\Controller;
+use App\Models\LembagaKelas;
 use App\Models\Siswa;
 use App\Services\PembayaranService;
 use Carbon\Carbon;
@@ -31,19 +32,18 @@ class SiswaController extends Controller
             });
         }
 
-        // Kolom tabel v_siswa untuk dropdown filter
-        $siswaCols   = ['unit_formal', 'kelas_formal', 'AsramaPondok', 'KamarPondok', 'TingkatMadin', 'KelasMadin'];
+        // Kolom v_siswa yang dipakai untuk filter pada query utama
+        $siswaCols     = ['unit_formal', 'kelas_formal', 'AsramaPondok', 'KamarPondok', 'TingkatMadin', 'KelasMadin'];
         $filterOptions = [];
 
         if (!$request->ajax()) {
-            foreach ($siswaCols as $col) {
-                $filterOptions[$col] = (clone $scope)
-                    ->select($col)
-                    ->whereNotNull($col)
-                    ->distinct()
-                    ->orderBy($col)
-                    ->pluck($col);
-            }
+            // Ambil opsi filter langsung dari v_lembaga_kelas — lebih cepat dari scan v_siswa
+            $filterOptions['unit_formal']       = LembagaKelas::formal()->distinct()->orderBy('title')->pluck('title');
+            $filterOptions['kelas_formal']      = LembagaKelas::formal()->distinct()->orderBy('keterangan')->pluck('keterangan');
+            $filterOptions['AsramaPondok']      = LembagaKelas::asrama()->distinct()->orderBy('idtingkat')->pluck('idtingkat');
+            $filterOptions['KamarPondok']       = LembagaKelas::asrama()->distinct()->orderBy('idrombel')->pluck('idrombel');
+            $filterOptions['TingkatMadin']      = LembagaKelas::madin()->distinct()->orderBy('idtingkat')->pluck('idtingkat');
+            $filterOptions['KelasMadin']        = LembagaKelas::madin()->distinct()->orderBy('idrombel')->pluck('idrombel');
             $filterOptions['status_penanganan'] = $this->getEnumValues('penanganan', 'status');
         }
 
