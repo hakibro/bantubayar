@@ -177,7 +177,13 @@ Kami bermaksud menginformasikan terkait administrasi sekolah ananda. Agar komuni
 
         function kirimTunggakan() {
             const belumLunas = @json($belumLunas ?? []);
-            const totalTunggakan = belumLunas.reduce((sum, i) => sum + i.selisih, 0);
+
+            // Hitung total dengan lebih robust - parsing float dan handle null/undefined
+            const totalTunggakan = belumLunas.reduce((sum, item) => {
+                const selisih = parseFloat(item.selisih) || 0;
+                return sum + Math.abs(selisih);
+            }, 0);
+
             const detailTunggakan = formatTunggakanPerPeriode(belumLunas);
             const pesan =
                 `Assalamu’alaikum Bapak/Ibu Wali {!! $siswa->nama !!} \n\n` +
