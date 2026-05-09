@@ -133,20 +133,25 @@ class DashboardController extends Controller
         $tugasAktif = (clone $scope)
             ->whereIn('status', ['menunggu_respon', 'menunggu_tindak_lanjut'])
             ->orderBy('updated_at', 'asc')
-            ->get()
-            ->map(function ($item) {
-                $item->lama_menunggu = $item->updated_at->diffForHumans();
-                return $item;
-            });
+            ->paginate(10);
+
+        $tugasAktif->through(function ($item) {
+            $item->lama_menunggu = $item->updated_at->diffForHumans();
+            return $item;
+        });
 
         // 3. Penanganan Terlambat
-        $penangananTerlambat = $tugasAktif->filter(function ($item) {
-            if ($item->status == 'menunggu_respon')
-                return $item->updated_at <= now()->subDays(2);
-            if ($item->status == 'menunggu_tindak_lanjut')
-                return $item->updated_at <= now()->subDays(3);
-            return false;
-        });
+        $penangananTerlambat = (clone $scope)
+            ->where(function ($q) {
+                $q->where(function ($query) {
+                    $query->where('status', 'menunggu_respon')
+                        ->where('updated_at', '<=', now()->subDays(2));
+                })->orWhere(function ($query) {
+                    $query->where('status', 'menunggu_tindak_lanjut')
+                        ->where('updated_at', '<=', now()->subDays(3));
+                });
+            })
+            ->get();
 
         // 4. Statistik & Catatan (Menyesuaikan rentang yang dipilih)
         $ratingQuery = (clone $scope)->whereNotNull('rating');

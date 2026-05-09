@@ -98,6 +98,10 @@
                             <p class="text-slate-500 font-medium">Semua tugas sudah beres! Istirahat sejenak.</p>
                         </div>
                     @endforelse
+
+                    <div class="mt-4">
+                        {{ $tugasAktif->appends(['range' => $range])->links() }}
+                    </div>
                 </div>
             </div>
 

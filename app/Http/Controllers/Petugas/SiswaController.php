@@ -15,7 +15,7 @@ class SiswaController extends Controller
     public function index(Request $request)
     {
         $lembagaUser = auth()->user()->lembaga;
-        $scope       = Siswa::query()
+        $scope = Siswa::query()
             ->leftJoin('v_status_lunas_siswa as sl', 'sl.idperson', '=', 'v_siswa.idperson')
             ->select('v_siswa.*', 'sl.is_lunas');
 
@@ -33,35 +33,85 @@ class SiswaController extends Controller
         }
 
         // Kolom v_siswa yang dipakai untuk filter pada query utama
-        $siswaCols     = ['unit_formal', 'kelas_formal', 'AsramaPondok', 'KamarPondok', 'TingkatMadin', 'KelasMadin'];
+        $siswaCols = ['unit_formal', 'kelas_formal', 'AsramaPondok', 'KamarPondok', 'TingkatMadin', 'KelasMadin'];
         $filterOptions = [];
 
+        // if (!$request->ajax()) {
+        //     // Ambil opsi filter langsung dari v_lembaga_kelas — lebih cepat dari scan v_siswa
+        //     $filterOptions['unit_formal']       = LembagaKelas::formal()->distinct()->orderBy('title')->pluck('title');
+        //     $filterOptions['kelas_formal']      = LembagaKelas::formal()->distinct()->orderBy('keterangan')->pluck('keterangan');
+        //     $filterOptions['AsramaPondok']      = LembagaKelas::asrama()->distinct()->orderBy('idtingkat')->pluck('idtingkat');
+        //     $filterOptions['KamarPondok']       = LembagaKelas::asrama()->distinct()->orderBy('idrombel')->pluck('idrombel');
+        //     $filterOptions['TingkatMadin']      = LembagaKelas::madin()->distinct()->orderBy('idtingkat')->pluck('idtingkat');
+        //     $filterOptions['KelasMadin']        = LembagaKelas::madin()->distinct()->orderBy('idrombel')->pluck('idrombel');
+        //     $filterOptions['status_penanganan'] = $this->getEnumValues('penanganan', 'status');
+        // }
+
         if (!$request->ajax()) {
-            // Ambil opsi filter langsung dari v_lembaga_kelas — lebih cepat dari scan v_siswa
-            $filterOptions['unit_formal']       = LembagaKelas::formal()->distinct()->orderBy('title')->pluck('title');
-            $filterOptions['kelas_formal']      = LembagaKelas::formal()->distinct()->orderBy('keterangan')->pluck('keterangan');
-            $filterOptions['AsramaPondok']      = LembagaKelas::asrama()->distinct()->orderBy('idtingkat')->pluck('idtingkat');
-            $filterOptions['KamarPondok']       = LembagaKelas::asrama()->distinct()->orderBy('idrombel')->pluck('idrombel');
-            $filterOptions['TingkatMadin']      = LembagaKelas::madin()->distinct()->orderBy('idtingkat')->pluck('idtingkat');
-            $filterOptions['KelasMadin']        = LembagaKelas::madin()->distinct()->orderBy('idrombel')->pluck('idrombel');
+            // Ambil unit yang tersedia dulu untuk pengecekan lock
+            $allUnits = LembagaKelas::formal()->distinct()->orderBy('title')->pluck('title');
+            $allAsrama = LembagaKelas::asrama()->distinct()->orderBy('idtingkat')->pluck('idtingkat');
+            $allMadin = LembagaKelas::madin()->distinct()->orderBy('idtingkat')->pluck('idtingkat');
+
+            // Cek apakah lembaga user masuk dalam daftar opsi
+            $isLockedFormal = in_array($lembagaUser, $allUnits->toArray());
+            $isLockedAsrama = in_array($lembagaUser, $allAsrama->toArray());
+            $isLockedMadin = in_array($lembagaUser, $allMadin->toArray());
+
+            // 1. Opsi Unit/Tingkat Utama
+            $filterOptions['unit_formal'] = $allUnits;
+            $filterOptions['AsramaPondok'] = $allAsrama;
+            $filterOptions['TingkatMadin'] = $allMadin;
+
+            // 2. Opsi Sub-Filter (Kelas/Kamar) yang TERFILTER
+            // Filter Kelas Formal berdasarkan Unit terpilih/terkunci
+            $formalTarget = $request->get('unit_formal', ($isLockedFormal ? $lembagaUser : null));
+            $filterOptions['kelas_formal'] = LembagaKelas::formal()
+                ->when($formalTarget, fn($q) => $q->where('title', $formalTarget))
+                ->distinct()->orderBy('keterangan')->pluck('keterangan');
+
+            // Filter Kamar berdasarkan Asrama terpilih/terkunci
+            $asramaTarget = $request->get('AsramaPondok', ($isLockedAsrama ? $lembagaUser : null));
+            $filterOptions['KamarPondok'] = LembagaKelas::asrama()
+                ->when($asramaTarget, fn($q) => $q->where('idtingkat', $asramaTarget))
+                ->distinct()->orderBy('idrombel')->pluck('idrombel');
+
+            // Filter Kelas Madin berdasarkan Tingkat Madin terpilih/terkunci
+            $madinTarget = $request->get('TingkatMadin', ($isLockedMadin ? $lembagaUser : null));
+            $filterOptions['KelasMadin'] = LembagaKelas::madin()
+                ->when($madinTarget, fn($q) => $q->where('idtingkat', $madinTarget))
+                ->distinct()->orderBy('idrombel')->pluck('idrombel');
+
             $filterOptions['status_penanganan'] = $this->getEnumValues('penanganan', 'status');
+
+            // Set status Lock untuk digunakan di View
+            $lock = [
+                'unit_formal' => $isLockedFormal,
+                'AsramaPondok' => $isLockedAsrama,
+                'TingkatMadin' => $isLockedMadin
+            ];
+            $selected = [
+                'unit_formal' => $isLockedFormal ? $lembagaUser : $request->unit_formal,
+                'AsramaPondok' => $isLockedAsrama ? $lembagaUser : $request->AsramaPondok,
+                'TingkatMadin' => $isLockedMadin ? $lembagaUser : $request->TingkatMadin
+            ];
         }
 
         // Logika Penguncian Lembaga
-        $lock     = ['unit_formal' => false, 'AsramaPondok' => false, 'TingkatMadin' => false];
-        $selected = ['unit_formal' => null,  'AsramaPondok' => null,  'TingkatMadin' => null];
+        $lock = ['unit_formal' => false, 'AsramaPondok' => false, 'TingkatMadin' => false];
+        $selected = ['unit_formal' => null, 'AsramaPondok' => null, 'TingkatMadin' => null];
 
         if (!$request->ajax()) {
             foreach (['unit_formal', 'AsramaPondok', 'TingkatMadin'] as $f) {
                 if (isset($filterOptions[$f]) && in_array($lembagaUser, $filterOptions[$f]->toArray())) {
-                    $lock[$f]     = true;
+                    $lock[$f] = true;
                     $selected[$f] = $lembagaUser;
                 }
             }
         }
 
         // Build Query Utama
-        $query      = (clone $scope);
+        $query = (clone $scope);
         $allFilters = array_merge($selected, $request->only(array_merge($siswaCols, ['status_penanganan', 'pembayaran_status'])));
 
         foreach ($siswaCols as $field) {
@@ -98,7 +148,7 @@ class SiswaController extends Controller
 
         if ($request->ajax()) {
             return response()->json([
-                'html'       => view('petugas.siswa.partials.list-siswa', compact('siswa'))->render(),
+                'html' => view('petugas.siswa.partials.list-siswa', compact('siswa'))->render(),
                 'pagination' => $siswa->links()->toHtml(),
             ]);
         }
@@ -108,8 +158,8 @@ class SiswaController extends Controller
 
     public function show($id, PembayaranService $pembayaranService)
     {
-        $siswa      = Siswa::findOrFail($id);
-        $summary    = $pembayaranService->getSummaryPerPeriode((string) $siswa->idperson);
+        $siswa = Siswa::findOrFail($id);
+        $summary = $pembayaranService->getSummaryPerPeriode((string) $siswa->idperson);
         $belumLunas = $pembayaranService->getDetailBelumLunas((string) $siswa->idperson);
 
         return view('petugas.siswa.show', compact('siswa', 'summary', 'belumLunas'));
@@ -119,7 +169,8 @@ class SiswaController extends Controller
     {
         $results = \DB::select("SHOW COLUMNS FROM {$table} WHERE Field = ?", [$column]);
 
-        if (empty($results)) return [];
+        if (empty($results))
+            return [];
 
         $type = $results[0]->Type;
         preg_match('/^enum\((.*)\)$/', $type, $matches);
