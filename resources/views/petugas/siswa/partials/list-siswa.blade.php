@@ -1,8 +1,9 @@
 @forelse ($siswa as $item)
+    @php
+        $isCompleted = $item->is_lunas && $item->penangananLunas();
+    @endphp
     <div id="siswa-{{ $item->id }}"
-        class="group {{ $item->is_lunas === true && $item->penangananLunas()?->updated_at->isSameMonth(now())
-            ? 'bg-gray-100 border-none shadow-none text-gray-400'
-            : 'bg-white' }} rounded-2xl border border-gray-100 hover:shadow-lg transition-all p-4">
+        class="group {{ $isCompleted ? 'bg-gray-100 border-none shadow-none text-gray-400' : 'bg-white' }} rounded-2xl border border-gray-100 hover:shadow-lg transition-all p-4">
 
         <div class="flex justify-between items-center gap-3">
             <div class="flex-1 min-w-0">

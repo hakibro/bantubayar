@@ -30,8 +30,8 @@ class Siswa extends Model
     public function scopeSearch($query, $keyword)
     {
         return $query->where(function ($q) use ($keyword) {
-            $q->where('nama', 'like', "%{$keyword}%")
-                ->orWhere('idperson', 'like', "%{$keyword}%");
+            $q->where('v_siswa.nama', 'like', "%{$keyword}%")
+                ->orWhere('v_siswa.idperson', 'like', "%{$keyword}%");
         });
     }
 

@@ -4,13 +4,19 @@
     </span>
 
     <span class="ml-2">
-        @if ($item->sedangDitangani())
+        @php
+            $penangananAktif = $item->penangananAktif();
+            $penangananLunasItem = $item->penangananLunas();
+        @endphp
+
+        @if ($penangananAktif)
             <span class="text-xs font-semibold text-yellow-600 truncate italic">
-                Sedang ditangani {{ $item->petugasPenangananAktif() }}
+                Sedang ditangani {{ $penangananAktif?->petugas?->name ?? 'Petugas' }}
             </span>
-        @elseif ($item->is_lunas && $item->penangananLunas()?->updated_at->isSameMonth(now()))
+        @elseif ($item->is_lunas && $penangananLunasItem)
             <span class="text-xs font-semibold text-green-600 italic">
-                Telah ditangani {{ $item->penangananLunas()->petugas->name }}
+                Telah ditangani {{ $penangananLunasItem->petugas?->name ?? 'Petugas' }}
+                ({{ $penangananLunasItem->updated_at?->translatedFormat('d M Y') ?? 'Tidak Diketahui' }})
             </span>
         @endif
     </span>
