@@ -128,8 +128,8 @@ class Siswa extends Model
     public function getStatusPembayaranBadgeAttribute(): string
     {
         return $this->totalTunggakan > 0
-            ? 'border-green-400 text-green-600'
-            : 'border-red-400 text-red-600';
+            ? 'border-red-400 text-red-600'
+            : 'border-green-400 text-green-600';
     }
 
     public function getStatusPembayaranLabelAttribute(): string
