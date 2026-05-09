@@ -116,13 +116,13 @@ class Siswa extends Model
 
     public function getStatusPembayaranBadgeAttribute(): string
     {
-        return $this->is_lunas
+        return $this->statusLunas?->is_lunas
             ? 'border-green-400 text-green-600'
             : 'border-red-400 text-red-600';
     }
 
     public function getStatusPembayaranLabelAttribute(): string
     {
-        return $this->is_lunas ? 'Lunas' : 'Belum Lunas';
+        return $this->statusLunas?->is_lunas ? 'Lunas' : 'Belum Lunas';
     }
 }
