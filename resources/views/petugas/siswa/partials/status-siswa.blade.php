@@ -2,7 +2,6 @@
     <span class="border-2 {{ $item->status_pembayaran_badge }} text-xs px-3 py-1 rounded-full font-semibold">
         {{ $item->status_pembayaran_label }}
     </span>
-    <span class="mx-2 text-gray-400">- {{ $item->totalTunggakan > 0 ? 'Belum Lunas' : 'Lunas' }} -</span>
 
     <span class="ml-2">
         @php
