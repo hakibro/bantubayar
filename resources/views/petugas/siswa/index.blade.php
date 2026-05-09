@@ -303,9 +303,11 @@
             let typingTimer;
 
             // Fungsi Utama Fetch Data
-            function fetchSiswa(url = null) {
-                // Tampilkan loading indicator
-                loadingIndicator.classList.remove('hidden');
+            function fetchSiswa(url = null, showLoading = true) {
+                // Tampilkan loading indicator hanya jika showLoading = true
+                if (showLoading) {
+                    loadingIndicator.classList.remove('hidden');
+                }
                 container.style.opacity = '0.5';
                 container.style.pointerEvents = 'none';
 
@@ -330,8 +332,10 @@
                         container.style.opacity = '1';
                         container.style.pointerEvents = 'auto';
 
-                        // Sembunyikan loading indicator dengan smooth transition
-                        loadingIndicator.classList.add('hidden');
+                        // Sembunyikan loading indicator hanya jika ditampilkan
+                        if (showLoading) {
+                            loadingIndicator.classList.add('hidden');
+                        }
 
                         // Update URL di browser tanpa reload
                         window.history.pushState({}, '', url);
@@ -340,7 +344,9 @@
                         console.error(err);
                         container.style.opacity = '1';
                         container.style.pointerEvents = 'auto';
-                        loadingIndicator.classList.add('hidden');
+                        if (showLoading) {
+                            loadingIndicator.classList.add('hidden');
+                        }
                     });
             }
 
@@ -349,12 +355,12 @@
                 select.addEventListener('change', () => fetchSiswa());
             });
 
-            // 2. Event Input Search (Debounce 500ms)
+            // 2. Event Input Search (Debounce 500ms) - Tanpa Loading Indicator
             const searchInput = filterForm.querySelector('input[name="search"]');
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
                     clearTimeout(typingTimer);
-                    typingTimer = setTimeout(() => fetchSiswa(), 500);
+                    typingTimer = setTimeout(() => fetchSiswa(null, false), 500);
                 });
             }
 
