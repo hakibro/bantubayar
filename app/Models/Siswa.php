@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\PembayaranService;
 use Illuminate\Database\Eloquent\Model;
 
 class Siswa extends Model
@@ -25,6 +26,16 @@ class Siswa extends Model
     public function getSaldoNominalAttribute(): int
     {
         return $this->saldo ?? 0;
+    }
+
+    public function totalTunggakan(): int
+    {
+        return app(PembayaranService::class)->getTotalBelumLunas((string) $this->idperson);
+    }
+
+    public function getTotalTunggakanAttribute(): int
+    {
+        return $this->totalTunggakan();
     }
 
     public function scopeSearch($query, $keyword)
