@@ -1,214 +1,635 @@
 @extends('layouts.dashboard')
 
 @section('content')
-    <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <!-- Judul Halaman -->
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-8">Laporan Aktivitas Petugas / Bendahara</h1>
+    @php
+        $formatLabel = fn($value) => str($value ?: 'tanpa_hasil')->replace('_', ' ')->title();
+        $activeCount = $menungguRespon + $menungguTindakLanjut;
 
-        <!-- Form Filter -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-            <form method="GET" action="{{ route('admin.laporan.petugas') }}" class="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Petugas</label>
-                    <select name="petugas_id"
-                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                        <option value="">Semua Petugas</option>
-                        @foreach ($petugasList as $p)
-                            <option value="{{ $p->id }}" {{ $petugasId == $p->id ? 'selected' : '' }}>
-                                {{ $p->name }} ({{ $p->roles->pluck('name')->join(', ') }} {{ $p->lembaga }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai</label>
-                    <input type="date" name="start_date" value="{{ $startDate }}"
-                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Akhir</label>
-                    <input type="date" name="end_date" value="{{ $endDate }}"
-                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                </div>
-                <div class="flex items-end">
-                    <button type="submit"
-                        class="w-full md:w-auto bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-2.5 rounded-xl hover:from-blue-700 hover:to-blue-800 transition shadow-md font-medium">
-                        Tampilkan
+        $statusMeta = [
+            'selesai' => ['label' => 'Selesai', 'icon' => 'fa-circle-check', 'class' => 'bg-emerald-100 text-emerald-700', 'bar' => 'bg-emerald-500'],
+            'menunggu_respon' => ['label' => 'Menunggu Respon', 'icon' => 'fa-clock', 'class' => 'bg-amber-100 text-amber-700', 'bar' => 'bg-amber-500'],
+            'menunggu_tindak_lanjut' => ['label' => 'Tindak Lanjut', 'icon' => 'fa-rotate-right', 'class' => 'bg-blue-100 text-blue-700', 'bar' => 'bg-blue-500'],
+        ];
+
+        $summaryCards = [
+            ['label' => 'Total Penanganan', 'value' => number_format($totalPenanganan), 'caption' => 'Aktivitas dalam periode ini', 'icon' => 'fa-clipboard-list', 'theme' => 'from-blue-50 to-white border-blue-100 text-blue-600'],
+            ['label' => 'Selesai', 'value' => number_format($selesai), 'caption' => $completionRate . '% terselesaikan', 'icon' => 'fa-circle-check', 'theme' => 'from-emerald-50 to-white border-emerald-100 text-emerald-600'],
+            ['label' => 'Masih Aktif', 'value' => number_format($activeCount), 'caption' => 'Respon dan tindak lanjut', 'icon' => 'fa-headset', 'theme' => 'from-amber-50 to-white border-amber-100 text-amber-600'],
+            ['label' => 'Rating', 'value' => number_format($ratingAvg, 1) . '/5', 'caption' => number_format($totalDinilai) . ' penilaian masuk', 'icon' => 'fa-star', 'theme' => 'from-violet-50 to-white border-violet-100 text-violet-600'],
+        ];
+
+        $rangeOptions = [
+            'current_week' => 'Minggu Ini',
+            'last_week' => 'Minggu Lalu',
+            'current_month' => 'Bulan Ini',
+            'previous_month' => 'Sebelumnya',
+            'all' => 'Semua',
+        ];
+
+        $detailFilters = [
+            'all' => 'Semua',
+            'lunas' => 'Lunas',
+            'cicilan' => 'Cicilan',
+            'isi_saldo' => 'Isi Saldo',
+            'hp_tidak_aktif' => 'WA Nonaktif',
+            'tidak_ada_respon' => 'Wali Tidak Merespon',
+            'aktif' => 'Aktif',
+        ];
+    @endphp
+
+    <div class="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
+        <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-wide text-primary">Laporan Petugas</p>
+                <h1 class="mt-1 text-2xl font-bold text-gray-950 sm:text-3xl">Performa Penanganan Siswa</h1>
+                <p class="mt-2 text-sm text-gray-500">
+                    {{ $periodLabel }}
+                    @if ($selectedPetugas)
+                        oleh {{ $selectedPetugas->name }}
+                    @else
+                        untuk semua petugas
+                    @endif
+                </p>
+            </div>
+        </div>
+
+        <section class="mb-6 rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
+            <form id="reportFilterForm" method="GET" action="{{ route('admin.laporan.petugas') }}" class="space-y-4">
+                <input type="hidden" name="range" value="{{ $range }}">
+                @if ($range === 'custom')
+                    <input type="hidden" name="start_date" value="{{ $startDate }}">
+                    <input type="hidden" name="end_date" value="{{ $endDate }}">
+                @endif
+
+                <div class="flex items-end gap-2 sm:gap-3">
+                    <div class="min-w-0 flex-1">
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-wide text-gray-400">Petugas</label>
+                        <select name="petugas_id" onchange="document.getElementById('reportFilterForm').submit()"
+                            class="h-12 w-full rounded-full border border-gray-200 bg-gray-50 px-4 text-sm font-semibold text-gray-800 outline-none transition focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10">
+                            <option value="">Semua Petugas</option>
+                            @foreach ($petugasList as $p)
+                                <option value="{{ $p->id }}" @selected($petugasId == $p->id)>
+                                    {{ $p->name }}{{ $p->lembaga ? ' - ' . $p->lembaga : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <button type="button" onclick="openDateRangeModal()" title="Pilih rentang tanggal"
+                        class="flex h-12 shrink-0 items-center justify-center gap-2 rounded-full border px-3 text-sm font-bold transition sm:px-5
+                        {{ $range === 'custom' ? 'border-primary bg-primary text-white shadow-md shadow-primary/20' : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-white' }}">
+                        <i class="fas fa-calendar-days"></i>
+                        <span class="hidden sm:inline">Rentang</span>
                     </button>
+
+                    <a href="{{ route('admin.laporan.petugas') }}" title="Reset filter"
+                        class="flex h-12 shrink-0 items-center justify-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 text-sm font-bold text-gray-700 transition hover:bg-white sm:px-5">
+                        <i class="fas fa-rotate-left"></i>
+                        <span class="hidden sm:inline">Reset</span>
+                    </a>
+                </div>
+
+                <div class="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+                    @foreach ($rangeOptions as $key => $label)
+                        <a href="{{ route('admin.laporan.petugas', array_filter(['range' => $key, 'petugas_id' => $petugasId])) }}"
+                            class="shrink-0 rounded-full px-4 py-2 text-sm font-bold transition
+                            {{ $range === $key ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+                            {{ $label }}
+                        </a>
+                    @endforeach
                 </div>
             </form>
-        </div>
+        </section>
 
-        <!-- Statistik Ringkasan -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
-            <!-- Total Penanganan -->
-            <div
-                class="bg-white rounded-xl shadow-sm border-l-4 border-blue-500 p-4 flex items-center space-x-3 hover:shadow-md transition">
-                <div class="p-2 bg-blue-100 rounded-lg">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
-                        </path>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 uppercase tracking-wider">Total Penanganan</p>
-                    <p class="text-xl font-bold text-gray-800">{{ $totalPenanganan }}</p>
-                </div>
-            </div>
-            <!-- Selesai -->
-            <div
-                class="bg-white rounded-xl shadow-sm border-l-4 border-green-500 p-4 flex items-center space-x-3 hover:shadow-md transition">
-                <div class="p-2 bg-green-100 rounded-lg">
-                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 uppercase tracking-wider">Selesai</p>
-                    <p class="text-xl font-bold text-gray-800">{{ $selesai }}</p>
-                </div>
-            </div>
-            <!-- Menunggu Respon -->
-            <div
-                class="bg-white rounded-xl shadow-sm border-l-4 border-yellow-500 p-4 flex items-center space-x-3 hover:shadow-md transition">
-                <div class="p-2 bg-yellow-100 rounded-lg">
-                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 uppercase tracking-wider">Menunggu Respon</p>
-                    <p class="text-xl font-bold text-gray-800">{{ $menungguRespon }}</p>
-                </div>
-            </div>
-            <!-- Menunggu Tindak Lanjut -->
-            <div
-                class="bg-white rounded-xl shadow-sm border-l-4 border-purple-500 p-4 flex items-center space-x-3 hover:shadow-md transition">
-                <div class="p-2 bg-purple-100 rounded-lg">
-                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 uppercase tracking-wider">Menunggu Tindak Lanjut</p>
-                    <p class="text-xl font-bold text-gray-800">{{ $menungguTindakLanjut }}</p>
-                </div>
-            </div>
-            <!-- Rata-rata Rating -->
-            <div
-                class="bg-white rounded-xl shadow-sm border-l-4 border-indigo-500 p-4 flex items-center space-x-3 hover:shadow-md transition">
-                <div class="p-2 bg-indigo-100 rounded-lg">
-                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z">
-                        </path>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-500 uppercase tracking-wider">Rata-rata Rating</p>
-                    <p class="text-xl font-bold text-gray-800">{{ number_format($ratingAvg, 1) }} / 5</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Breakdown Hasil Penanganan Selesai -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                    </path>
-                </svg>
-                Breakdown Hasil Penanganan Selesai
-            </h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                @forelse($hasilBreakdown as $hasil => $count)
-                    <div
-                        class="bg-gray-50/80 p-4 rounded-xl text-center border border-gray-100 hover:bg-gray-50 transition">
-                        <span class="text-sm font-medium text-gray-700">{{ ucfirst(str_replace('_', ' ', $hasil)) }}</span>
-                        <p class="text-2xl font-bold text-gray-800 mt-1">{{ $count }}</p>
+        <div class="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+            @foreach ($summaryCards as $card)
+                <div class="rounded-[1.15rem] border bg-gradient-to-br p-3 shadow-sm sm:rounded-[1.5rem] sm:p-5 {{ $card['theme'] }}">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="truncate text-xs font-semibold text-gray-500 sm:text-sm">{{ $card['label'] }}</p>
+                            <p class="mt-2 text-2xl font-black leading-none text-gray-950 sm:mt-3 sm:text-3xl">{{ $card['value'] }}</p>
+                        </div>
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/80 shadow-sm sm:h-12 sm:w-12 sm:rounded-2xl">
+                            <i class="fas {{ $card['icon'] }} text-sm sm:text-lg"></i>
+                        </span>
                     </div>
-                @empty
-                    <div class="col-span-full text-center py-6 text-gray-500 bg-gray-50/50 rounded-xl">
-                        Belum ada data penanganan selesai pada periode ini.
-                    </div>
-                @endforelse
-            </div>
+                    <p class="mt-3 line-clamp-2 text-xs font-medium text-gray-500 sm:mt-5 sm:text-sm">{{ $card['caption'] }}</p>
+                </div>
+            @endforeach
         </div>
 
-        <!-- Daftar Penanganan dalam Bentuk Card Responsif -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
-                    </path>
-                </svg>
-                Detail Penanganan
-            </h3>
-            @if ($penanganan->count() > 0)
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                    @foreach ($penanganan as $p)
-                        <div
-                            class="group bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg hover:border-blue-200 transition-all duration-200">
-                            <!-- Header Card: Tanggal & Status -->
-                            <div class="flex justify-between items-start mb-3">
-                                <span
-                                    class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{{ $p->created_at->format('d/m/Y H:i') }}</span>
-                                <span
-                                    class="px-3 py-1 rounded-full text-xs font-semibold
-                                    @if ($p->status == 'selesai') bg-green-100 text-green-700
-                                    @elseif($p->status == 'menunggu_respon') bg-yellow-100 text-yellow-700
-                                    @elseif($p->status == 'menunggu_tindak_lanjut') bg-blue-100 text-blue-700
-                                    @else bg-gray-100 text-gray-700 @endif">
-                                    {{ str_replace('_', ' ', $p->status) }}
-                                </span>
+        <div class="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <section class="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm xl:col-span-2">
+                <div class="mb-6 flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-950">Status Penanganan</h2>
+                        <p class="text-sm text-gray-500">Komposisi pekerjaan selama periode laporan.</p>
+                    </div>
+                    <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">
+                        {{ number_format($totalPenanganan) }} total
+                    </span>
+                </div>
+
+                <div class="space-y-5">
+                    @foreach ($statusMeta as $status => $meta)
+                        @php
+                            $count = $statusBreakdown[$status] ?? 0;
+                            $percent = round(($count / max($totalPenanganan, 1)) * 100, 1);
+                        @endphp
+                        <div>
+                            <div class="mb-2 flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl {{ $meta['class'] }}">
+                                        <i class="fas {{ $meta['icon'] }}"></i>
+                                    </span>
+                                    <p class="text-sm font-bold text-gray-800">{{ $meta['label'] }}</p>
+                                </div>
+                                <p class="text-sm font-black text-gray-950">{{ number_format($count) }} <span class="font-semibold text-gray-400">({{ $percent }}%)</span></p>
                             </div>
-                            <!-- Informasi Petugas & Siswa -->
-                            <div class="space-y-2 mb-3">
-                                <div class="flex items-center text-sm">
-                                    <span class="text-gray-500 w-16">Petugas</span>
-                                    <span class="font-medium text-gray-800 truncate">{{ $p->petugas->name ?? '-' }}</span>
-                                </div>
-                                <div class="flex items-center text-sm">
-                                    <span class="text-gray-500 w-16">Siswa</span>
-                                    <span class="font-medium text-gray-800 truncate">{{ $p->siswa->nama ?? '-' }}</span>
-                                </div>
-                                <div class="flex items-center text-sm">
-                                    <span class="text-gray-500 w-16">Hasil</span>
-                                    <span class="font-medium text-gray-800 truncate">{{ $p->hasil ?? '-' }}</span>
-                                </div>
-                            </div>
-                            <!-- Rating -->
-                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <span class="text-sm text-gray-600">Rating</span>
-                                @if ($p->rating)
-                                    <div class="flex items-center">
-                                        <span class="text-yellow-500 font-bold">{{ $p->rating }}</span>
-                                        <span class="text-gray-400 text-sm ml-1">/5</span>
-                                    </div>
-                                @else
-                                    <span class="text-gray-400 text-sm">-</span>
-                                @endif
+                            <div class="h-3 overflow-hidden rounded-full bg-gray-100">
+                                <div class="h-full rounded-full {{ $meta['bar'] }}" style="width: {{ min($percent, 100) }}%"></div>
                             </div>
                         </div>
                     @endforeach
                 </div>
-            @else
-                <div class="text-center py-10 text-gray-500 bg-gray-50/50 rounded-xl">
-                    <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                        </path>
-                    </svg>
-                    <p class="text-gray-500">Tidak ada data penanganan pada periode ini.</p>
+            </section>
+
+            <section class="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-950">Kecepatan Selesai</h2>
+                        <p class="mt-1 text-sm text-gray-500">Rata-rata durasi selesai.</p>
+                    </div>
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+                        <i class="fas fa-stopwatch"></i>
+                    </span>
                 </div>
-            @endif
+                <div class="mt-5 flex items-end gap-2">
+                    <p class="text-5xl font-black leading-none text-gray-950">{{ number_format($rataJamSelesai, 1) }}</p>
+                    <p class="pb-1 text-sm font-bold text-gray-500">jam</p>
+                </div>
+                <div class="mt-5 rounded-[1rem] bg-gray-50 px-4 py-3">
+                    <p class="text-sm font-semibold text-gray-600">
+                        Rating {{ number_format($ratingAvg, 1) }}/5 dari {{ number_format($totalDinilai) }} penilaian.
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <div class="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <section class="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm">
+                <h2 class="text-lg font-bold text-gray-950">Hasil Penanganan</h2>
+                <p class="mb-4 text-sm text-gray-500">Breakdown dari penanganan berstatus selesai.</p>
+                <div class="space-y-3">
+                    @forelse ($hasilBreakdown as $hasil => $count)
+                        @php $percent = round(($count / max($selesai, 1)) * 100, 1); @endphp
+                        <div class="rounded-[1rem] border border-gray-100 p-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <p class="text-sm font-bold text-gray-700">{{ $formatLabel($hasil) }}</p>
+                                <p class="text-sm font-black text-gray-950">{{ number_format($count) }}</p>
+                            </div>
+                            <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+                                <div class="h-full rounded-full bg-primary" style="width: {{ min($percent, 100) }}%"></div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="rounded-[1rem] bg-gray-50 p-5 text-center text-sm text-gray-500">
+                            Belum ada penanganan selesai pada periode ini.
+                        </div>
+                    @endforelse
+                </div>
+            </section>
+
+            <section class="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm xl:col-span-2">
+                <h2 class="text-lg font-bold text-gray-950">Performa Petugas</h2>
+                <p class="mb-4 text-sm text-gray-500">Urutan berdasarkan kontribusi aktivitas pada periode ini.</p>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-100 text-sm">
+                        <thead>
+                            <tr class="text-left text-xs font-bold uppercase text-gray-400">
+                                <th class="px-3 py-3">Petugas</th>
+                                <th class="px-3 py-3 text-right">Total</th>
+                                <th class="px-3 py-3 text-right">Selesai</th>
+                                <th class="px-3 py-3 text-right">%</th>
+                                <th class="px-3 py-3 text-right">Aktif</th>
+                                <th class="px-3 py-3 text-right">Keaktifan</th>
+                                <th class="px-3 py-3 text-right">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse ($petugasPerformance as $item)
+                                <tr>
+                                    <td class="px-3 py-3">
+                                        <p class="font-bold text-gray-950">{{ $item->name }}</p>
+                                        <p class="text-xs text-gray-500">{{ $item->lembaga ?: 'Umum' }}</p>
+                                    </td>
+                                    <td class="px-3 py-3 text-right font-bold text-gray-950">{{ number_format($item->total) }}</td>
+                                    <td class="px-3 py-3 text-right font-semibold text-emerald-700">{{ number_format($item->selesai) }}</td>
+                                    <td class="px-3 py-3 text-right font-bold text-gray-950">{{ $item->completion_rate }}%</td>
+                                    <td class="px-3 py-3 text-right font-semibold text-amber-700">{{ number_format($item->aktif) }}</td>
+                                    <td class="px-3 py-3 text-right">
+                                        <div class="ml-auto w-24">
+                                            <p class="mb-1 text-xs font-bold text-gray-700">{{ $item->activity_share }}%</p>
+                                            <div class="h-2 overflow-hidden rounded-full bg-gray-100">
+                                                <div class="h-full rounded-full bg-primary" style="width: {{ min($item->activity_share, 100) }}%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-3 text-right">
+                                        <button type="button" onclick="openPetugasModal('petugasModal{{ $item->id }}')"
+                                            class="inline-flex h-9 items-center justify-center rounded-full bg-gray-100 px-3 text-xs font-bold text-gray-700 transition hover:bg-primary hover:text-white">
+                                            Detail
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-3 py-8 text-center text-gray-500">Belum ada data petugas pada periode ini.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+    </div>
+
+    @foreach ($petugasPerformance as $item)
+        @php $detailPenanganan = $penangananPetugas->get($item->id, collect()); @endphp
+        <div id="petugasModal{{ $item->id }}" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4">
+            <div class="max-h-[88vh] w-full max-w-3xl overflow-hidden rounded-[1.75rem] bg-white shadow-2xl">
+                <div class="flex items-start justify-between gap-4 border-b border-gray-100 p-5">
+                    <div class="flex flex-1 flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wide text-primary">Detail Petugas</p>
+                            <h2 class="mt-1 text-xl font-black text-gray-950">{{ $item->name }}</h2>
+                            <p class="mt-1 text-sm text-gray-500">{{ $item->lembaga ?: 'Umum' }} - {{ number_format($item->total) }} penanganan</p>
+                        </div>
+                        <div class="grid w-full grid-cols-3 gap-2 md:w-auto md:min-w-[19rem]">
+                            <div class="rounded-[1rem] bg-gray-50 p-3">
+                                <p class="text-[10px] font-bold uppercase text-gray-400">Total</p>
+                                <p class="mt-1 text-xl font-black text-gray-950">{{ number_format($item->total) }}</p>
+                            </div>
+                            <div class="rounded-[1rem] bg-emerald-50 p-3">
+                                <p class="text-[10px] font-bold uppercase text-emerald-500">Selesai</p>
+                                <p class="mt-1 text-xl font-black text-gray-950">{{ number_format($item->selesai) }}</p>
+                            </div>
+                            <div class="rounded-[1rem] bg-primary/10 p-3">
+                                <p class="text-[10px] font-bold uppercase text-primary">Aktif</p>
+                                <p class="mt-1 text-xl font-black text-gray-950">{{ $item->activity_share }}%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closePetugasModal('petugasModal{{ $item->id }}')"
+                        class="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="border-b border-gray-100 px-5 py-3">
+                    <div class="no-scrollbar flex gap-2 overflow-x-auto">
+                        @foreach ($detailFilters as $filterKey => $filterLabel)
+                            <button type="button"
+                                onclick="filterPetugasDetail('petugasModal{{ $item->id }}', '{{ $filterKey }}')"
+                                data-filter-chip="{{ $filterKey }}"
+                                class="shrink-0 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-600 transition hover:bg-primary hover:text-white">
+                                {{ $filterLabel }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="max-h-[56vh] overflow-y-auto px-5 py-5">
+                    <div class="space-y-3">
+                        @forelse ($detailPenanganan as $detail)
+                            @php
+                                $meta = $statusMeta[$detail->status] ?? ['label' => $formatLabel($detail->status), 'class' => 'bg-gray-100 text-gray-700'];
+                                $filterValue = $detail->status === 'selesai' ? ($detail->hasil ?? 'tanpa_hasil') : 'aktif';
+                            @endphp
+                            <article class="petugas-detail-item rounded-[1.15rem] border border-gray-100"
+                                data-filter="{{ $filterValue }}"
+                                data-hasil="{{ $detail->hasil ?? '' }}"
+                                data-status="{{ $detail->status }}">
+                                <button type="button" onclick="togglePetugasAccordion('detail{{ $detail->id }}')"
+                                    class="flex w-full items-start justify-between gap-3 p-4 text-left">
+                                    <div class="min-w-0">
+                                        <p class="truncate font-bold text-gray-950">{{ $detail->siswa->nama ?? 'Siswa tidak ditemukan' }}</p>
+                                        <p class="mt-1 text-xs text-gray-500">
+                                            {{ $detail->created_at?->translatedFormat('d M Y H:i') }} - {{ $formatLabel($detail->hasil ?? ($detail->status === 'selesai' ? '-' : 'aktif')) }}
+                                        </p>
+                                    </div>
+                                    <div class="flex shrink-0 items-center gap-2">
+                                        <span class="rounded-full px-3 py-1 text-xs font-bold {{ $meta['class'] }}">{{ $meta['label'] }}</span>
+                                        <i id="icondetail{{ $detail->id }}" class="fas fa-chevron-down text-xs text-gray-400 transition-transform"></i>
+                                    </div>
+                                </button>
+
+                                <div id="detail{{ $detail->id }}" class="hidden border-t border-gray-100 px-4 pb-4 pt-3">
+                                    <div class="grid grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <p class="text-xs font-bold uppercase text-gray-400">Hasil</p>
+                                            <p class="mt-1 font-bold text-gray-800">{{ $formatLabel($detail->hasil ?? '-') }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-bold uppercase text-gray-400">Aksi</p>
+                                            <p class="mt-1 font-bold text-gray-800">{{ number_format($detail->histories_count) }} riwayat</p>
+                                        </div>
+                                        <div class="col-span-2">
+                                            <p class="text-xs font-bold uppercase text-gray-400">Kesanggupan</p>
+                                            <p class="mt-1 font-bold text-gray-800">
+                                                {{ $detail->kesanggupanTerakhir?->tanggal ? \Carbon\Carbon::parse($detail->kesanggupanTerakhir->tanggal)->translatedFormat('d M Y') : '-' }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <p class="text-xs font-bold uppercase text-gray-400">History Aksi</p>
+                                        <div class="mt-2 space-y-2">
+                                            @forelse ($detail->histories as $history)
+                                                <div class="rounded-xl bg-gray-50 p-3 text-sm">
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <p class="font-bold text-gray-800">{{ $formatLabel($history->jenis_penanganan) }}</p>
+                                                        <p class="text-xs text-gray-400">{{ $history->created_at?->translatedFormat('d M Y H:i') }}</p>
+                                                    </div>
+                                                    @if ($history->catatan)
+                                                        <p class="mt-1 text-gray-600">{{ $history->catatan }}</p>
+                                                    @endif
+                                                </div>
+                                            @empty
+                                                <p class="rounded-xl bg-gray-50 p-3 text-sm text-gray-500">Belum ada history aksi.</p>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        @empty
+                            <div class="rounded-[1.15rem] bg-gray-50 px-5 py-10 text-center text-sm text-gray-500">
+                                Belum ada detail penanganan untuk petugas ini.
+                            </div>
+                        @endforelse
+                        <div class="petugas-empty-filter hidden rounded-[1.15rem] bg-gray-50 px-5 py-10 text-center text-sm text-gray-500">
+                            Tidak ada penanganan untuk filter ini.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
+    <div id="dateRangeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4">
+        <div class="w-full max-w-sm rounded-[1.75rem] bg-white p-5 shadow-2xl">
+            <div class="mb-4 flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-black text-gray-950">Pilih Tanggal</h2>
+                    <p class="mt-1 text-sm text-gray-500">Tap tanggal awal lalu tanggal akhir.</p>
+                </div>
+                <button type="button" onclick="closeDateRangeModal()"
+                    class="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form method="GET" action="{{ route('admin.laporan.petugas') }}">
+                <input type="hidden" name="range" value="custom">
+                <input type="hidden" id="calendarStartInput" name="start_date" value="{{ $startDate ?? now()->startOfMonth()->format('Y-m-d') }}">
+                <input type="hidden" id="calendarEndInput" name="end_date" value="{{ $endDate ?? now()->format('Y-m-d') }}">
+                @if ($petugasId)
+                    <input type="hidden" name="petugas_id" value="{{ $petugasId }}">
+                @endif
+
+                <div class="mb-4 grid grid-cols-2 gap-3">
+                    <div class="rounded-[1rem] bg-gray-50 p-3">
+                        <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Mulai</p>
+                        <p id="calendarStartLabel" class="mt-1 text-sm font-black text-gray-950">-</p>
+                    </div>
+                    <div class="rounded-[1rem] bg-gray-50 p-3">
+                        <p class="text-xs font-bold uppercase tracking-wide text-gray-400">Akhir</p>
+                        <p id="calendarEndLabel" class="mt-1 text-sm font-black text-gray-950">-</p>
+                    </div>
+                </div>
+
+                <div class="rounded-[1.25rem] border border-gray-100 p-3">
+                    <div class="mb-3 flex items-center justify-between">
+                        <button type="button" onclick="changeCalendarMonth(-1)" class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-700">
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+                        <p id="calendarMonthLabel" class="text-sm font-black text-gray-950"></p>
+                        <button type="button" onclick="changeCalendarMonth(1)" class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-700">
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold uppercase text-gray-400">
+                        <span>Min</span>
+                        <span>Sen</span>
+                        <span>Sel</span>
+                        <span>Rab</span>
+                        <span>Kam</span>
+                        <span>Jum</span>
+                        <span>Sab</span>
+                    </div>
+                    <div id="calendarGrid" class="mt-2 grid grid-cols-7 gap-1"></div>
+                </div>
+
+                <button type="submit"
+                    class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-black text-white shadow-md shadow-primary/20 transition hover:bg-primary/90">
+                    <i class="fas fa-check"></i>
+                    Terapkan Rentang
+                </button>
+            </form>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        let calendarStart = parseCalendarDate(@json($startDate ?? now()->startOfMonth()->format('Y-m-d')));
+        let calendarEnd = parseCalendarDate(@json($endDate ?? now()->format('Y-m-d')));
+        let calendarView = new Date(calendarStart.getFullYear(), calendarStart.getMonth(), 1);
+        let awaitingCalendarEnd = false;
+
+        function parseCalendarDate(value) {
+            const parts = value.split('-').map(Number);
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+
+        function formatCalendarValue(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatCalendarLabel(date) {
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function sameCalendarDay(a, b) {
+            return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        }
+
+        function inCalendarRange(date) {
+            return calendarStart && calendarEnd && date > calendarStart && date < calendarEnd;
+        }
+
+        function syncCalendarLabels() {
+            document.getElementById('calendarStartInput').value = formatCalendarValue(calendarStart);
+            document.getElementById('calendarEndInput').value = formatCalendarValue(calendarEnd ?? calendarStart);
+            document.getElementById('calendarStartLabel').innerText = formatCalendarLabel(calendarStart);
+            document.getElementById('calendarEndLabel').innerText = calendarEnd ? formatCalendarLabel(calendarEnd) : 'Pilih akhir';
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const monthLabel = document.getElementById('calendarMonthLabel');
+            grid.innerHTML = '';
+            monthLabel.innerText = calendarView.toLocaleDateString('id-ID', {
+                month: 'long',
+                year: 'numeric'
+            });
+
+            const year = calendarView.getFullYear();
+            const month = calendarView.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                grid.appendChild(document.createElement('span'));
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.innerText = day;
+                button.className = 'h-10 rounded-full text-sm font-bold transition';
+
+                if (sameCalendarDay(date, calendarStart) || sameCalendarDay(date, calendarEnd)) {
+                    button.className += ' bg-primary text-white shadow-md shadow-primary/20';
+                } else if (inCalendarRange(date)) {
+                    button.className += ' bg-primary/10 text-primary';
+                } else {
+                    button.className += ' text-gray-700 hover:bg-gray-100';
+                }
+
+                button.addEventListener('click', function() {
+                    if (!awaitingCalendarEnd) {
+                        calendarStart = date;
+                        calendarEnd = null;
+                        awaitingCalendarEnd = true;
+                    } else if (date < calendarStart) {
+                        calendarEnd = calendarStart;
+                        calendarStart = date;
+                        awaitingCalendarEnd = false;
+                    } else {
+                        calendarEnd = date;
+                        awaitingCalendarEnd = false;
+                    }
+
+                    syncCalendarLabels();
+                    renderCalendar();
+                });
+
+                grid.appendChild(button);
+            }
+        }
+
+        function changeCalendarMonth(offset) {
+            calendarView = new Date(calendarView.getFullYear(), calendarView.getMonth() + offset, 1);
+            renderCalendar();
+        }
+
+        function openDateRangeModal() {
+            const modal = document.getElementById('dateRangeModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            syncCalendarLabels();
+            renderCalendar();
+        }
+
+        function closeDateRangeModal() {
+            const modal = document.getElementById('dateRangeModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function openPetugasModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePetugasModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function closeAllPetugasModals() {
+            document.querySelectorAll('[id^="petugasModal"]').forEach(function(modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+        }
+
+        function togglePetugasAccordion(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(`icon${id}`);
+            content.classList.toggle('hidden');
+            icon?.classList.toggle('rotate-180');
+        }
+
+        function filterPetugasDetail(modalId, filter) {
+            const modal = document.getElementById(modalId);
+            const items = modal.querySelectorAll('.petugas-detail-item');
+            const empty = modal.querySelector('.petugas-empty-filter');
+            let visibleCount = 0;
+
+            modal.querySelectorAll('[data-filter-chip]').forEach(function(chip) {
+                const active = chip.dataset.filterChip === filter;
+                chip.classList.toggle('bg-primary', active);
+                chip.classList.toggle('text-white', active);
+                chip.classList.toggle('bg-gray-100', !active);
+                chip.classList.toggle('text-gray-600', !active);
+            });
+
+            items.forEach(function(item) {
+                const visible = filter === 'all' || item.dataset.filter === filter || item.dataset.hasil === filter;
+                item.classList.toggle('hidden', !visible);
+                if (visible) {
+                    visibleCount++;
+                }
+            });
+
+            empty?.classList.toggle('hidden', visibleCount > 0);
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeDateRangeModal();
+                closeAllPetugasModals();
+            }
+        });
+
+        document.getElementById('dateRangeModal')?.addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeDateRangeModal();
+            }
+        });
+
+        document.querySelectorAll('[id^="petugasModal"]').forEach(function(modal) {
+            modal.addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closePetugasModal(this.id);
+                }
+            });
+            filterPetugasDetail(modal.id, 'all');
+        });
+    </script>
+@endpush

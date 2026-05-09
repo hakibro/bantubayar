@@ -61,11 +61,21 @@ class Siswa extends Model
     public function scopeStatusPembayaran($query, $status)
     {
         if ($status === 'lunas') {
-            return $query->whereHas('statusLunas', fn($q) => $q->where('is_lunas', 1));
+            return $query->lunas();
         } elseif ($status === 'belum_lunas') {
-            return $query->whereHas('statusLunas', fn($q) => $q->where('is_lunas', 0));
+            return $query->belumLunas();
         }
         return $query;
+    }
+
+    public function scopeLunas($query)
+    {
+        return $query->whereHas('statusLunas', fn($q) => $q->where('is_lunas', 1));
+    }
+
+    public function scopeBelumLunas($query)
+    {
+        return $query->whereHas('statusLunas', fn($q) => $q->where('is_lunas', 0));
     }
 
     public function petugas()

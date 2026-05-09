@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\HomeVisit;
+use App\Models\Penanganan;
 use App\Models\Siswa;
 use App\Models\User;
-use App\Models\Penanganan;
-use App\Models\HomeVisit;
 
 class DashboardController extends Controller
 {
@@ -15,63 +15,58 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        $activeStatuses = ['menunggu_respon', 'menunggu_tindak_lanjut'];
+        $thisMonth = fn($query) => $query
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year);
 
+        $lunasQuery = Siswa::query()->lunas();
+        $belumLunasQuery = Siswa::query()->belumLunas();
 
-        $baseSiswaQuery = Siswa::query();
-        // Total semua siswa
-        $totalSiswa = (clone $baseSiswaQuery)->count();
-
-        // Siswa LUNAS — join langsung, tidak pluck semua ID ke PHP
-        $lunasQuery = (clone $baseSiswaQuery)
-            ->join('v_status_lunas_siswa as sl', 'sl.idperson', '=', 'v_siswa.idperson')
-            ->where('sl.is_lunas', 1);
+        $totalSiswa = Siswa::count();
         $siswaLunas = (clone $lunasQuery)->count();
-
-        // Penanganan dari siswa lunas (pakai subquery, bukan whereIn array)
-        $penangananLunasAktif = Penanganan::whereIn('id_siswa', (clone $lunasQuery)->select('v_siswa.idperson'))
-            ->whereIn('status', ['menunggu_respon', 'menunggu_tindak_lanjut'])
-            ->whereMonth('updated_at', now()->month)
-            ->whereYear('updated_at', now()->year)
-            ->count();
-        $penangananLunasSelesai = Penanganan::whereIn('id_siswa', (clone $lunasQuery)->select('v_siswa.idperson'))
-            ->where('status', 'selesai')
-            ->whereMonth('updated_at', now()->month)
-            ->whereYear('updated_at', now()->year)
-            ->count();
-
-        // Siswa BELUM LUNAS
-        $belumLunasQuery = (clone $baseSiswaQuery)
-            ->join('v_status_lunas_siswa as sl', 'sl.idperson', '=', 'v_siswa.idperson')
-            ->where('sl.is_lunas', 0);
         $siswaBelumLunas = (clone $belumLunasQuery)->count();
 
-        // Penanganan dari siswa belum lunas (pakai subquery)
-        $penangananBelumLunasAktif = Penanganan::whereIn('id_siswa', (clone $belumLunasQuery)->select('v_siswa.idperson'))
-            ->whereIn('status', ['menunggu_respon', 'menunggu_tindak_lanjut'])
-            ->whereMonth('updated_at', now()->month)
-            ->whereYear('updated_at', now()->year)
-            ->count();
-        $penangananBelumLunasSelesai = Penanganan::whereIn('id_siswa', (clone $belumLunasQuery)->select('v_siswa.idperson'))
-            ->where('status', 'selesai')
-            ->whereMonth('updated_at', now()->month)
-            ->whereYear('updated_at', now()->year)
-            ->count();
+        $countPenangananSiswa = fn($siswaQuery, $statusQuery) => $statusQuery(
+            Penanganan::whereIn('id_siswa', (clone $siswaQuery)->select('v_siswa.idperson'))
+        )->count();
 
-        // Statistik Pengguna
+        $penangananPembayaran = [
+            'lunas' => [
+                'aktif' => $countPenangananSiswa($lunasQuery, fn($query) => $thisMonth($query)->whereIn('status', $activeStatuses)),
+                'selesai' => $countPenangananSiswa($lunasQuery, fn($query) => $thisMonth($query)->where('status', 'selesai')),
+            ],
+            'belum_lunas' => [
+                'aktif' => $countPenangananSiswa($belumLunasQuery, fn($query) => $thisMonth($query)->whereIn('status', $activeStatuses)),
+                'selesai' => $countPenangananSiswa($belumLunasQuery, fn($query) => $thisMonth($query)->where('status', 'selesai')),
+            ],
+        ];
+
         $totalPetugas = User::role('petugas')->count();
         $totalBendahara = User::role('bendahara')->count();
 
-        // Statistik Penanganan & Home Visit
-        $penangananAktif = Penanganan::whereIn('status', ['menunggu_respon', 'menunggu_tindak_lanjut'])->count();
+        $penangananAktif = Penanganan::whereIn('status', $activeStatuses)->count();
+        $penangananSelesaiBulanIni = $thisMonth(Penanganan::where('status', 'selesai'))->count();
         $homeVisitAktif = HomeVisit::where('status', '!=', 'selesai')->count();
+        $homeVisitBulanIni = HomeVisit::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        $persentaseLunas = round(($siswaLunas / max($totalSiswa, 1)) * 100, 1);
+        $persentaseBelumLunas = round(($siswaBelumLunas / max($totalSiswa, 1)) * 100, 1);
 
         return view('admin.dashboard', compact(
             'totalSiswa',
             'siswaLunas',
             'siswaBelumLunas',
+            'persentaseLunas',
+            'persentaseBelumLunas',
             'totalPetugas',
             'totalBendahara',
             'penangananAktif',
+            'penangananSelesaiBulanIni',
+            'penangananPembayaran',
+            'homeVisitBulanIni',
             'homeVisitAktif'
         ));
     }
