@@ -2,6 +2,7 @@
     <span class="border-2 {{ $item->status_pembayaran_badge }} text-xs px-3 py-1 rounded-full font-semibold">
         {{ $item->status_pembayaran_label }}
     </span>
+    <span class="mx-2 text-gray-400">- {{ $item->statusLunas?->is_lunas ? 'Lunas' : 'Belum Lunas' }} -</span>
 
     <span class="ml-2">
         @php
@@ -13,7 +14,7 @@
             <span class="text-xs font-semibold text-yellow-600 truncate italic">
                 Sedang ditangani {{ $penangananAktif?->petugas?->name ?? 'Petugas' }}
             </span>
-        @elseif ($item->is_lunas && $penangananLunasItem)
+        @elseif ($item->statusLunas?->is_lunas && $penangananLunasItem)
             <span class="text-xs font-semibold text-green-600 italic">
                 Telah ditangani {{ $penangananLunasItem->petugas?->name ?? 'Petugas' }}
                 ({{ $penangananLunasItem->updated_at?->translatedFormat('d M Y') ?? 'Tidak Diketahui' }})

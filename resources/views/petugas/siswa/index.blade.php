@@ -4,7 +4,7 @@
 
 @push('styles')
     <style>
-        /* Custom styles for loading and error modals */
+        /* Custom styles */
         /* Custom scrollbar agar rapi */
         ::-webkit-scrollbar {
             width: 6px;
@@ -63,50 +63,6 @@
             transition: transform 0.3s ease;
         }
 
-        /* Loading Animation */
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes pulse-scale {
-
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-
-            50% {
-                opacity: 0.7;
-                transform: scale(0.95);
-            }
-        }
-
-        @keyframes shimmer {
-            0% {
-                background-position: -1000px 0;
-            }
-
-            100% {
-                background-position: 1000px 0;
-            }
-        }
-
-        .loading-spinner {
-            animation: spin 1s linear infinite;
-        }
-
-        .loading-overlay {
-            animation: pulse-scale 1.5s ease-in-out infinite;
-        }
-
-        .skeleton-card {
-            animation: shimmer 2s infinite;
-            background: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
-            background-size: 200% 100%;
-        }
     </style>
 @endpush
 @section('content')
@@ -268,17 +224,6 @@
         </form>
         <div id="filterOverlay" class="fixed inset-0 bg-black/50 z-10 hidden transition-opacity duration-300"></div>
 
-        {{-- LOADING INDICATOR --}}
-        <div id="loadingIndicator"
-            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm transition-opacity duration-300">
-            <div class="bg-white rounded-2xl p-8 shadow-2xl">
-                <div class="flex flex-col items-center gap-4">
-                    <div class="w-12 h-12 border-4 border-slate-200 border-t-blue-600 rounded-full loading-spinner"></div>
-                    <p class="text-sm font-semibold text-slate-700">Memuat data...</p>
-                </div>
-            </div>
-        </div>
-
         {{-- Grid Layout: 1 Kolom di Mobile, 2 di Tablet, 3 di Desktop, 4 di Layar Lebar --}}
         <div id="siswa-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
             @include('petugas.siswa.partials.list-siswa')
@@ -299,15 +244,10 @@
             const filterForm = document.getElementById('filterForm');
             const container = document.getElementById('siswa-container');
             const paginationContainer = document.querySelector('.mt-8');
-            const loadingIndicator = document.getElementById('loadingIndicator');
             let typingTimer;
 
             // Fungsi Utama Fetch Data
-            function fetchSiswa(url = null, showLoading = true) {
-                // Tampilkan loading indicator hanya jika showLoading = true
-                if (showLoading) {
-                    loadingIndicator.classList.remove('hidden');
-                }
+            function fetchSiswa(url = null) {
                 container.style.opacity = '0.5';
                 container.style.pointerEvents = 'none';
 
@@ -332,11 +272,6 @@
                         container.style.opacity = '1';
                         container.style.pointerEvents = 'auto';
 
-                        // Sembunyikan loading indicator hanya jika ditampilkan
-                        if (showLoading) {
-                            loadingIndicator.classList.add('hidden');
-                        }
-
                         // Update URL di browser tanpa reload
                         window.history.pushState({}, '', url);
                     })
@@ -344,9 +279,6 @@
                         console.error(err);
                         container.style.opacity = '1';
                         container.style.pointerEvents = 'auto';
-                        if (showLoading) {
-                            loadingIndicator.classList.add('hidden');
-                        }
                     });
             }
 
@@ -355,12 +287,12 @@
                 select.addEventListener('change', () => fetchSiswa());
             });
 
-            // 2. Event Input Search (Debounce 500ms) - Tanpa Loading Indicator
+            // 2. Event Input Search (Debounce 500ms)
             const searchInput = filterForm.querySelector('input[name="search"]');
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
                     clearTimeout(typingTimer);
-                    typingTimer = setTimeout(() => fetchSiswa(null, false), 500);
+                    typingTimer = setTimeout(() => fetchSiswa(), 500);
                 });
             }
 

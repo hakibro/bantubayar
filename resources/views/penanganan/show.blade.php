@@ -40,8 +40,8 @@
 
                             <h2
                                 class="text-4xl font-bold tracking-tight
-                            {{ !$siswa->is_lunas && $totalTunggakan > 0 ? 'text-accent' : 'text-success' }}">
-                                @if (!$siswa->is_lunas && $totalTunggakan > 0)
+                            {{ !$siswa->statusLunas?->is_lunas && $totalTunggakan > 0 ? 'text-accent' : 'text-success' }}">
+                                @if (!$siswa->statusLunas?->is_lunas && $totalTunggakan > 0)
                                     Rp {{ number_format($totalTunggakan, 0, ',', '.') }}
                                 @else
                                     Lunas
@@ -101,7 +101,7 @@
                     @if (
                         $penangananTerakhir &&
                             $penangananTerakhir->hasil === 'lunas' &&
-                            $siswa->is_lunas &&
+                            $siswa->statusLunas?->is_lunas &&
                             $penangananTerakhir->updated_at->isSameMonth(now()))
                         <span class="text-gray-400 text-sm italic"> Sudah ditangani oleh
                             {{ $penangananTerakhir->petugas->name }}.</span>
