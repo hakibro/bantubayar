@@ -66,10 +66,12 @@
 
     <div class="flex h-screen">
         @php
+            $authUser = auth()->user();
             $navActive = 'bg-primaryLight text-primary font-semibold';
             $navInactive = 'hover:bg-gray-50 text-gray-500 hover:text-primary transition';
         @endphp
 
+        @if ($authUser)
         <nav
             class="fixed z-40 bg-white border-gray-100 
             md:inset-y-0 md:left-0 md:w-64 md:border-r 
@@ -90,8 +92,8 @@
 
                     @php
                         // Logika Role-Based Menu untuk mempersingkat kode
-                        $isAdmin = auth()->user()->hasRole('admin');
-                        $isMonitoring = auth()->user()->hasRole('monitoring');
+                        $isAdmin = $authUser->hasRole('admin');
+                        $isMonitoring = $authUser->hasRole('monitoring');
                         if ($isAdmin) {
                             $menus = [
                                 [
@@ -184,12 +186,12 @@
                         class="hidden md:flex w-full items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition group">
                         <div
                             class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                            {{ substr(auth()->user()->name, 0, 1) }}
+                            {{ substr($authUser->name, 0, 1) }}
                         </div>
                         <div class="text-left overflow-hidden">
-                            <p class="text-sm font-bold text-gray-800 truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-sm font-bold text-gray-800 truncate">{{ $authUser->name }}</p>
                             <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
-                                {{ auth()->user()->getRoleNames()->first() }}
+                                {{ $authUser->getRoleNames()->first() }}
                             </p>
                         </div>
                         <i class="fas fa-ellipsis-v ml-auto text-gray-300 group-hover:text-gray-500"></i>
@@ -201,13 +203,13 @@
                             <div class="flex items-center gap-3">
                                 <div
                                     class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md">
-                                    {{ substr(auth()->user()->name, 0, 1) }}
+                                    {{ substr($authUser->name, 0, 1) }}
                                 </div>
                                 <div class="overflow-hidden">
-                                    <p class="text-sm font-bold text-gray-800 truncate">{{ auth()->user()->name }}</p>
+                                    <p class="text-sm font-bold text-gray-800 truncate">{{ $authUser->name }}</p>
                                     <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
-                                        {{ auth()->user()->getRoleNames()->first() }} •
-                                        {{ auth()->user()->lembaga ?? 'Umum' }}
+                                        {{ $authUser->getRoleNames()->first() }} •
+                                        {{ $authUser->lembaga ?? 'Umum' }}
                                     </p>
                                 </div>
                             </div>
@@ -231,11 +233,12 @@
                 class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"></div>
 
         </nav>
+        @endif
 
 
 
         <!-- Main Content -->
-        <main class="flex-1 md:ml-64 pb-20 md:pb-2 flex flex-col h-full overflow-hidden relative">
+        <main class="flex-1 {{ $authUser ? 'md:ml-64 pb-20 md:pb-2' : '' }} flex flex-col h-full overflow-hidden relative">
 
             <div class="max-w-full overflow-auto bg-bgBody">
                 @yield('content')
@@ -282,6 +285,8 @@
             const popup = document.getElementById('logoutPopup');
             const overlay = document.getElementById('mobileOverlay');
 
+            if (!popup) return;
+
             if (popup.classList.contains('hidden')) {
                 // Tampilkan
                 popup.classList.remove('hidden');
@@ -308,6 +313,8 @@
             const nav = document.querySelector('nav');
             const popup = document.getElementById('logoutPopup');
             const overlay = document.getElementById('mobileOverlay');
+
+            if (!nav || !popup) return;
 
             if (!nav.contains(event.target)) {
                 popup.classList.add('hidden');

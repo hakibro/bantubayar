@@ -188,7 +188,25 @@ class PembayaranService
      */
     public function getTotalBelumLunas(string $idperson, ?array $periodes = null): int
     {
-        return (int) collect($this->getDetailBelumLunas($idperson, $periodes))
-            ->sum('selisih');
+        $periodes = $periodes ?? self::PERIODES;
+        $placeholders = implode(',', array_fill(0, count($periodes), '?'));
+
+        $summary = DB::selectOne("
+            SELECT
+                COALESCE(SUM(
+                    CASE
+                        WHEN (iis.jml_kredit - iis.jml_debet) > 0
+                            THEN iis.jml_kredit - iis.jml_debet
+                        ELSE 0
+                    END
+                ), 0) AS total_tunggakan
+            FROM daruttaqwa_trans.ips_siswa iis
+            WHERE iis.idperson = ?
+              AND iis.idperiode IN ({$placeholders})
+              AND iis.status = '1'
+              AND iis.tgl_jurnal < NOW()
+        ", array_merge([$idperson], $periodes));
+
+        return (int) ($summary->total_tunggakan ?? 0);
     }
 }
