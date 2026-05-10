@@ -68,6 +68,7 @@ class PenangananController extends Controller
     public function show(Request $request, PembayaranService $pembayaranService, $id_siswa)
     {
         $siswa = Siswa::findOrFail($id_siswa);
+        $pembayaranService->refreshStatusLunasSiswa((string) $siswa->idperson);
 
         if (auth()->check()) {
             $penanganan = Penanganan::where('id_siswa', $id_siswa)

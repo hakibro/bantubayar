@@ -8,6 +8,78 @@ class PembayaranService
 {
     const PERIODES = ['20212022', '20222023', '20232024', '20242025', '20252026'];
 
+    public function refreshStatusLunasSiswa(string $idperson): void
+    {
+        $summary = DB::selectOne("
+            SELECT
+                ? AS idperson,
+                COALESCE(SUM(
+                    CASE
+                        WHEN (iis.jml_kredit - iis.jml_debet) > 0
+                            THEN iis.jml_kredit - iis.jml_debet
+                        ELSE 0
+                    END
+                ), 0) AS total_tunggakan
+            FROM daruttaqwa_trans.ips_siswa iis
+            WHERE iis.idperson = ?
+              AND iis.idperiode IN ('20212022', '20222023', '20232024', '20242025', '20252026')
+              AND iis.status = '1'
+              AND iis.tgl_jurnal < NOW()
+        ", [$idperson, $idperson]);
+
+        $totalTunggakan = (float) ($summary->total_tunggakan ?? 0);
+
+        DB::table('siswa_status_pembayaran')->updateOrInsert(
+            ['idperson' => $idperson],
+            [
+                'total_tunggakan' => $totalTunggakan,
+                'is_lunas' => $totalTunggakan > 0 ? 0 : 1,
+                'refreshed_at' => now(),
+            ]
+        );
+    }
+
+    public function refreshStatusLunasSemuaSiswa(): int
+    {
+        DB::statement('DROP TEMPORARY TABLE IF EXISTS tmp_siswa_status_pembayaran');
+
+        DB::statement("
+            CREATE TEMPORARY TABLE tmp_siswa_status_pembayaran AS
+            SELECT
+                summary.idperson,
+                summary.total_tunggakan,
+                CASE WHEN summary.total_tunggakan > 0 THEN 0 ELSE 1 END AS is_lunas,
+                NOW() AS refreshed_at
+            FROM (
+                SELECT
+                    iis.idperson,
+                    COALESCE(SUM(
+                        CASE
+                            WHEN (iis.jml_kredit - iis.jml_debet) > 0
+                                THEN iis.jml_kredit - iis.jml_debet
+                            ELSE 0
+                        END
+                    ), 0) AS total_tunggakan
+                FROM daruttaqwa_trans.ips_siswa iis
+                WHERE iis.idperiode IN ('20212022', '20222023', '20232024', '20242025', '20252026')
+                  AND iis.status = '1'
+                  AND iis.tgl_jurnal < NOW()
+                GROUP BY iis.idperson
+            ) summary
+        ");
+
+        DB::transaction(function () {
+            DB::table('siswa_status_pembayaran')->delete();
+            DB::statement("
+                INSERT INTO siswa_status_pembayaran (idperson, total_tunggakan, is_lunas, refreshed_at)
+                SELECT idperson, total_tunggakan, is_lunas, refreshed_at
+                FROM tmp_siswa_status_pembayaran
+            ");
+        });
+
+        return DB::table('siswa_status_pembayaran')->count();
+    }
+
     /**
      * Seluruh tagihan siswa (lunas maupun belum) lintas periode.
      */
@@ -42,6 +114,7 @@ class PembayaranService
 
     /**
      * Hanya item yang masih punya sisa tagihan.
+     */
     public function getDetailBelumLunas(string $idperson, ?array $periodes = null): array
     {
         $periodes = $periodes ?? self::PERIODES;
