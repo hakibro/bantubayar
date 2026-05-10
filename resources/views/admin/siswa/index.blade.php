@@ -77,6 +77,15 @@
 
         <!-- TABLE -->
         <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
+            <div id="tableLoading" class="hidden border-b border-indigo-100 bg-indigo-50/80 px-5 py-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-spinner fa-spin text-indigo-600"></i>
+                    <div>
+                        <p id="tableLoadingText" class="text-sm font-semibold text-indigo-900">Mengambil data siswa...</p>
+                        <p class="text-xs text-indigo-600">Sebentar ya, data pembayaran sedang dirapikan.</p>
+                    </div>
+                </div>
+            </div>
             <div id="tableContainer">
                 @include('admin.siswa.partials.table', ['siswa' => $siswa, 'petugas' => $petugas])
             </div>
@@ -231,6 +240,36 @@
                 const filterPetugas = document.getElementById('filterPetugas');
                 const filterPembayaran = document.getElementById('filterPembayaran');
                 const tableContainer = document.getElementById('tableContainer');
+                const tableLoading = document.getElementById('tableLoading');
+                const tableLoadingText = document.getElementById('tableLoadingText');
+                const loadingMessages = [
+                    'Menghitung tagihan siswa...',
+                    'Menyempurnakan status pembayaran...',
+                    'Mengambil data lunas dan belum lunas...',
+                    'Merapikan daftar siswa...',
+                    'Mencocokkan saldo dan tunggakan...',
+                    'Menyiapkan hasil terbaik untuk Anda...'
+                ];
+                let loadingInterval;
+
+                function showTableLoading() {
+                    let index = 0;
+                    tableLoadingText.textContent = loadingMessages[index];
+                    tableLoading.classList.remove('hidden');
+                    tableContainer.classList.add('opacity-50', 'pointer-events-none');
+
+                    clearInterval(loadingInterval);
+                    loadingInterval = setInterval(() => {
+                        index = (index + 1) % loadingMessages.length;
+                        tableLoadingText.textContent = loadingMessages[index];
+                    }, 1400);
+                }
+
+                function hideTableLoading() {
+                    clearInterval(loadingInterval);
+                    tableLoading.classList.add('hidden');
+                    tableContainer.classList.remove('opacity-50', 'pointer-events-none');
+                }
 
 
                 // ===== UTILITY FUNCTIONS =====
@@ -244,6 +283,8 @@
 
                 // ===== FETCH TABLE =====
                 function fetchSiswa() {
+                    showTableLoading();
+
                     const params = new URLSearchParams({
                         search: searchInput.value,
                         lembaga: filterLembaga.value,
@@ -264,9 +305,12 @@
                         .then(res => res.text())
                         .then(html => {
                             tableContainer.innerHTML = html;
+                            hideTableLoading();
                         })
                         .catch(err => {
                             console.error('Error loading table:', err);
+                            tableLoadingText.textContent = 'Gagal memuat data. Coba lagi sebentar.';
+                            setTimeout(hideTableLoading, 1800);
                         });
                 }
 

@@ -11,7 +11,7 @@ class PembayaranService
     /**
      * Seluruh tagihan siswa (lunas maupun belum) lintas periode.
      */
-    public function getDetailPembayaran(string $idperson, array $periodes = null): array
+    public function getDetailPembayaran(string $idperson, ?array $periodes = null): array
     {
         $periodes = $periodes ?? self::PERIODES;
         $placeholders = implode(',', array_fill(0, count($periodes), '?'));
@@ -23,7 +23,11 @@ class PembayaranService
                 td.title AS nama_unit,
                 iis.jml_kredit, iis.jml_debet,
                 (iis.jml_kredit - iis.jml_debet) AS selisih,
-                iis.lunas, iis.tgl_jurnal, iis.tgl_update
+                CASE
+                    WHEN (iis.jml_kredit - iis.jml_debet) > 0 THEN 0
+                    ELSE 1
+                END AS lunas,
+                iis.tgl_jurnal, iis.tgl_update
             FROM daruttaqwa_trans.ips_siswa iis
             JOIN daruttaqwa_trans.tbl_ips_unit tiu ON tiu.ipsunit = iis.ipsunit
             JOIN daruttaqwa_trans.tbl_ips_main tim ON tim.ipsmain = tiu.ipsmain
@@ -37,9 +41,8 @@ class PembayaranService
     }
 
     /**
-     * Hanya item yang belum lunas (iis.lunas = 0).
-     */
-    public function getDetailBelumLunas(string $idperson, array $periodes = null): array
+     * Hanya item yang masih punya sisa tagihan.
+    public function getDetailBelumLunas(string $idperson, ?array $periodes = null): array
     {
         $periodes = $periodes ?? self::PERIODES;
         $placeholders = implode(',', array_fill(0, count($periodes), '?'));
@@ -51,7 +54,11 @@ class PembayaranService
                 td.title AS nama_unit,
                 iis.jml_kredit, iis.jml_debet,
                 (iis.jml_kredit - iis.jml_debet) AS selisih,
-                iis.lunas, iis.tgl_jurnal, iis.tgl_update
+                CASE
+                    WHEN (iis.jml_kredit - iis.jml_debet) > 0 THEN 0
+                    ELSE 1
+                END AS lunas,
+                iis.tgl_jurnal, iis.tgl_update
             FROM daruttaqwa_trans.ips_siswa iis
             JOIN daruttaqwa_trans.tbl_ips_unit tiu ON tiu.ipsunit = iis.ipsunit
             JOIN daruttaqwa_trans.tbl_ips_main tim ON tim.ipsmain = tiu.ipsmain
@@ -60,7 +67,7 @@ class PembayaranService
               AND iis.idperiode IN ({$placeholders})
               AND iis.status = '1'
               AND iis.tgl_jurnal < NOW()
-              AND iis.lunas = 0
+              AND (iis.jml_kredit - iis.jml_debet) > 0
             ORDER BY lunas DESC, idperiode DESC, tgl_jurnal, judul ASC
         ", array_merge([$idperson], $periodes));
     }
@@ -68,7 +75,7 @@ class PembayaranService
     /**
      * Ringkasan total kredit/debet per periode.
      */
-    public function getSummaryPerPeriode(string $idperson, array $periodes = null): array
+    public function getSummaryPerPeriode(string $idperson, ?array $periodes = null): array
     {
         $periodes = $periodes ?? self::PERIODES;
         $placeholders = implode(',', array_fill(0, count($periodes), '?'));
@@ -106,7 +113,7 @@ class PembayaranService
     /**
      * Total rupiah kurang bayar siswa saat ini.
      */
-    public function getTotalBelumLunas(string $idperson, array $periodes = null): int
+    public function getTotalBelumLunas(string $idperson, ?array $periodes = null): int
     {
         return (int) collect($this->getDetailBelumLunas($idperson, $periodes))
             ->sum('selisih');

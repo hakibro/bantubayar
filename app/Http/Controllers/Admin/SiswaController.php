@@ -17,7 +17,7 @@ class SiswaController extends Controller
 
         $query = Siswa::query()
             ->leftJoin('v_status_lunas_siswa as sl', 'sl.idperson', '=', 'v_siswa.idperson')
-            ->select('v_siswa.*', 'sl.is_lunas')
+            ->select('v_siswa.*', 'sl.is_lunas', 'sl.total_tunggakan')
             ->with([
                 'petugas' => function ($q) {
                     $q->limit(1);

@@ -35,6 +35,10 @@ class Siswa extends Model
 
     public function getTotalTunggakanAttribute(): int
     {
+        if (array_key_exists('total_tunggakan', $this->attributes)) {
+            return (int) ($this->attributes['total_tunggakan'] ?? 0);
+        }
+
         return $this->totalTunggakan();
     }
 

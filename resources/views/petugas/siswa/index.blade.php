@@ -224,6 +224,16 @@
         </form>
         <div id="filterOverlay" class="fixed inset-0 bg-black/50 z-10 hidden transition-opacity duration-300"></div>
 
+        <div id="siswaLoading" class="mt-6 hidden rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-spinner fa-spin text-blue-600"></i>
+                <div>
+                    <p id="siswaLoadingText" class="text-sm font-bold text-blue-900">Mengambil data siswa...</p>
+                    <p class="text-xs text-blue-600">Kami sedang menyusun daftar agar lebih mudah dibaca.</p>
+                </div>
+            </div>
+        </div>
+
         {{-- Grid Layout: 1 Kolom di Mobile, 2 di Tablet, 3 di Desktop, 4 di Layar Lebar --}}
         <div id="siswa-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
             @include('petugas.siswa.partials.list-siswa')
@@ -244,12 +254,43 @@
             const filterForm = document.getElementById('filterForm');
             const container = document.getElementById('siswa-container');
             const paginationContainer = document.querySelector('.mt-8');
+            const siswaLoading = document.getElementById('siswaLoading');
+            const siswaLoadingText = document.getElementById('siswaLoadingText');
+            const loadingMessages = [
+                'Menghitung tagihan siswa...',
+                'Menyempurnakan status pembayaran...',
+                'Mengambil siswa lunas dan belum lunas...',
+                'Mencocokkan tunggakan terbaru...',
+                'Merapikan daftar tugas Anda...',
+                'Menyiapkan hasil yang paling pas...'
+            ];
+            let loadingInterval;
             let typingTimer;
+
+            function showSiswaLoading() {
+                let index = 0;
+                siswaLoadingText.textContent = loadingMessages[index];
+                siswaLoading.classList.remove('hidden');
+                container.style.opacity = '0.45';
+                container.style.pointerEvents = 'none';
+
+                clearInterval(loadingInterval);
+                loadingInterval = setInterval(() => {
+                    index = (index + 1) % loadingMessages.length;
+                    siswaLoadingText.textContent = loadingMessages[index];
+                }, 1400);
+            }
+
+            function hideSiswaLoading() {
+                clearInterval(loadingInterval);
+                siswaLoading.classList.add('hidden');
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+            }
 
             // Fungsi Utama Fetch Data
             function fetchSiswa(url = null) {
-                container.style.opacity = '0.5';
-                container.style.pointerEvents = 'none';
+                showSiswaLoading();
 
                 // Jika url kosong (berarti dari filter), bangun URL dari form
                 if (!url) {
@@ -269,16 +310,15 @@
                         if (paginationContainer) {
                             paginationContainer.innerHTML = data.pagination;
                         }
-                        container.style.opacity = '1';
-                        container.style.pointerEvents = 'auto';
+                        hideSiswaLoading();
 
                         // Update URL di browser tanpa reload
                         window.history.pushState({}, '', url);
                     })
                     .catch(err => {
                         console.error(err);
-                        container.style.opacity = '1';
-                        container.style.pointerEvents = 'auto';
+                        siswaLoadingText.textContent = 'Gagal memuat data. Coba lagi sebentar.';
+                        setTimeout(hideSiswaLoading, 1800);
                     });
             }
 
