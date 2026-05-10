@@ -10,6 +10,13 @@ use App\Http\Controllers\Admin\SiswaController;
 
 Route::middleware(['auth', 'role:admin|monitoring'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/laporan/petugas', [LaporanPetugasController::class, 'index'])->name('laporan.petugas');
+
+    // Monitoring Siswa
+    Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
+    Route::get('/siswa/kelas', [SiswaController::class, 'kelas'])->name('siswa.kelas');
+    Route::get('/siswa/kamar', [SiswaController::class, 'kamar'])->name('siswa.kamar');
+    Route::get('/siswa/kelasDiniyah', [SiswaController::class, 'kelasDiniyah'])->name('siswa.kelasDiniyah');
+    Route::get('/siswa/{id}/details', [SiswaController::class, 'show'])->name('siswa.show');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -25,13 +32,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/petugas/{id}', [PenggunaController::class, 'destroy'])->name('petugas.destroy');
     Route::post('/petugas/{id}/restore', [PenggunaController::class, 'restore'])->name('petugas.restore');
     Route::delete('/petugas/{id}/force', [PenggunaController::class, 'forceDelete'])->name('petugas.forceDelete');
-
-    // Manajemen Siswa
-    Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
-    Route::get('/siswa/kelas', [SiswaController::class, 'kelas'])->name('siswa.kelas');
-    Route::get('/siswa/kamar', [SiswaController::class, 'kamar'])->name('siswa.kamar');
-    Route::get('/siswa/kelasDiniyah', [SiswaController::class, 'kelasDiniyah'])->name('siswa.kelasDiniyah');
-    Route::get('/siswa/{id}/details', [SiswaController::class, 'show'])->name('siswa.show');
 
     // Assign Siswa ke Petugas
     Route::get('/assign', [AssignController::class, 'index'])->name('assign.index');

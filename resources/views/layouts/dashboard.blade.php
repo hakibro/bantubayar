@@ -131,6 +131,12 @@
                         } elseif ($isMonitoring) {
                             $menus = [
                                 [
+                                    'route' => 'admin.siswa.index',
+                                    'icon' => 'fa-user-graduate',
+                                    'label' => 'Siswa',
+                                    'active' => 'admin.siswa*',
+                                ],
+                                [
                                     'route' => 'admin.laporan.petugas',
                                     'icon' => 'fa-chart-line',
                                     'label' => 'Laporan Petugas',
