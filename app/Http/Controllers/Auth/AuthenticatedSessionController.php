@@ -32,6 +32,8 @@ class AuthenticatedSessionController extends Controller
         // Arahkan berdasarkan role
         if ($user->hasRole('admin')) {
             return redirect()->route('admin.dashboard');
+        } elseif ($user->hasRole('monitoring')) {
+            return redirect()->route('admin.laporan.petugas');
         } elseif ($user->hasRole('petugas')) {
             return redirect()->route('petugas.dashboard');
         }

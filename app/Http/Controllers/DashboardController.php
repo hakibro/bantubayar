@@ -13,6 +13,8 @@ class DashboardController extends Controller
         // Periksa role dan arahkan sesuai
         if ($user->hasRole('admin')) {
             return redirect()->route('admin.dashboard');
+        } elseif ($user->hasRole('monitoring')) {
+            return redirect()->route('admin.laporan.petugas');
         } elseif ($user->hasRole(['bendahara', 'petugas'])) {
             return redirect()->route('petugas.dashboard');
         } else {

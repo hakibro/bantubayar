@@ -91,8 +91,9 @@
                     @php
                         // Logika Role-Based Menu untuk mempersingkat kode
                         $isAdmin = auth()->user()->hasRole('admin');
-                        $menus = $isAdmin
-                            ? [
+                        $isMonitoring = auth()->user()->hasRole('monitoring');
+                        if ($isAdmin) {
+                            $menus = [
                                 [
                                     'route' => 'dashboard',
                                     'icon' => 'fa-home',
@@ -124,8 +125,18 @@
                                     'label' => 'Laporan Petugas',
                                     'active' => 'admin.laporan.petugas',
                                 ],
-                            ]
-                            : [
+                            ];
+                        } elseif ($isMonitoring) {
+                            $menus = [
+                                [
+                                    'route' => 'admin.laporan.petugas',
+                                    'icon' => 'fa-chart-line',
+                                    'label' => 'Laporan Petugas',
+                                    'active' => 'admin.laporan.petugas',
+                                ],
+                            ];
+                        } else {
+                            $menus = [
                                 [
                                     'route' => 'dashboard',
                                     'icon' => 'fa-home',
@@ -145,6 +156,7 @@
                                     'active' => 'penanganan*',
                                 ],
                             ];
+                        }
                     @endphp
 
                     @foreach ($menus as $menu)

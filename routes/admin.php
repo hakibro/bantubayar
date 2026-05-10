@@ -8,6 +8,10 @@ use App\Http\Controllers\Admin\PembayaranSiswaController;
 use App\Http\Controllers\Admin\PenggunaController;
 use App\Http\Controllers\Admin\SiswaController;
 
+Route::middleware(['auth', 'role:admin|monitoring'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/laporan/petugas', [LaporanPetugasController::class, 'index'])->name('laporan.petugas');
+});
+
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -52,6 +56,4 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/{id}', [HomeVisitController::class, 'show'])->name('show');
         Route::get('/{id}/cetak', [HomeVisitController::class, 'cetak'])->name('cetak');
     });
-
-    Route::get('/laporan/petugas', [LaporanPetugasController::class, 'index'])->name('laporan.petugas');
 });

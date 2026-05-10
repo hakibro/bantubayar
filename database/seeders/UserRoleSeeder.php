@@ -2,21 +2,20 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserRoleSeeder extends Seeder
 {
     public function run(): void
     {
-        // Buat role jika belum ada
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $petugasRole = Role::firstOrCreate(['name' => 'petugas']);
         $bendaharaRole = Role::firstOrCreate(['name' => 'bendahara']);
+        Role::firstOrCreate(['name' => 'monitoring']);
 
-        // Buat user admin
         $admin = User::firstOrCreate(
             ['email' => 'admin@example.com'],
             [
@@ -25,7 +24,6 @@ class UserRoleSeeder extends Seeder
             ]
         );
 
-        // Buat user petugas
         $petugas = User::firstOrCreate(
             ['email' => 'petugas@example.com'],
             [
@@ -33,7 +31,7 @@ class UserRoleSeeder extends Seeder
                 'password' => Hash::make('password'),
             ]
         );
-        // Buat user petugas
+
         $bendahara = User::firstOrCreate(
             ['email' => 'bendahara@example.com'],
             [
@@ -42,13 +40,10 @@ class UserRoleSeeder extends Seeder
             ]
         );
 
-
-
-        // Assign role
         $admin->assignRole($adminRole);
         $petugas->assignRole($petugasRole);
         $bendahara->assignRole($bendaharaRole);
 
-        $this->command->info('✅ User admin, petugas, dan bendahara berhasil dibuat!');
+        $this->command->info('Role admin, petugas, bendahara, dan monitoring berhasil dibuat.');
     }
 }

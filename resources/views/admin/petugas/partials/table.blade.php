@@ -28,6 +28,12 @@
                         </span>
                     @endif
 
+                    @if ($item->hasRole('monitoring'))
+                        <span class="px-2 py-1 text-xs rounded bg-purple-100 text-purple-700">
+                            Monitoring
+                        </span>
+                    @endif
+
                 </td>
 
                 <td class="px-4 py-3 text-center">

@@ -11,7 +11,7 @@ class PenggunaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::role(['petugas', 'bendahara'])->withTrashed();
+        $query = User::role(['petugas', 'bendahara', 'monitoring'])->withTrashed();
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -26,7 +26,7 @@ class PenggunaController extends Controller
 
         $petugas = $query->orderBy('name')->paginate(10)->withQueryString();
 
-        $daftarLembaga = User::role(['petugas', 'bendahara'])
+        $daftarLembaga = User::role(['petugas', 'bendahara', 'monitoring'])
             ->select('lembaga')->distinct()->pluck('lembaga')->filter()->values();
 
         // Jika request dari AJAX → return partial table saja
@@ -60,6 +60,7 @@ class PenggunaController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'lembaga' => 'nullable|string|max:255',
+            'role' => 'required|exists:roles,name',
         ]);
 
         $user = User::create([
@@ -97,6 +98,7 @@ class PenggunaController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $petugas->id,
             'password' => 'nullable|string|min:8|confirmed',
             'lembaga' => 'nullable|string|max:255',
+            'role' => 'required|exists:roles,name',
         ]);
 
         $petugas->name = $request->name;
@@ -106,6 +108,7 @@ class PenggunaController extends Controller
         }
         $petugas->lembaga = $request->lembaga;
         $petugas->save();
+        $petugas->syncRoles([$request->role]);
 
         return redirect()->route('admin.petugas.index')->with('success', 'Petugas updated successfully.');
     }
