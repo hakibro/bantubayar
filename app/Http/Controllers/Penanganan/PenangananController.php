@@ -178,6 +178,8 @@ class PenangananController extends Controller
 
         $penanganan = Penanganan::findOrFail($data['id_penanganan']);
         $siswa = Siswa::findOrFail($penanganan->id_siswa);
+        $pembayaranService->refreshStatusLunasSiswa((string) $siswa->idperson);
+        $siswa->load('statusLunas');
 
         if ($data['hasil'] === 'lunas') {
             if (!$siswa->is_lunas) {

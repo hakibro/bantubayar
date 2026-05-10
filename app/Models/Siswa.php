@@ -42,6 +42,15 @@ class Siswa extends Model
         return $this->totalTunggakan();
     }
 
+    public function getIsLunasAttribute(): bool
+    {
+        if (array_key_exists('is_lunas', $this->attributes)) {
+            return (int) $this->attributes['is_lunas'] === 1;
+        }
+
+        return (int) optional($this->statusLunas)->is_lunas === 1;
+    }
+
     public function scopeSearch($query, $keyword)
     {
         return $query->where(function ($q) use ($keyword) {
