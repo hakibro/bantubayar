@@ -13,11 +13,11 @@ class CustomController extends Controller
 {
     public function index(Request $request)
     {
-        $keyword        = $request->get('keyword');
-        $unitFormal     = $request->get('unit_formal');
-        $asramaPondok   = $request->get('asrama_pondok');
+        $keyword = $request->get('keyword');
+        $unitFormal = $request->get('unit_formal');
+        $asramaPondok = $request->get('asrama_pondok');
         $tingkatDiniyah = $request->get('tingkat_diniyah');
-        $jenis          = $request->get('jenis', 'semua');
+        $jenis = $request->get('jenis', 'semua');
 
         $query = Siswa::query()
             ->joinSub($this->paymentIssueSummaryQuery($jenis), 'payment_issue', function ($join) {
@@ -46,8 +46,8 @@ class CustomController extends Controller
 
         $siswaList = $query->orderBy('v_siswa.nama')->paginate(20)->withQueryString();
 
-        $unitFormalList     = Siswa::whereNotNull('unit_formal')->distinct()->orderBy('unit_formal')->pluck('unit_formal');
-        $asramaPondokList   = Siswa::whereNotNull('AsramaPondok')->distinct()->orderBy('AsramaPondok')->pluck('AsramaPondok');
+        $unitFormalList = Siswa::whereNotNull('unit_formal')->distinct()->orderBy('unit_formal')->pluck('unit_formal');
+        $asramaPondokList = Siswa::whereNotNull('AsramaPondok')->distinct()->orderBy('AsramaPondok')->pluck('AsramaPondok');
         $tingkatDiniyahList = Siswa::whereNotNull('TingkatMadin')->distinct()->orderBy('TingkatMadin')->pluck('TingkatMadin');
 
         return view('custom.index', compact(
@@ -78,7 +78,7 @@ class CustomController extends Controller
                 SUM(iis.jml_kredit - iis.jml_debet) AS saldo_selisih,
                 COUNT(*) AS jumlah_item
             ")
-            ->where('iis.idperiode', '<', '20242025')
+            ->whereBetween('iis.idperiode', ['20212022', '20232024'])
             ->where('iis.status', '1')
             ->whereRaw('iis.tgl_jurnal < NOW()')
             ->whereRaw('(iis.jml_kredit - iis.jml_debet) != 0')
@@ -103,7 +103,7 @@ class CustomController extends Controller
             $db = DB::connection('mysql_second');
 
             $namaSiswa = $db->table('daruttaqwa_person.tbl_person')->where('idperson', $idperson)->value('nama');
-            $saldo     = $db->table('duwit.person')->where('idperson', $idperson)->value('saldo');
+            $saldo = $db->table('duwit.person')->where('idperson', $idperson)->value('saldo');
 
             $historyKelas = $db->select("
                 SELECT tk.idperiode, tk.keterangan as kelas, td.title
@@ -134,17 +134,17 @@ class CustomController extends Controller
                     $dataPeriode[$p->idperiode]['info_kelas'] = ['kelas' => 'Tidak Terdata', 'unit' => '-'];
                 }
                 $dataPeriode[$p->idperiode]['list_pembayaran'][] = [
-                    'item'       => $p->judul,
-                    'tagihan'    => $p->jml_kredit,
-                    'bayar'      => $p->jml_debet,
-                    'lunas'      => $p->lunas,
+                    'item' => $p->judul,
+                    'tagihan' => $p->jml_kredit,
+                    'bayar' => $p->jml_debet,
+                    'lunas' => $p->lunas,
                     'tgl_jurnal' => $p->tgl_jurnal,
                 ];
             }
 
             return response()->json([
                 'status' => 'success',
-                'siswa'  => ['idperson' => $idperson, 'nama' => $namaSiswa ?? 'Tidak Ditemukan', 'saldo' => $saldo ?? 0],
+                'siswa' => ['idperson' => $idperson, 'nama' => $namaSiswa ?? 'Tidak Ditemukan', 'saldo' => $saldo ?? 0],
                 'riwayat_per_periode' => $dataPeriode,
             ]);
         } catch (\Exception $e) {
