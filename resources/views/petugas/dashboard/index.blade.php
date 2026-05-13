@@ -7,7 +7,7 @@
         <div class="mb-8 flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800">Halo, {{ Auth::user()->name }} 👋</h1>
-                <p class="text-sm text-slate-500">Berikut adalah ringkasan penanganan Anda hari ini.</p>
+                <p class="text-sm text-slate-500">Berikut ringkasan siswa dan penanganan sesuai periode yang dipilih.</p>
             </div>
             <div class="flex gap-4">
                 <a href="{{ route('penanganan.index') }}"
