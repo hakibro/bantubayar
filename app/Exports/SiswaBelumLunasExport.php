@@ -42,6 +42,23 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
                 'td.title as nama_unit',
                 'iis.jml_kredit',
                 'iis.jml_debet',
+                DB::raw("(
+                    SELECT GROUP_CONCAT(DISTINCT lembaga_history.title ORDER BY lembaga_history.title SEPARATOR ' | ')
+                    FROM daruttaqwa_sisda.tbl_siswa siswa_history
+                    JOIN daruttaqwa_sisda.tbl_kelas kelas_history ON kelas_history.idkelas = siswa_history.idkelas
+                    JOIN daruttaqwa_referensi.tbl_departemen lembaga_history ON lembaga_history.idunit = kelas_history.idunit
+                    WHERE siswa_history.idperson = iis.idperson
+                      AND siswa_history.status = 1
+                      AND kelas_history.idperiode = iis.idperiode
+                ) as lembaga_periode_tagihan"),
+                DB::raw("(
+                    SELECT GROUP_CONCAT(DISTINCT kelas_history.keterangan ORDER BY kelas_history.keterangan SEPARATOR ' | ')
+                    FROM daruttaqwa_sisda.tbl_siswa siswa_history
+                    JOIN daruttaqwa_sisda.tbl_kelas kelas_history ON kelas_history.idkelas = siswa_history.idkelas
+                    WHERE siswa_history.idperson = iis.idperson
+                      AND siswa_history.status = 1
+                      AND kelas_history.idperiode = iis.idperiode
+                ) as kelas_periode_tagihan"),
                 DB::raw('(iis.jml_kredit - iis.jml_debet) as selisih')
             )
             ->where('iis.idperiode', '<', '20242025')
@@ -77,22 +94,24 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
             ->get()
             ->map(function ($item) {
                 return [
-                    'idperson'       => $item->idperson,
-                    'nama'           => $item->nama,
-                    'unit_formal'    => $item->unit_formal,
-                    'kelas_formal'   => $item->kelas_formal,
-                    'asrama_pondok'  => $item->AsramaPondok,
-                    'kamar'          => $item->KamarPondok,
-                    'tingkat_madin'  => $item->TingkatMadin,
-                    'kelas_madin'    => $item->KelasMadin,
-                    'periode'        => $item->idperiode,
-                    'kategori'       => $item->judul,
-                    'unit'           => $item->nama_unit,
-                    'tagihan'        => $item->jml_kredit,
-                    'dibayar'        => $item->jml_debet,
-                    'tunggakan'      => max((int) $item->selisih, 0),
-                    'kelebihan'      => abs(min((int) $item->selisih, 0)),
-                    'status'         => $item->selisih > 0 ? 'Belum Lunas' : 'Kelebihan Bayar',
+                    'idperson' => $item->idperson,
+                    'nama' => $item->nama,
+                    'unit_formal' => $item->unit_formal,
+                    'kelas_formal' => $item->kelas_formal,
+                    'asrama_pondok' => $item->AsramaPondok,
+                    'kamar' => $item->KamarPondok,
+                    'tingkat_madin' => $item->TingkatMadin,
+                    'kelas_madin' => $item->KelasMadin,
+                    'periode' => $item->idperiode,
+                    'lembaga_periode_tagihan' => $item->lembaga_periode_tagihan,
+                    'kelas_periode_tagihan' => $item->kelas_periode_tagihan,
+                    'unit' => $item->nama_unit,
+                    'kategori' => $item->judul,
+                    'tagihan' => $item->jml_kredit,
+                    'dibayar' => $item->jml_debet,
+                    'tunggakan' => max((int) $item->selisih, 0),
+                    'kelebihan' => abs(min((int) $item->selisih, 0)),
+                    'status' => $item->selisih > 0 ? 'Belum Lunas' : 'Kelebihan Bayar',
                 ];
             });
     }
@@ -109,8 +128,10 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
             'Tingkat Madin',
             'Kelas Madin',
             'Periode',
-            'Kategori',
+            'Lembaga Periode Tagihan',
+            'Kelas Periode Tagihan',
             'Unit',
+            'Kategori',
             'Tagihan (Rp)',
             'Dibayar (Rp)',
             'Tunggakan (Rp)',
@@ -122,10 +143,10 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
     public function columnFormats(): array
     {
         return [
-            'L' => '#,##0',
-            'M' => '#,##0',
             'N' => '#,##0',
             'O' => '#,##0',
+            'P' => '#,##0',
+            'Q' => '#,##0',
         ];
     }
 }
