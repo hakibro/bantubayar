@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Custom;
 
+use App\Exports\SiswaBelumLunasExport;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
-use App\Services\PembayaranService;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 
 class CustomController extends Controller
@@ -17,27 +17,38 @@ class CustomController extends Controller
         $unitFormal     = $request->get('unit_formal');
         $asramaPondok   = $request->get('asrama_pondok');
         $tingkatDiniyah = $request->get('tingkat_diniyah');
+        $jenis          = $request->get('jenis', 'semua');
 
-        $query = Siswa::where('is_lunas', false);
+        $query = Siswa::query()
+            ->joinSub($this->paymentIssueSummaryQuery($jenis), 'payment_issue', function ($join) {
+                $join->on('payment_issue.idperson', '=', 'v_siswa.idperson');
+            })
+            ->select(
+                'v_siswa.*',
+                'payment_issue.total_tunggakan',
+                'payment_issue.total_kelebihan',
+                'payment_issue.saldo_selisih',
+                'payment_issue.jumlah_item'
+            );
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
-                $q->where('nama', 'like', "%{$keyword}%")
-                    ->orWhere('idperson', 'like', "%{$keyword}%");
+                $q->where('v_siswa.nama', 'like', "%{$keyword}%")
+                    ->orWhere('v_siswa.idperson', 'like', "%{$keyword}%");
             });
         }
         if ($unitFormal)
-            $query->where('unit_formal', $unitFormal);
+            $query->where('v_siswa.unit_formal', $unitFormal);
         if ($asramaPondok)
-            $query->where('AsramaPondok', $asramaPondok);
+            $query->where('v_siswa.AsramaPondok', $asramaPondok);
         if ($tingkatDiniyah)
-            $query->where('TingkatMadin', $tingkatDiniyah);
+            $query->where('v_siswa.TingkatMadin', $tingkatDiniyah);
 
-        $siswaList = $query->orderBy('nama')->paginate(20)->withQueryString();
+        $siswaList = $query->orderBy('v_siswa.nama')->paginate(20)->withQueryString();
 
-        $unitFormalList     = Siswa::whereNotNull('unit_formal')->distinct()->pluck('unit_formal');
-        $asramaPondokList   = Siswa::whereNotNull('AsramaPondok')->distinct()->pluck('AsramaPondok');
-        $tingkatDiniyahList = Siswa::whereNotNull('TingkatMadin')->distinct()->pluck('TingkatMadin');
+        $unitFormalList     = Siswa::whereNotNull('unit_formal')->distinct()->orderBy('unit_formal')->pluck('unit_formal');
+        $asramaPondokList   = Siswa::whereNotNull('AsramaPondok')->distinct()->orderBy('AsramaPondok')->pluck('AsramaPondok');
+        $tingkatDiniyahList = Siswa::whereNotNull('TingkatMadin')->distinct()->orderBy('TingkatMadin')->pluck('TingkatMadin');
 
         return view('custom.index', compact(
             'siswaList',
@@ -45,10 +56,43 @@ class CustomController extends Controller
             'unitFormal',
             'asramaPondok',
             'tingkatDiniyah',
+            'jenis',
             'unitFormalList',
             'asramaPondokList',
             'tingkatDiniyahList'
         ));
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(new SiswaBelumLunasExport($request), 'siswa-tunggakan-kelebihan-bayar.xlsx');
+    }
+
+    private function paymentIssueSummaryQuery(?string $jenis = 'semua')
+    {
+        $query = DB::table('daruttaqwa_trans.ips_siswa as iis')
+            ->selectRaw("
+                iis.idperson,
+                SUM(CASE WHEN (iis.jml_kredit - iis.jml_debet) > 0 THEN (iis.jml_kredit - iis.jml_debet) ELSE 0 END) AS total_tunggakan,
+                SUM(CASE WHEN (iis.jml_kredit - iis.jml_debet) < 0 THEN ABS(iis.jml_kredit - iis.jml_debet) ELSE 0 END) AS total_kelebihan,
+                SUM(iis.jml_kredit - iis.jml_debet) AS saldo_selisih,
+                COUNT(*) AS jumlah_item
+            ")
+            ->where('iis.idperiode', '<', '20242025')
+            ->where('iis.status', '1')
+            ->whereRaw('iis.tgl_jurnal < NOW()')
+            ->whereRaw('(iis.jml_kredit - iis.jml_debet) != 0')
+            ->groupBy('iis.idperson');
+
+        if ($jenis === 'tunggakan') {
+            $query->havingRaw('total_tunggakan > 0');
+        } elseif ($jenis === 'kelebihan') {
+            $query->havingRaw('total_kelebihan > 0');
+        } else {
+            $query->havingRaw('total_tunggakan > 0 OR total_kelebihan > 0');
+        }
+
+        return $query;
     }
 
     public function tesSiswa()

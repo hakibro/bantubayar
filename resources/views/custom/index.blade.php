@@ -19,11 +19,19 @@
             <div class="p-6">
                 <!-- Form Filter -->
                 <form method="GET" action="{{ route('siswa.belum-lunas.index') }}" class="mb-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                         <div>
                             <label class="block text-gray-700 font-medium mb-1">Cari (Nama / ID)</label>
                             <input type="text" name="keyword" value="{{ request('keyword') }}"
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-1">Jenis</label>
+                            <select name="jenis" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="semua" {{ request('jenis', 'semua') === 'semua' ? 'selected' : '' }}>Semua</option>
+                                <option value="tunggakan" {{ request('jenis') === 'tunggakan' ? 'selected' : '' }}>Belum Lunas</option>
+                                <option value="kelebihan" {{ request('jenis') === 'kelebihan' ? 'selected' : '' }}>Kelebihan Bayar</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-gray-700 font-medium mb-1">Unit Formal</label>
@@ -76,6 +84,9 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas Formal</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asrama</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tingkat Madin</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tunggakan</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Kelebihan</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Item</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Detail</th>
                             </tr>
                         </thead>
@@ -88,8 +99,15 @@
                                     <td class="px-4 py-3 text-sm">{{ $siswa->kelas_formal }}</td>
                                     <td class="px-4 py-3 text-sm">{{ $siswa->AsramaPondok }}</td>
                                     <td class="px-4 py-3 text-sm">{{ $siswa->TingkatMadin }}</td>
+                                    <td class="px-4 py-3 text-sm text-right text-red-600 font-semibold">
+                                        Rp {{ number_format($siswa->total_tunggakan ?? 0, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-right text-green-600 font-semibold">
+                                        Rp {{ number_format($siswa->total_kelebihan ?? 0, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-center">{{ $siswa->jumlah_item ?? 0 }}</td>
                                     <td class="px-4 py-3 text-sm">
-                                        <a href="{{ route('siswa.show', $siswa->idperson) }}"
+                                        <a href="{{ route('admin.siswa.show', $siswa->idperson) }}"
                                             class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded-lg">
                                             Lihat Detail
                                         </a>
@@ -97,7 +115,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-6 text-gray-500">Tidak ada data siswa.</td>
+                                    <td colspan="10" class="text-center py-6 text-gray-500">Tidak ada data siswa.</td>
                                 </tr>
                             @endforelse
                         </tbody>
