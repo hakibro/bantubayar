@@ -61,7 +61,7 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
                 ) as kelas_periode_tagihan"),
                 DB::raw('(iis.jml_kredit - iis.jml_debet) as selisih')
             )
-            ->where('iis.idperiode', '<', '20242025')
+            ->whereBetween('iis.idperiode', ['20212022', '20232024'])
             ->where('iis.status', '1')
             ->whereRaw('iis.tgl_jurnal < NOW()')
             ->whereRaw('(iis.jml_kredit - iis.jml_debet) != 0');
