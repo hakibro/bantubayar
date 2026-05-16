@@ -50,7 +50,8 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
                     WHERE siswa_history.idperson = iis.idperson
                       AND siswa_history.status = 1
                       AND kelas_history.idperiode = iis.idperiode
-                ) as lembaga_periode_tagihan"),
+                      AND kelas_history.idunit NOT IN ('01', '07')
+                ) as periode_unit_formal"),
                 DB::raw("(
                     SELECT GROUP_CONCAT(DISTINCT kelas_history.keterangan ORDER BY kelas_history.keterangan SEPARATOR ' | ')
                     FROM daruttaqwa_sisda.tbl_siswa siswa_history
@@ -58,7 +59,44 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
                     WHERE siswa_history.idperson = iis.idperson
                       AND siswa_history.status = 1
                       AND kelas_history.idperiode = iis.idperiode
-                ) as kelas_periode_tagihan"),
+                      AND kelas_history.idunit NOT IN ('01', '07')
+                ) as periode_kelas_formal"),
+                DB::raw("(
+                    SELECT GROUP_CONCAT(DISTINCT kelas_history.idtingkat ORDER BY kelas_history.idtingkat SEPARATOR ' | ')
+                    FROM daruttaqwa_sisda.tbl_siswa siswa_history
+                    JOIN daruttaqwa_sisda.tbl_kelas kelas_history ON kelas_history.idkelas = siswa_history.idkelas
+                    WHERE siswa_history.idperson = iis.idperson
+                      AND siswa_history.status = 1
+                      AND kelas_history.idperiode = iis.idperiode
+                      AND kelas_history.idunit = '07'
+                ) as periode_asrama_pondok"),
+                DB::raw("(
+                    SELECT GROUP_CONCAT(DISTINCT kelas_history.idrombel ORDER BY kelas_history.idrombel SEPARATOR ' | ')
+                    FROM daruttaqwa_sisda.tbl_siswa siswa_history
+                    JOIN daruttaqwa_sisda.tbl_kelas kelas_history ON kelas_history.idkelas = siswa_history.idkelas
+                    WHERE siswa_history.idperson = iis.idperson
+                      AND siswa_history.status = 1
+                      AND kelas_history.idperiode = iis.idperiode
+                      AND kelas_history.idunit = '07'
+                ) as periode_kamar_pondok"),
+                DB::raw("(
+                    SELECT GROUP_CONCAT(DISTINCT kelas_history.idtingkat ORDER BY kelas_history.idtingkat SEPARATOR ' | ')
+                    FROM daruttaqwa_sisda.tbl_siswa siswa_history
+                    JOIN daruttaqwa_sisda.tbl_kelas kelas_history ON kelas_history.idkelas = siswa_history.idkelas
+                    WHERE siswa_history.idperson = iis.idperson
+                      AND siswa_history.status = 1
+                      AND kelas_history.idperiode = iis.idperiode
+                      AND kelas_history.idunit = '01'
+                ) as periode_tingkat_madin"),
+                DB::raw("(
+                    SELECT GROUP_CONCAT(DISTINCT kelas_history.idrombel ORDER BY kelas_history.idrombel SEPARATOR ' | ')
+                    FROM daruttaqwa_sisda.tbl_siswa siswa_history
+                    JOIN daruttaqwa_sisda.tbl_kelas kelas_history ON kelas_history.idkelas = siswa_history.idkelas
+                    WHERE siswa_history.idperson = iis.idperson
+                      AND siswa_history.status = 1
+                      AND kelas_history.idperiode = iis.idperiode
+                      AND kelas_history.idunit = '01'
+                ) as periode_kelas_madin"),
                 DB::raw('(iis.jml_kredit - iis.jml_debet) as selisih')
             )
             ->whereBetween('iis.idperiode', ['20212022', '20232024'])
@@ -103,8 +141,12 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
                     'tingkat_madin' => $item->TingkatMadin,
                     'kelas_madin' => $item->KelasMadin,
                     'periode' => $item->idperiode,
-                    'lembaga_periode_tagihan' => $item->lembaga_periode_tagihan,
-                    'kelas_periode_tagihan' => $item->kelas_periode_tagihan,
+                    'periode_unit_formal' => $item->periode_unit_formal,
+                    'periode_kelas_formal' => $item->periode_kelas_formal,
+                    'periode_asrama_pondok' => $item->periode_asrama_pondok,
+                    'periode_kamar_pondok' => $item->periode_kamar_pondok,
+                    'periode_tingkat_madin' => $item->periode_tingkat_madin,
+                    'periode_kelas_madin' => $item->periode_kelas_madin,
                     'unit' => $item->nama_unit,
                     'kategori' => $item->judul,
                     'tagihan' => $item->jml_kredit,
@@ -128,8 +170,12 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
             'Tingkat Madin',
             'Kelas Madin',
             'Periode',
-            'Lembaga Periode Tagihan',
-            'Kelas Periode Tagihan',
+            'Periode Unit Formal',
+            'Periode Kelas Formal',
+            'Periode Asrama Pondok',
+            'Periode Kamar Pondok',
+            'Periode Tingkat Madin',
+            'Periode Kelas Madin',
             'Unit',
             'Kategori',
             'Tagihan (Rp)',
@@ -143,10 +189,10 @@ class SiswaBelumLunasExport implements FromCollection, WithHeadings, ShouldAutoS
     public function columnFormats(): array
     {
         return [
-            'N' => '#,##0',
-            'O' => '#,##0',
-            'P' => '#,##0',
-            'Q' => '#,##0',
+            'R' => '#,##0',
+            'S' => '#,##0',
+            'T' => '#,##0',
+            'U' => '#,##0',
         ];
     }
 }
