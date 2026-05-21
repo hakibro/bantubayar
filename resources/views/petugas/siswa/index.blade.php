@@ -62,7 +62,6 @@
             /* Efek sedikit putar agar lebih dinamis */
             transition: transform 0.3s ease;
         }
-
     </style>
 @endpush
 @section('content')
@@ -76,8 +75,8 @@
             '2jt_plus' => '> 2jt',
         ];
         $sortOptions = [
-            '' => 'Nama A-Z',
             'tagihan_desc' => 'Tagihan Terbesar',
+            '' => 'Nama A-Z',
         ];
     @endphp
 
@@ -165,7 +164,8 @@
                                     <select name="sort"
                                         class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none">
                                         @foreach ($sortOptions as $value => $label)
-                                            <option value="{{ $value }}" {{ request('sort') === $value ? 'selected' : '' }}>
+                                            <option value="{{ $value }}"
+                                                {{ request('sort') === $value ? 'selected' : '' }}>
                                                 {{ $label }}
                                             </option>
                                         @endforeach
