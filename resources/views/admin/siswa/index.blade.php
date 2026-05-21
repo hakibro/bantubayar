@@ -61,6 +61,7 @@
         $selectedPeriodePenanganan = request('periode_penanganan', 'bulan_ini');
         $selectedTagihan = request('tagihan_range', '');
         $selectedLembaga = request('lembaga_filter', '');
+        $selectedSort = request('sort', '');
     @endphp
 
     <div class="clean-bg min-h-screen px-4 py-5 md:p-8">
@@ -106,6 +107,7 @@
                 <input id="filterStatusPenanganan" type="hidden" value="{{ $selectedStatusPenanganan }}">
                 <input id="filterPeriodePenanganan" type="hidden" value="{{ $selectedPeriodePenanganan }}">
                 <input id="filterTagihan" type="hidden" value="{{ $selectedTagihan }}">
+                <input id="filterSort" type="hidden" value="{{ $selectedSort }}">
 
                 <div class="mt-4">
                     <div class="mb-2 flex items-center justify-between gap-2">
@@ -202,6 +204,10 @@
                                 {{ $label }}
                             </button>
                         @endforeach
+                        <button type="button" data-sort="tagihan_desc"
+                            class="sortBtn shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition {{ $selectedSort === 'tagihan_desc' ? 'border-slate-700 bg-slate-800 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800' }}">
+                            Tagihan Terbesar
+                        </button>
                     </div>
                 </div>
 
@@ -246,6 +252,7 @@
                 const filterStatusPenanganan = document.getElementById('filterStatusPenanganan');
                 const filterPeriodePenanganan = document.getElementById('filterPeriodePenanganan');
                 const filterTagihan = document.getElementById('filterTagihan');
+                const filterSort = document.getElementById('filterSort');
                 const tableContainer = document.getElementById('tableContainer');
                 const petugasPerformanceContainer = document.getElementById('petugasPerformanceContainer');
                 const tableLoading = document.getElementById('tableLoading');
@@ -320,6 +327,7 @@
                             search: searchInput.value,
                             lembaga_filter: filterLembaga.value,
                             tagihan_range: filterTagihan.value,
+                            sort: filterSort.value,
                             status_penanganan: filterStatusPenanganan.value,
                             periode_penanganan: filterPeriodePenanganan.value,
                         });
@@ -353,6 +361,7 @@
                         search: searchInput.value,
                         lembaga_filter: filterLembaga.value,
                         tagihan_range: filterTagihan.value,
+                        sort: filterSort.value,
                         status_penanganan: filterStatusPenanganan.value,
                         periode_penanganan: filterPeriodePenanganan.value,
                     });
@@ -434,6 +443,22 @@
                             ['border-rose-500', 'bg-rose-600', 'text-white', 'shadow-sm'],
                             ['border-slate-200', 'bg-white', 'text-slate-600']
                         );
+                        fetchSiswa();
+                    });
+                });
+
+                document.querySelectorAll('.sortBtn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const nextSort = filterSort.value === button.dataset.sort ? '' : (button.dataset.sort || '');
+                        filterSort.value = nextSort;
+                        const active = nextSort === button.dataset.sort;
+                        button.classList.toggle('border-slate-700', active);
+                        button.classList.toggle('bg-slate-800', active);
+                        button.classList.toggle('text-white', active);
+                        button.classList.toggle('shadow-sm', active);
+                        button.classList.toggle('border-slate-200', !active);
+                        button.classList.toggle('bg-white', !active);
+                        button.classList.toggle('text-slate-600', !active);
                         fetchSiswa();
                     });
                 });

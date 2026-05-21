@@ -65,7 +65,9 @@ class SiswaController extends Controller
         ];
         $petugasPerformance = $this->getPetugasPerformance($request, $applyPeriod);
 
-        $siswa = $query->orderBy('v_siswa.nama')->paginate(40)->withQueryString();
+        $this->applySort($query, $request->get('sort'));
+
+        $siswa = $query->paginate(40)->withQueryString();
 
         if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return response()->json([
@@ -106,7 +108,20 @@ class SiswaController extends Controller
             }
         }
 
+        $this->applySort($query, $request->get('sort'), 'sl_filter');
+
         return Excel::download(new SiswaTotalTunggakanExport($query), 'data-siswa-total-tunggakan.xlsx');
+    }
+
+    private function applySort(Builder $query, ?string $sort, string $statusAlias = 'sl'): Builder
+    {
+        if ($sort === 'tagihan_desc') {
+            return $query
+                ->orderByRaw("COALESCE({$statusAlias}.total_tunggakan, 0) DESC")
+                ->orderBy('v_siswa.nama');
+        }
+
+        return $query->orderBy('v_siswa.nama');
     }
 
     private function baseSiswaQuery(Request $request): Builder

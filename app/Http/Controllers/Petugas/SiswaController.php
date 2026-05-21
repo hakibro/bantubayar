@@ -148,6 +148,8 @@ class SiswaController extends Controller
             $query->search($request->search);
         }
 
+        $this->applySort($query, $request->get('sort'));
+
         $siswa = $query->paginate(40)->appends($request->query());
 
         if ($request->ajax()) {
@@ -203,7 +205,20 @@ class SiswaController extends Controller
             $query->search($request->search);
         }
 
+        $this->applySort($query, $request->get('sort'));
+
         return Excel::download(new SiswaTotalTunggakanExport($query), 'data-siswa-total-tunggakan.xlsx');
+    }
+
+    private function applySort($query, ?string $sort)
+    {
+        if ($sort === 'tagihan_desc') {
+            return $query
+                ->orderByRaw('COALESCE(sl.total_tunggakan, 0) DESC')
+                ->orderBy('v_siswa.nama');
+        }
+
+        return $query->orderBy('v_siswa.nama');
     }
 
     private function applyTagihanRange($query, ?string $range)

@@ -39,7 +39,7 @@
                     </a>
                 </div>
 
-                <div class="mt-2 grid grid-cols-[1fr_auto] gap-2">
+                <div class="mt-2">
                     <div class="min-w-0 text-[11px] leading-5 text-slate-500 flex gap-2">
                         <p class="truncate"><i
                                 class="fas fa-graduation-cap mr-1.5 text-blue-400"></i>{{ $item->unit_formal ?? '-' }} -
@@ -50,12 +50,6 @@
                         <p class="truncate"><i
                                 class="fas fa-atom mr-1.5 text-orange-500"></i>{{ $item->TingkatMadin ?? '-' }} -
                             {{ $item->KelasMadin ?? '-' }}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Tagihan</p>
-                        <p class="{{ $totalTagihan > 0 ? 'text-rose-600' : 'text-emerald-600' }} text-xs font-black">
-                            Rp {{ number_format($totalTagihan, 0, ',', '.') }}
-                        </p>
                     </div>
                 </div>
 

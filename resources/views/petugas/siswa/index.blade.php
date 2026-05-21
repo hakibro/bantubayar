@@ -75,6 +75,10 @@
             '1jt_2jt' => '1jt - 2jt',
             '2jt_plus' => '> 2jt',
         ];
+        $sortOptions = [
+            '' => 'Nama A-Z',
+            'tagihan_desc' => 'Tagihan Terbesar',
+        ];
     @endphp
 
     <div class="bg-gray-100 p-6 rounded-xl shadow">
@@ -148,12 +152,20 @@
                                 <h4 class="text-[10px] font-bold text-rose-600 uppercase tracking-widest w-16 shrink-0">
                                     Tunggakan</h4>
                                 <div
-                                    class="flex flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-rose-400 transition-colors">
+                                    class="grid flex-1 grid-cols-2 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-rose-400 transition-colors">
                                     <select name="tagihan_range"
-                                        class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none">
+                                        class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none border-r border-gray-100">
                                         @foreach ($tagihanOptions as $value => $label)
                                             <option value="{{ $value }}"
                                                 {{ request('tagihan_range') === $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <select name="sort"
+                                        class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none">
+                                        @foreach ($sortOptions as $value => $label)
+                                            <option value="{{ $value }}" {{ request('sort') === $value ? 'selected' : '' }}>
                                                 {{ $label }}
                                             </option>
                                         @endforeach
