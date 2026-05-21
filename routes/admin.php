@@ -13,6 +13,7 @@ Route::middleware(['auth', 'role:admin|monitoring'])->prefix('admin')->name('adm
 
     // Monitoring Siswa
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
+    Route::get('/siswa/export', [SiswaController::class, 'export'])->name('siswa.export');
     Route::get('/siswa/kelas', [SiswaController::class, 'kelas'])->name('siswa.kelas');
     Route::get('/siswa/kamar', [SiswaController::class, 'kamar'])->name('siswa.kamar');
     Route::get('/siswa/kelasDiniyah', [SiswaController::class, 'kelasDiniyah'])->name('siswa.kelasDiniyah');

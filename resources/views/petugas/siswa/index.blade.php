@@ -66,6 +66,16 @@
     </style>
 @endpush
 @section('content')
+    @php
+        $tagihanOptions = [
+            '' => 'Semua',
+            '0' => 'Rp 0',
+            '1_500k' => 'Rp 1 - 500rb',
+            '500k_1jt' => '500rb - 1jt',
+            '1jt_2jt' => '1jt - 2jt',
+            '2jt_plus' => '> 2jt',
+        ];
+    @endphp
 
     <div class="bg-gray-100 p-6 rounded-xl shadow">
         <form method="GET" id="filterForm" class="sticky top-0 z-20">
@@ -103,7 +113,7 @@
 
                 <div id="filterSection" class="hidden md:block bg-slate-50/50 border-t border-gray-100">
                     <div class="p-4 md:p-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
                             <div class="flex items-center justify-between gap-3">
                                 <h4 class="text-[10px] font-bold text-purple-600 uppercase tracking-widest w-16 shrink-0">
                                     Status</h4>
@@ -131,6 +141,22 @@
                                             {{ request('pembayaran_status') == 'belum_lunas' ? 'selected' : '' }}>Belum
                                             Lunas
                                         </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between gap-3">
+                                <h4 class="text-[10px] font-bold text-rose-600 uppercase tracking-widest w-16 shrink-0">
+                                    Tunggakan</h4>
+                                <div
+                                    class="flex flex-1 shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-rose-400 transition-colors">
+                                    <select name="tagihan_range"
+                                        class="w-full px-2 py-2.5 bg-transparent text-gray-700 text-xs focus:outline-none">
+                                        @foreach ($tagihanOptions as $value => $label)
+                                            <option value="{{ $value }}"
+                                                {{ request('tagihan_range') === $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>

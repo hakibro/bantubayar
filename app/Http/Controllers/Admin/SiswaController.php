@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\SiswaTotalTunggakanExport;
 use App\Http\Controllers\Controller;
 use App\Models\LembagaKelas;
 use App\Models\User;
@@ -11,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SiswaController extends Controller
 {
@@ -76,6 +78,35 @@ class SiswaController extends Controller
         $daftarLembaga = $this->getLembagaOptions();
 
         return view('admin.siswa.index', compact('siswa', 'petugas', 'daftarLembaga', 'statPenanganan', 'petugasPerformance'));
+    }
+
+    public function export(Request $request)
+    {
+        $selectedPeriode = $request->get('periode_penanganan', 'bulan_ini');
+        [$periodStart, $periodEnd] = $this->resolvePeriodePenanganan($selectedPeriode);
+        $applyPeriod = function ($q) use ($periodStart, $periodEnd) {
+            if ($periodStart && $periodEnd) {
+                $q->whereBetween('penanganan.created_at', [$periodStart, $periodEnd]);
+            }
+
+            return $q;
+        };
+
+        $query = $this->baseSiswaQuery($request);
+
+        if ($request->filled('status_penanganan')) {
+            if ($request->status_penanganan === 'sudah_ditangani') {
+                $query->whereHas('penanganan', $applyPeriod);
+            } elseif ($request->status_penanganan === 'belum_ditangani') {
+                $query->whereDoesntHave('penanganan', $applyPeriod);
+            } elseif ($request->status_penanganan === 'aktif') {
+                $query->whereHas('penanganan', fn($q) => $applyPeriod($q)->where('status', '!=', 'selesai'));
+            } elseif ($request->status_penanganan === 'selesai') {
+                $query->whereHas('penanganan', fn($q) => $applyPeriod($q)->where('status', 'selesai'));
+            }
+        }
+
+        return Excel::download(new SiswaTotalTunggakanExport($query), 'data-siswa-total-tunggakan.xlsx');
     }
 
     private function baseSiswaQuery(Request $request): Builder

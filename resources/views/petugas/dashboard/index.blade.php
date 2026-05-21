@@ -1,6 +1,21 @@
 @extends('layouts.dashboard')
 
 @section('content')
+    @php
+        $tagihanOptions = [
+            '' => 'Semua Tunggakan',
+            '0' => 'Rp 0',
+            '1_500k' => 'Rp 1 - 500rb',
+            '500k_1jt' => '500rb - 1jt',
+            '1jt_2jt' => '1jt - 2jt',
+            '2jt_plus' => '> 2jt',
+        ];
+        $selectedTagihan = request('tagihan_range', '');
+        $dashboardRouteName = request()->routeIs('bendahara.*') ? 'bendahara.dashboard' : 'petugas.dashboard';
+        $dashboardExportRouteName = request()->routeIs('bendahara.*')
+            ? 'bendahara.dashboard.siswa.export'
+            : 'petugas.dashboard.siswa.export';
+    @endphp
     <div class="max-w-7xl mx-auto px-4 py-8 bg-slate-50 min-h-screen">
 
         {{-- HEADER --}}
@@ -10,6 +25,10 @@
                 <p class="text-sm text-slate-500">Berikut ringkasan siswa dan penanganan sesuai periode yang dipilih.</p>
             </div>
             <div class="flex gap-4">
+                <a id="downloadSiswaLink" href="{{ route($dashboardExportRouteName, request()->query()) }}"
+                    class="bg-emerald-600 px-4 py-2 rounded-xl text-sm font-semibold text-white hover:bg-emerald-700 transition shadow-sm">
+                    <i class="fas fa-download mr-2"></i> Download Data Siswa
+                </a>
                 <a href="{{ route('penanganan.index') }}"
                     class="bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
                     Lihat Semua Data
@@ -29,6 +48,14 @@
                     </button>
                 @endforeach
             </div>
+            <select id="tagihanRange"
+                class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 shadow-sm focus:border-rose-300 focus:ring-2 focus:ring-rose-200">
+                @foreach ($tagihanOptions as $value => $label)
+                    <option value="{{ $value }}" {{ $selectedTagihan === $value ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                @endforeach
+            </select>
         </div>
 
         {{-- CONTAINER UNTUK AJAX --}}
@@ -157,13 +184,67 @@
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
+            const tagihanRange = document.getElementById('tagihanRange');
+            const downloadSiswaLink = document.getElementById('downloadSiswaLink');
+
+            function dashboardUrl(range) {
+                const params = new URLSearchParams({
+                    range: range,
+                    tagihan_range: tagihanRange.value || ''
+                });
+
+                if (!tagihanRange.value) {
+                    params.delete('tagihan_range');
+                }
+
+                return `{{ route($dashboardRouteName) }}?${params.toString()}`;
+            }
+
+            function updateDownloadLink(range) {
+                const params = new URLSearchParams({
+                    range: range,
+                    tagihan_range: tagihanRange.value || ''
+                });
+
+                if (!tagihanRange.value) {
+                    params.delete('tagihan_range');
+                }
+
+                downloadSiswaLink.href = `{{ route($dashboardExportRouteName) }}?${params.toString()}`;
+            }
+
+            function activeRange() {
+                return document.querySelector('.filter-btn.bg-white')?.getAttribute('data-range') || '{{ $range }}';
+            }
+
+            function fetchDashboard(range = activeRange()) {
+                const container = document.getElementById('dashboard-content');
+
+                container.style.opacity = '0.5';
+                updateDownloadLink(range);
+
+                fetch(dashboardUrl(range), {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => res.text())
+                    .then(html => {
+                        container.innerHTML = html;
+                        container.style.opacity = '1';
+                        window.history.replaceState({}, '', dashboardUrl(range));
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        container.style.opacity = '1';
+                    });
+            }
+
+            tagihanRange.addEventListener('change', () => fetchDashboard());
+
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const range = this.getAttribute('data-range');
-                    const container = document.getElementById('dashboard-content');
-
-                    // UI Feedback: Loading
-                    container.style.opacity = '0.5';
 
                     // Update active state button
                     document.querySelectorAll('.filter-btn').forEach(b => {
@@ -172,21 +253,7 @@
                     });
                     this.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
 
-                    // AJAX Fetch
-                    fetch(`{{ route('petugas.dashboard') }}?range=${range}`, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(res => res.text())
-                        .then(html => {
-                            container.innerHTML = html;
-                            container.style.opacity = '1';
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            container.style.opacity = '1';
-                        });
+                    fetchDashboard(range);
                 });
             });
         </script>

@@ -1,6 +1,6 @@
 @forelse ($siswa as $item)
     @php
-        $isCompleted = $item->is_lunas && $item->penangananLunas();
+        $isCompleted = $item->is_lunas && $item->penangananLunasBulanIni();
     @endphp
     <div id="siswa-{{ $item->id }}"
         class="group {{ $isCompleted ? 'bg-gray-100 border-none shadow-none text-gray-400' : 'bg-white' }} rounded-2xl border border-gray-100 hover:shadow-lg transition-all p-4">

@@ -8,6 +8,7 @@ Route::middleware(['auth', 'role:bendahara'])->prefix('bendahara')->name('bendah
 
     // Dashboard Bendahara
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/siswa/export', [DashboardController::class, 'exportSiswa'])->name('dashboard.siswa.export');
 
     // Data Siswa dan Penanganan
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa');

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Petugas;
 
+use App\Exports\SiswaTotalTunggakanExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Siswa;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardController extends Controller
 {
@@ -28,8 +30,12 @@ class DashboardController extends Controller
             });
         }
 
+        $this->applyTagihanRange($baseSiswaQuery, $request->get('tagihan_range'));
+
         $range = $request->get('range', 'current_week');
         $scope = $user->penanganan()->with('siswa:idperson,nama');
+        $filteredSiswaIds = (clone $baseSiswaQuery)->select('v_siswa.idperson');
+        $scope->whereIn('penanganan.id_siswa', $filteredSiswaIds);
 
         $statsQuery = (clone $scope);
         $startDate = null;
@@ -161,5 +167,62 @@ class DashboardController extends Controller
             'catatanTerbaru',
             'range'
         ));
+    }
+
+    public function exportSiswa(Request $request)
+    {
+        $query = $this->scopedSiswaQuery($request);
+
+        return Excel::download(new SiswaTotalTunggakanExport($query), 'data-siswa-total-tunggakan.xlsx');
+    }
+
+    private function scopedSiswaQuery(Request $request)
+    {
+        $user = auth()->user();
+        $lembagaUser = $user->lembaga;
+
+        $query = Siswa::query();
+
+        if ($user->hasRole('petugas')) {
+            $query->whereHas('petugas', function ($q) {
+                $q->where('users.id', Auth::id());
+            });
+        } else {
+            $query->where(function ($q) use ($lembagaUser) {
+                $q->where('unit_formal', $lembagaUser)
+                    ->orWhere('AsramaPondok', $lembagaUser)
+                    ->orWhere('TingkatMadin', $lembagaUser);
+            });
+        }
+
+        $this->applyTagihanRange($query, $request->get('tagihan_range'));
+
+        return $query;
+    }
+
+    private function applyTagihanRange($query, ?string $range)
+    {
+        if (!$range) {
+            return $query;
+        }
+
+        $query->leftJoin('v_status_lunas_siswa as sl_dashboard_filter', 'sl_dashboard_filter.idperson', '=', 'v_siswa.idperson')
+            ->where(function ($q) use ($range) {
+                $totalTunggakan = 'COALESCE(sl_dashboard_filter.total_tunggakan, 0)';
+
+                if ($range === '0') {
+                    $q->whereRaw("{$totalTunggakan} = 0");
+                } elseif ($range === '1_500k') {
+                    $q->whereRaw("{$totalTunggakan} > 0 AND {$totalTunggakan} <= 500000");
+                } elseif ($range === '500k_1jt') {
+                    $q->whereRaw("{$totalTunggakan} > 500000 AND {$totalTunggakan} <= 1000000");
+                } elseif ($range === '1jt_2jt') {
+                    $q->whereRaw("{$totalTunggakan} > 1000000 AND {$totalTunggakan} <= 2000000");
+                } elseif ($range === '2jt_plus') {
+                    $q->whereRaw("{$totalTunggakan} > 2000000");
+                }
+            });
+
+        return $query;
     }
 }

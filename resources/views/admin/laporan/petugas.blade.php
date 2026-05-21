@@ -12,9 +12,9 @@
         ];
 
         $summaryCards = [
-            ['label' => 'Total Penanganan', 'value' => number_format($totalPenanganan), 'caption' => 'Aktivitas dalam periode ini', 'icon' => 'fa-clipboard-list', 'theme' => 'from-blue-50 to-white border-blue-100 text-blue-600'],
-            ['label' => 'Selesai', 'value' => number_format($selesai), 'caption' => $completionRate . '% terselesaikan', 'icon' => 'fa-circle-check', 'theme' => 'from-emerald-50 to-white border-emerald-100 text-emerald-600'],
-            ['label' => 'Masih Aktif', 'value' => number_format($activeCount), 'caption' => 'Respon dan tindak lanjut', 'icon' => 'fa-headset', 'theme' => 'from-amber-50 to-white border-amber-100 text-amber-600'],
+            ['label' => 'Penanganan Tunggakan', 'value' => number_format($totalTunggakan), 'caption' => $tunggakanSuccessRate . '% berhasil selesai', 'icon' => 'fa-file-invoice-dollar', 'theme' => 'from-rose-50 to-white border-rose-100 text-rose-600'],
+            ['label' => 'Apresiasi Lunas', 'value' => number_format($totalApresiasi), 'caption' => $apresiasiCompletionRate . '% apresiasi selesai', 'icon' => 'fa-hands-clapping', 'theme' => 'from-emerald-50 to-white border-emerald-100 text-emerald-600'],
+            ['label' => 'Total Aktivitas', 'value' => number_format($totalPenanganan), 'caption' => $completionRate . '% semua aktivitas selesai', 'icon' => 'fa-clipboard-list', 'theme' => 'from-blue-50 to-white border-blue-100 text-blue-600'],
             ['label' => 'Rating', 'value' => number_format($ratingAvg, 1) . '/5', 'caption' => number_format($totalDinilai) . ' penilaian masuk', 'icon' => 'fa-star', 'theme' => 'from-violet-50 to-white border-violet-100 text-violet-600'],
         ];
 
@@ -28,7 +28,9 @@
 
         $detailFilters = [
             'all' => 'Semua',
-            'lunas' => 'Lunas',
+            'tunggakan' => 'Tunggakan',
+            'apresiasi' => 'Apresiasi',
+            'lunas' => 'Hasil Lunas',
             'cicilan' => 'Cicilan',
             'isi_saldo' => 'Isi Saldo',
             'hp_tidak_aktif' => 'WA Nonaktif',
@@ -178,18 +180,43 @@
 
         <div class="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
             <section class="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm">
-                <h2 class="text-lg font-bold text-gray-950">Hasil Penanganan</h2>
-                <p class="mb-4 text-sm text-gray-500">Breakdown dari penanganan berstatus selesai.</p>
-                <div class="space-y-3">
-                    @forelse ($hasilBreakdown as $hasil => $count)
-                        @php $percent = round(($count / max($selesai, 1)) * 100, 1); @endphp
-                        <div class="rounded-[1rem] border border-gray-100 p-3">
-                            <div class="flex items-center justify-between gap-3">
-                                <p class="text-sm font-bold text-gray-700">{{ $formatLabel($hasil) }}</p>
-                                <p class="text-sm font-black text-gray-950">{{ number_format($count) }}</p>
-                            </div>
-                            <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
-                                <div class="h-full rounded-full bg-primary" style="width: {{ min($percent, 100) }}%"></div>
+                <h2 class="text-lg font-bold text-gray-950">Jenis Penanganan</h2>
+                <p class="mb-4 text-sm text-gray-500">Tunggakan dipisah dari apresiasi siswa lunas.</p>
+                <div class="mb-4 grid grid-cols-2 gap-3">
+                    <div class="rounded-[1rem] bg-rose-50 p-3">
+                        <p class="text-xs font-black uppercase text-rose-500">Tunggakan</p>
+                        <p class="mt-1 text-2xl font-black text-gray-950">{{ number_format($totalTunggakan) }}</p>
+                        <p class="mt-1 text-xs font-semibold text-rose-600">{{ number_format($selesaiTunggakan) }} selesai, {{ number_format($aktifTunggakan) }} aktif</p>
+                    </div>
+                    <div class="rounded-[1rem] bg-emerald-50 p-3">
+                        <p class="text-xs font-black uppercase text-emerald-500">Apresiasi</p>
+                        <p class="mt-1 text-2xl font-black text-gray-950">{{ number_format($totalApresiasi) }}</p>
+                        <p class="mt-1 text-xs font-semibold text-emerald-600">{{ number_format($selesaiApresiasi) }} selesai, {{ number_format($aktifApresiasi) }} aktif</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    @forelse ($hasilBreakdown as $type => $rows)
+                        @php
+                            $typeTotal = $rows->sum('total');
+                            $typeLabel = $type === 'tunggakan' ? 'Hasil Tunggakan' : 'Hasil Apresiasi';
+                            $typeColor = $type === 'tunggakan' ? 'bg-rose-500' : 'bg-emerald-500';
+                        @endphp
+                        <div>
+                            <p class="mb-2 text-xs font-black uppercase tracking-wide text-gray-400">{{ $typeLabel }}</p>
+                            <div class="space-y-2">
+                                @foreach ($rows as $row)
+                                    @php $percent = round(($row->total / max($typeTotal, 1)) * 100, 1); @endphp
+                                    <div class="rounded-[1rem] border border-gray-100 p-3">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <p class="text-sm font-bold text-gray-700">{{ $formatLabel($row->hasil) }}</p>
+                                            <p class="text-sm font-black text-gray-950">{{ number_format($row->total) }}</p>
+                                        </div>
+                                        <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+                                            <div class="h-full rounded-full {{ $typeColor }}" style="width: {{ min($percent, 100) }}%"></div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     @empty
@@ -201,19 +228,20 @@
             </section>
 
             <section class="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm xl:col-span-2">
-                <h2 class="text-lg font-bold text-gray-950">Performa Petugas</h2>
-                <p class="mb-4 text-sm text-gray-500">Urutan berdasarkan kontribusi aktivitas pada periode ini.</p>
+                <h2 class="text-lg font-bold text-gray-950">Performa Bendahara/Petugas</h2>
+                <p class="mb-4 text-sm text-gray-500">Semua bendahara/petugas tampil, termasuk yang belum punya penanganan pada periode ini.</p>
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-100 text-sm">
                         <thead>
                             <tr class="text-left text-xs font-bold uppercase text-gray-400">
                                 <th class="px-3 py-3">Petugas</th>
-                                <th class="px-3 py-3 text-right">Total</th>
-                                <th class="px-3 py-3 text-right">Selesai</th>
-                                <th class="px-3 py-3 text-right">%</th>
-                                <th class="px-3 py-3 text-right">Aktif</th>
-                                <th class="px-3 py-3 text-right">Keaktifan</th>
+                                <th class="px-3 py-3 text-right">Siswa Terkait</th>
+                                <th class="px-3 py-3 text-right">Tunggakan</th>
+                                <th class="px-3 py-3 text-right">Berhasil</th>
+                                <th class="px-3 py-3 text-right">% Berhasil</th>
+                                <th class="px-3 py-3 text-right">Apresiasi</th>
+                                <th class="px-3 py-3 text-right">Coverage</th>
                                 <th class="px-3 py-3 text-right">Detail</th>
                             </tr>
                         </thead>
@@ -222,17 +250,21 @@
                                 <tr>
                                     <td class="px-3 py-3">
                                         <p class="font-bold text-gray-950">{{ $item->name }}</p>
-                                        <p class="text-xs text-gray-500">{{ $item->lembaga ?: 'Umum' }}</p>
+                                        <p class="text-xs text-gray-500">{{ $item->roles_label ?: 'Petugas' }}{{ $item->lembaga ? ' - ' . $item->lembaga : '' }}</p>
                                     </td>
-                                    <td class="px-3 py-3 text-right font-bold text-gray-950">{{ number_format($item->total) }}</td>
-                                    <td class="px-3 py-3 text-right font-semibold text-emerald-700">{{ number_format($item->selesai) }}</td>
-                                    <td class="px-3 py-3 text-right font-bold text-gray-950">{{ $item->completion_rate }}%</td>
-                                    <td class="px-3 py-3 text-right font-semibold text-amber-700">{{ number_format($item->aktif) }}</td>
+                                    <td class="px-3 py-3 text-right">
+                                        <p class="font-bold text-gray-950">{{ number_format($item->related_siswa) }}</p>
+                                        <p class="text-xs font-semibold text-rose-500">{{ number_format($item->related_tunggakan_siswa) }} tunggakan</p>
+                                    </td>
+                                    <td class="px-3 py-3 text-right font-bold text-rose-700">{{ number_format($item->total_tunggakan) }}</td>
+                                    <td class="px-3 py-3 text-right font-semibold text-emerald-700">{{ number_format($item->selesai_tunggakan) }}</td>
+                                    <td class="px-3 py-3 text-right font-bold text-gray-950">{{ $item->tunggakan_success_rate }}%</td>
+                                    <td class="px-3 py-3 text-right font-semibold text-emerald-700">{{ number_format($item->total_apresiasi) }}</td>
                                     <td class="px-3 py-3 text-right">
                                         <div class="ml-auto w-24">
-                                            <p class="mb-1 text-xs font-bold text-gray-700">{{ $item->activity_share }}%</p>
+                                            <p class="mb-1 text-xs font-bold text-gray-700">{{ $item->tunggakan_coverage_rate }}%</p>
                                             <div class="h-2 overflow-hidden rounded-full bg-gray-100">
-                                                <div class="h-full rounded-full bg-primary" style="width: {{ min($item->activity_share, 100) }}%"></div>
+                                                <div class="h-full rounded-full bg-rose-500" style="width: {{ min($item->tunggakan_coverage_rate, 100) }}%"></div>
                                             </div>
                                         </div>
                                     </td>
@@ -245,7 +277,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-3 py-8 text-center text-gray-500">Belum ada data petugas pada periode ini.</td>
+                                    <td colspan="8" class="px-3 py-8 text-center text-gray-500">Belum ada data petugas pada periode ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -265,20 +297,24 @@
                         <div>
                             <p class="text-xs font-bold uppercase tracking-wide text-primary">Detail Petugas</p>
                             <h2 class="mt-1 text-xl font-black text-gray-950">{{ $item->name }}</h2>
-                            <p class="mt-1 text-sm text-gray-500">{{ $item->lembaga ?: 'Umum' }} - {{ number_format($item->total) }} penanganan</p>
+                            <p class="mt-1 text-sm text-gray-500">{{ $item->roles_label ?: 'Petugas' }}{{ $item->lembaga ? ' - ' . $item->lembaga : '' }} - {{ number_format($item->total) }} penanganan</p>
                         </div>
-                        <div class="grid w-full grid-cols-3 gap-2 md:w-auto md:min-w-[19rem]">
+                        <div class="grid w-full grid-cols-4 gap-2 md:w-auto md:min-w-[24rem]">
                             <div class="rounded-[1rem] bg-gray-50 p-3">
-                                <p class="text-[10px] font-bold uppercase text-gray-400">Total</p>
-                                <p class="mt-1 text-xl font-black text-gray-950">{{ number_format($item->total) }}</p>
+                                <p class="text-[10px] font-bold uppercase text-gray-400">Siswa</p>
+                                <p class="mt-1 text-xl font-black text-gray-950">{{ number_format($item->related_siswa) }}</p>
+                            </div>
+                            <div class="rounded-[1rem] bg-rose-50 p-3">
+                                <p class="text-[10px] font-bold uppercase text-rose-500">Tunggakan</p>
+                                <p class="mt-1 text-xl font-black text-gray-950">{{ number_format($item->total_tunggakan) }}</p>
                             </div>
                             <div class="rounded-[1rem] bg-emerald-50 p-3">
-                                <p class="text-[10px] font-bold uppercase text-emerald-500">Selesai</p>
-                                <p class="mt-1 text-xl font-black text-gray-950">{{ number_format($item->selesai) }}</p>
+                                <p class="text-[10px] font-bold uppercase text-emerald-500">Berhasil</p>
+                                <p class="mt-1 text-xl font-black text-gray-950">{{ $item->tunggakan_success_rate }}%</p>
                             </div>
                             <div class="rounded-[1rem] bg-primary/10 p-3">
-                                <p class="text-[10px] font-bold uppercase text-primary">Aktif</p>
-                                <p class="mt-1 text-xl font-black text-gray-950">{{ $item->activity_share }}%</p>
+                                <p class="text-[10px] font-bold uppercase text-primary">Apresiasi</p>
+                                <p class="mt-1 text-xl font-black text-gray-950">{{ number_format($item->total_apresiasi) }}</p>
                             </div>
                         </div>
                     </div>
@@ -307,9 +343,11 @@
                             @php
                                 $meta = $statusMeta[$detail->status] ?? ['label' => $formatLabel($detail->status), 'class' => 'bg-gray-100 text-gray-700'];
                                 $filterValue = $detail->status === 'selesai' ? ($detail->hasil ?? 'tanpa_hasil') : 'aktif';
+                                $detailType = ((int) ($detail->is_penanganan_tunggakan ?? 0)) === 1 ? 'tunggakan' : 'apresiasi';
                             @endphp
                             <article class="petugas-detail-item rounded-[1.15rem] border border-gray-100"
                                 data-filter="{{ $filterValue }}"
+                                data-type="{{ $detailType }}"
                                 data-hasil="{{ $detail->hasil ?? '' }}"
                                 data-status="{{ $detail->status }}">
                                 <button type="button" onclick="togglePetugasAccordion('detail{{ $detail->id }}')"
@@ -317,10 +355,13 @@
                                     <div class="min-w-0">
                                         <p class="truncate font-bold text-gray-950">{{ $detail->siswa->nama ?? 'Siswa tidak ditemukan' }}</p>
                                         <p class="mt-1 text-xs text-gray-500">
-                                            {{ $detail->created_at?->translatedFormat('d M Y H:i') }} - {{ $formatLabel($detail->hasil ?? ($detail->status === 'selesai' ? '-' : 'aktif')) }}
+                                            {{ $detail->created_at?->translatedFormat('d M Y H:i') }} - {{ $detailType === 'tunggakan' ? 'Penanganan Tunggakan' : 'Apresiasi Lunas' }}
                                         </p>
                                     </div>
                                     <div class="flex shrink-0 items-center gap-2">
+                                        <span class="rounded-full px-3 py-1 text-xs font-bold {{ $detailType === 'tunggakan' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                            {{ $detailType === 'tunggakan' ? 'Tunggakan' : 'Apresiasi' }}
+                                        </span>
                                         <span class="rounded-full px-3 py-1 text-xs font-bold {{ $meta['class'] }}">{{ $meta['label'] }}</span>
                                         <i id="icondetail{{ $detail->id }}" class="fas fa-chevron-down text-xs text-gray-400 transition-transform"></i>
                                     </div>
@@ -328,6 +369,10 @@
 
                                 <div id="detail{{ $detail->id }}" class="hidden border-t border-gray-100 px-4 pb-4 pt-3">
                                     <div class="grid grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <p class="text-xs font-bold uppercase text-gray-400">Tipe</p>
+                                            <p class="mt-1 font-bold text-gray-800">{{ $detailType === 'tunggakan' ? 'Penanganan Tunggakan' : 'Apresiasi Lunas' }}</p>
+                                        </div>
                                         <div>
                                             <p class="text-xs font-bold uppercase text-gray-400">Hasil</p>
                                             <p class="mt-1 font-bold text-gray-800">{{ $formatLabel($detail->hasil ?? '-') }}</p>
@@ -600,7 +645,7 @@
             });
 
             items.forEach(function(item) {
-                const visible = filter === 'all' || item.dataset.filter === filter || item.dataset.hasil === filter;
+                const visible = filter === 'all' || item.dataset.type === filter || item.dataset.filter === filter || item.dataset.hasil === filter;
                 item.classList.toggle('hidden', !visible);
                 if (visible) {
                     visibleCount++;

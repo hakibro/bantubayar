@@ -6,7 +6,7 @@
     <span class="ml-2">
         @php
             $penangananAktif = $item->penangananAktif();
-            $penangananLunasItem = $item->penangananLunas();
+            $penangananLunasItem = $item->penangananLunasBulanIni();
         @endphp
 
         @if ($penangananAktif)

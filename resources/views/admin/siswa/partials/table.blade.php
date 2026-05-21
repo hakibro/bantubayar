@@ -17,8 +17,8 @@
                         </div>
                         <div class="mt-1 flex flex-wrap items-center gap-1.5">
                             <span
-                                class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $item->is_lunas ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
-                                {{ $item->is_lunas ? 'Lunas' : 'Belum Lunas' }}
+                                class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $totalTagihan > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                {{ $totalTagihan > 0 ? 'Rp ' . number_format($totalTagihan, 0, ',', '.') : 'Lunas' }}
                             </span>
                             @if (!$hasPenanganan)
                                 <span
@@ -103,8 +103,8 @@
                         <div class="mt-1 flex items-center gap-2">
                             <span class="font-mono text-xs font-semibold text-slate-400">{{ $item->idperson }}</span>
                             <span
-                                class="rounded-full px-2.5 py-0.5 text-xs font-bold {{ $item->is_lunas ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
-                                {{ $item->is_lunas ? 'Lunas' : 'Belum Lunas' }}
+                                class="rounded-full px-2.5 py-0.5 text-xs font-bold {{ $totalTagihan > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                {{ $totalTagihan > 0 ? 'Rp ' . number_format($totalTagihan, 0, ',', '.') : 'Lunas' }}
                             </span>
                         </div>
                     </td>

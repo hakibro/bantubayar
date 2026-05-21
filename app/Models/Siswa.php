@@ -136,6 +136,15 @@ class Siswa extends Model
             ->first();
     }
 
+    public function penangananLunasBulanIni()
+    {
+        return $this->penanganan()
+            ->where(['status' => 'selesai', 'hasil' => 'lunas'])
+            ->whereBetween('updated_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->latest()
+            ->first();
+    }
+
     public function sedangDitangani(): bool
     {
         return $this->penanganan()
@@ -157,6 +166,8 @@ class Siswa extends Model
 
     public function getStatusPembayaranLabelAttribute(): string
     {
-        return $this->totalTunggakan > 0 ? 'Belum Lunas' : 'Lunas';
+        return $this->totalTunggakan > 0
+            ? 'Rp ' . number_format($this->totalTunggakan, 0, ',', '.')
+            : 'Lunas';
     }
 }

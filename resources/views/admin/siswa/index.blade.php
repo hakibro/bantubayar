@@ -73,12 +73,18 @@
                     </h1>
                     <p class="mt-1 text-sm text-slate-500">Pantau lembaga, penanganan, petugas, dan tagihan siswa.</p>
                 </div>
+                <div class="flex items-center gap-2">
+                    <a id="downloadSiswaLink" href="{{ route('admin.siswa.export', request()->query()) }}"
+                        class="inline-flex rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-700">
+                        <i class="fas fa-download mr-2"></i> Download Data Siswa
+                    </a>
                 @role('admin')
                     <a href="{{ route('admin.assign.index') }}"
                         class="hidden rounded-2xl bg-teal-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-teal-700 md:inline-flex">
                         <i class="fas fa-check mr-2"></i> Assign Siswa
                     </a>
                 @endrole
+                </div>
             </div>
 
             <section class="clean-card mb-5 rounded-3xl p-4">
@@ -246,6 +252,7 @@
                 const tableLoadingText = document.getElementById('tableLoadingText');
                 const resetButton = document.getElementById('resetButton');
                 const clearLembagaButton = document.getElementById('clearLembagaButton');
+                const downloadSiswaLink = document.getElementById('downloadSiswaLink');
                 const loadingMessages = [
                     'Menghitung tagihan siswa...',
                     'Menyempurnakan status pembayaran...',
@@ -319,6 +326,8 @@
                         url = `{{ route('admin.siswa.index') }}?${params.toString()}`;
                     }
 
+                    updateDownloadLink();
+
                     fetch(url, {
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest'
@@ -337,6 +346,22 @@
                             tableLoadingText.textContent = 'Gagal memuat data. Coba lagi sebentar.';
                             setTimeout(hideTableLoading, 1800);
                         });
+                }
+
+                function updateDownloadLink() {
+                    const params = new URLSearchParams({
+                        search: searchInput.value,
+                        lembaga_filter: filterLembaga.value,
+                        tagihan_range: filterTagihan.value,
+                        status_penanganan: filterStatusPenanganan.value,
+                        periode_penanganan: filterPeriodePenanganan.value,
+                    });
+
+                    [...params.keys()].forEach(key => {
+                        if (!params.get(key)) params.delete(key);
+                    });
+
+                    downloadSiswaLink.href = `{{ route('admin.siswa.export') }}?${params.toString()}`;
                 }
 
                 searchInput.addEventListener('keyup', debounce(fetchSiswa, 300));
