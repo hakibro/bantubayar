@@ -110,14 +110,31 @@ class LaporanPetugasController extends Controller
             ->get()
             ->keyBy('id_petugas');
 
+        $performanceResults = (clone $baseQuery)
+            ->where('penanganan.status', 'selesai')
+            ->selectRaw("
+                penanganan.id_petugas,
+                CASE WHEN {$isPenangananTunggakan} THEN 'tunggakan' ELSE 'apresiasi' END as tipe_penanganan,
+                COALESCE(penanganan.hasil, 'tanpa_hasil') as hasil,
+                COUNT(*) as total
+            ")
+            ->groupBy('penanganan.id_petugas')
+            ->groupByRaw("CASE WHEN {$isPenangananTunggakan} THEN 'tunggakan' ELSE 'apresiasi' END")
+            ->groupByRaw("COALESCE(penanganan.hasil, 'tanpa_hasil')")
+            ->get()
+            ->groupBy('id_petugas');
+
         $performanceUsers = $petugasId
             ? $petugasList->where('id', (int) $petugasId)->values()
             : $petugasList;
 
         $petugasPerformance = $performanceUsers
-            ->map(function ($user) use ($performanceStats, $totalPenanganan) {
+            ->map(function ($user) use ($performanceStats, $performanceResults, $totalPenanganan) {
                 $stats = $performanceStats->get($user->id);
                 $related = $this->relatedStudentCounts($user);
+                $results = $performanceResults->get($user->id, collect());
+                $tunggakanResults = $results->where('tipe_penanganan', 'tunggakan');
+                $apresiasiResults = $results->where('tipe_penanganan', 'apresiasi');
 
                 $item = (object) [
                     'id' => $user->id,
@@ -132,13 +149,18 @@ class LaporanPetugasController extends Controller
                     'aktif_tunggakan' => (int) ($stats->aktif_tunggakan ?? 0),
                     'total_apresiasi' => (int) ($stats->total_apresiasi ?? 0),
                     'selesai_apresiasi' => (int) ($stats->selesai_apresiasi ?? 0),
-                    'related_siswa' => $related['total'],
-                    'related_tunggakan_siswa' => $related['tunggakan'],
+                    'related_siswa' => $related['total'] ?? 0,
+                    'related_tunggakan_siswa' => $related['tunggakan'] ?? 0,
+                    'related_lunas_siswa' => $related['lunas'] ?? 0,
+                    'tunggakan_results' => $this->formatResultSummary($tunggakanResults),
+                    'apresiasi_results' => $this->formatResultSummary($apresiasiResults),
                 ];
 
                 $item->completion_rate = round(($item->selesai / max($item->total, 1)) * 100, 1);
                 $item->tunggakan_success_rate = round(($item->selesai_tunggakan / max($item->total_tunggakan, 1)) * 100, 1);
                 $item->tunggakan_coverage_rate = round(($item->total_tunggakan / max($item->related_tunggakan_siswa, 1)) * 100, 1);
+                $item->apresiasi_coverage_rate = round(($item->total_apresiasi / max($item->related_lunas_siswa, 1)) * 100, 1);
+                $item->apresiasi_success_rate = round(($item->selesai_apresiasi / max($item->total_apresiasi, 1)) * 100, 1);
                 $item->student_coverage_rate = round(($item->total / max($item->related_siswa, 1)) * 100, 1);
                 $item->activity_share = round(($item->total / max($totalPenanganan, 1)) * 100, 1);
 
@@ -206,6 +228,18 @@ class LaporanPetugasController extends Controller
         ));
     }
 
+    private function formatResultSummary($rows): string
+    {
+        if ($rows->isEmpty()) {
+            return '-';
+        }
+
+        return $rows
+            ->sortByDesc('total')
+            ->map(fn($row) => str($row->hasil ?: 'tanpa_hasil')->replace('_', ' ')->title() . ': ' . number_format((int) $row->total, 0, ',', '.'))
+            ->implode(' / ');
+    }
+
     private function relatedStudentCounts(User $user): array
     {
         $query = Siswa::query()
@@ -213,7 +247,7 @@ class LaporanPetugasController extends Controller
 
         if ($user->hasRole('bendahara')) {
             if (!$user->lembaga) {
-                return ['total' => 0, 'tunggakan' => 0];
+                return ['total' => 0, 'tunggakan' => 0, 'lunas' => 0];
             }
 
             $query->where(function ($q) use ($user) {
@@ -228,6 +262,7 @@ class LaporanPetugasController extends Controller
         return [
             'total' => (clone $query)->count('v_siswa.idperson'),
             'tunggakan' => (clone $query)->whereRaw('COALESCE(sl_related.total_tunggakan, 0) > 0')->count('v_siswa.idperson'),
+            'lunas' => (clone $query)->whereRaw('COALESCE(sl_related.total_tunggakan, 0) = 0')->count('v_siswa.idperson'),
         ];
     }
 

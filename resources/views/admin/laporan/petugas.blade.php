@@ -236,48 +236,67 @@
                         <thead>
                             <tr class="text-left text-xs font-bold uppercase text-gray-400">
                                 <th class="px-3 py-3">Petugas</th>
-                                <th class="px-3 py-3 text-right">Siswa Terkait</th>
-                                <th class="px-3 py-3 text-right">Tunggakan</th>
-                                <th class="px-3 py-3 text-right">Berhasil</th>
-                                <th class="px-3 py-3 text-right">% Berhasil</th>
-                                <th class="px-3 py-3 text-right">Apresiasi</th>
-                                <th class="px-3 py-3 text-right">Coverage</th>
+                                <th class="px-3 py-3 text-right">Total</th>
+                                <th class="px-3 py-3 text-right">Ditangani</th>
+                                <th class="px-3 py-3 text-right">Berhasil - Persen</th>
                                 <th class="px-3 py-3 text-right">Detail</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse ($petugasPerformance as $item)
-                                <tr>
-                                    <td class="px-3 py-3">
-                                        <p class="font-bold text-gray-950">{{ $item->name }}</p>
-                                        <p class="text-xs text-gray-500">{{ $item->roles_label ?: 'Petugas' }}{{ $item->lembaga ? ' - ' . $item->lembaga : '' }}</p>
+                                <tr class="bg-white">
+                                    <td class="px-3 py-3 align-top">
+                                        <p class="font-black text-gray-950">{{ $item->name }}</p>
+                                        <p class="text-xs font-semibold text-gray-500">{{ $item->roles_label ?: 'Petugas' }}{{ $item->lembaga ? ' - ' . $item->lembaga : '' }}</p>
                                     </td>
-                                    <td class="px-3 py-3 text-right">
-                                        <p class="font-bold text-gray-950">{{ number_format($item->related_siswa) }}</p>
-                                        <p class="text-xs font-semibold text-rose-500">{{ number_format($item->related_tunggakan_siswa) }} tunggakan</p>
+                                    <td class="px-3 py-3 text-right align-top">
+                                        <p class="font-black text-gray-950">{{ number_format($item->related_siswa, 0, ',', '.') }}</p>
+                                        <p class="text-xs text-gray-400">total siswa</p>
                                     </td>
-                                    <td class="px-3 py-3 text-right font-bold text-rose-700">{{ number_format($item->total_tunggakan) }}</td>
-                                    <td class="px-3 py-3 text-right font-semibold text-emerald-700">{{ number_format($item->selesai_tunggakan) }}</td>
-                                    <td class="px-3 py-3 text-right font-bold text-gray-950">{{ $item->tunggakan_success_rate }}%</td>
-                                    <td class="px-3 py-3 text-right font-semibold text-emerald-700">{{ number_format($item->total_apresiasi) }}</td>
-                                    <td class="px-3 py-3 text-right">
-                                        <div class="ml-auto w-24">
-                                            <p class="mb-1 text-xs font-bold text-gray-700">{{ $item->tunggakan_coverage_rate }}%</p>
-                                            <div class="h-2 overflow-hidden rounded-full bg-gray-100">
-                                                <div class="h-full rounded-full bg-rose-500" style="width: {{ min($item->tunggakan_coverage_rate, 100) }}%"></div>
-                                            </div>
-                                        </div>
+                                    <td class="px-3 py-3 text-right align-top">
+                                        <p class="font-black text-gray-950">{{ number_format($item->total, 0, ',', '.') }} <span class="text-xs font-bold text-gray-400">({{ $item->student_coverage_rate }}%)</span></p>
+                                        <p class="text-xs text-gray-400">semua penanganan</p>
                                     </td>
-                                    <td class="px-3 py-3 text-right">
+                                    <td class="px-3 py-3 text-right align-top">
+                                        <p class="font-black text-emerald-700">{{ number_format($item->selesai, 0, ',', '.') }} <span class="text-xs font-bold text-gray-400">({{ $item->completion_rate }}%)</span></p>
+                                        <p class="text-xs text-gray-400">{{ $item->total > $item->selesai ? number_format($item->total - $item->selesai, 0, ',', '.') . ' aktif' : 'selesai semua' }}</p>
+                                    </td>
+                                    <td class="px-3 py-3 text-right align-top">
                                         <button type="button" onclick="openPetugasModal('petugasModal{{ $item->id }}')"
                                             class="inline-flex h-9 items-center justify-center rounded-full bg-gray-100 px-3 text-xs font-bold text-gray-700 transition hover:bg-primary hover:text-white">
                                             Detail
                                         </button>
                                     </td>
                                 </tr>
+                                <tr class="bg-rose-50/35">
+                                    <td class="px-3 py-2 pl-8 text-xs font-black uppercase tracking-wide text-rose-600">- Belum Lunas</td>
+                                    <td class="px-3 py-2 text-right font-bold text-gray-800">{{ number_format($item->related_tunggakan_siswa, 0, ',', '.') }}</td>
+                                    <td class="px-3 py-2 text-right">
+                                        <span class="font-bold text-gray-900">{{ number_format($item->total_tunggakan, 0, ',', '.') }}</span>
+                                        <span class="text-xs font-semibold text-gray-400">({{ $item->tunggakan_coverage_rate }}%)</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-right">
+                                        <p class="font-bold text-emerald-700">{{ $item->tunggakan_results }}</p>
+                                        <p class="text-xs font-semibold text-gray-400">{{ number_format($item->selesai_tunggakan, 0, ',', '.') }} selesai ({{ $item->tunggakan_success_rate }}%)</p>
+                                    </td>
+                                    <td class="px-3 py-2"></td>
+                                </tr>
+                                <tr class="bg-emerald-50/35">
+                                    <td class="px-3 py-2 pl-8 text-xs font-black uppercase tracking-wide text-emerald-600">- Lunas</td>
+                                    <td class="px-3 py-2 text-right font-bold text-gray-800">{{ number_format($item->related_lunas_siswa, 0, ',', '.') }}</td>
+                                    <td class="px-3 py-2 text-right">
+                                        <span class="font-bold text-gray-900">{{ number_format($item->total_apresiasi, 0, ',', '.') }}</span>
+                                        <span class="text-xs font-semibold text-gray-400">({{ $item->apresiasi_coverage_rate }}%)</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-right">
+                                        <p class="font-bold text-emerald-700">{{ $item->apresiasi_results }}</p>
+                                        <p class="text-xs font-semibold text-gray-400">{{ number_format($item->selesai_apresiasi, 0, ',', '.') }} selesai ({{ $item->apresiasi_success_rate }}%)</p>
+                                    </td>
+                                    <td class="px-3 py-2"></td>
+                                </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-3 py-8 text-center text-gray-500">Belum ada data petugas pada periode ini.</td>
+                                    <td colspan="5" class="px-3 py-8 text-center text-gray-500">Belum ada data petugas pada periode ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>
