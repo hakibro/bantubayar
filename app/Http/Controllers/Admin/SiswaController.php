@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\SiswaPembayaranExport;
 use App\Exports\SiswaTotalTunggakanExport;
 use App\Http\Controllers\Controller;
 use App\Models\LembagaKelas;
@@ -111,6 +112,47 @@ class SiswaController extends Controller
         $this->applySort($query, $request->get('sort'), 'sl_filter');
 
         return Excel::download(new SiswaTotalTunggakanExport($query), 'data-siswa-total-tunggakan.xlsx');
+    }
+
+    public function exportPembayaran(Request $request)
+    {
+        $selectedPeriode = $request->get('periode_penanganan', 'bulan_ini');
+        [$periodStart, $periodEnd] = $this->resolvePeriodePenanganan($selectedPeriode);
+        $applyPeriod = function ($q) use ($periodStart, $periodEnd) {
+            if ($periodStart && $periodEnd) {
+                $q->whereBetween('penanganan.created_at', [$periodStart, $periodEnd]);
+            }
+
+            return $q;
+        };
+
+        $query = $this->baseSiswaQuery($request);
+
+        if ($request->filled('status_penanganan')) {
+            if ($request->status_penanganan === 'sudah_ditangani') {
+                $query->whereHas('penanganan', $applyPeriod);
+            } elseif ($request->status_penanganan === 'belum_ditangani') {
+                $query->whereDoesntHave('penanganan', $applyPeriod);
+            } elseif ($request->status_penanganan === 'aktif') {
+                $query->whereHas('penanganan', fn($q) => $applyPeriod($q)->where('status', '!=', 'selesai'));
+            } elseif ($request->status_penanganan === 'selesai') {
+                $query->whereHas('penanganan', fn($q) => $applyPeriod($q)->where('status', 'selesai'));
+            }
+        }
+
+        $this->applySort($query, $request->get('sort'), 'sl_filter');
+
+        $periode = $request->get('periode', 'all');
+
+        if (in_array($periode, PembayaranService::PERIODES, true)) {
+            $periodes = [$periode];
+            $filename = "data-pembayaran-siswa-{$periode}.xlsx";
+        } else {
+            $periodes = PembayaranService::PERIODES;
+            $filename = 'data-pembayaran-siswa-semua-periode.xlsx';
+        }
+
+        return Excel::download(new SiswaPembayaranExport($query, $periodes), $filename);
     }
 
     private function applySort(Builder $query, ?string $sort, string $statusAlias = 'sl'): Builder

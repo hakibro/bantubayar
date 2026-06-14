@@ -57,6 +57,9 @@
             '1jt_2jt' => '1jt - 2jt',
             '2jt_plus' => '> 2jt',
         ];
+        $periodePembayaranOptions = collect(\App\Services\PembayaranService::PERIODES)->mapWithKeys(
+            fn($periode) => [$periode => substr($periode, 0, 4) . '/' . substr($periode, 4, 4)],
+        );
         $selectedStatusPenanganan = request('status_penanganan', '');
         $selectedPeriodePenanganan = request('periode_penanganan', 'bulan_ini');
         $selectedTagihan = request('tagihan_range', '');
@@ -75,16 +78,16 @@
                     <p class="mt-1 text-sm text-slate-500">Pantau lembaga, penanganan, petugas, dan tagihan siswa.</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a id="downloadSiswaLink" href="{{ route('admin.siswa.export', request()->query()) }}"
+                    <button type="button" id="openDownloadPembayaranBtn"
                         class="inline-flex rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-700">
-                        <i class="fas fa-download mr-2"></i> Download Data Siswa
-                    </a>
-                @role('admin')
-                    <a href="{{ route('admin.assign.index') }}"
-                        class="hidden rounded-2xl bg-teal-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-teal-700 md:inline-flex">
-                        <i class="fas fa-check mr-2"></i> Assign Siswa
-                    </a>
-                @endrole
+                        <i class="fas fa-download mr-2"></i> Download Data Pembayaran Siswa
+                    </button>
+                    @role('admin')
+                        <a href="{{ route('admin.assign.index') }}"
+                            class="hidden rounded-2xl bg-teal-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-teal-700 md:inline-flex">
+                            <i class="fas fa-check mr-2"></i> Assign Siswa
+                        </a>
+                    @endrole
                 </div>
             </div>
 
@@ -124,7 +127,8 @@
                                 <option value="">Semua Formal</option>
                                 @foreach ($daftarLembaga['formal'] as $lembaga)
                                     <option value="formal:{{ $lembaga }}"
-                                        {{ $selectedLembaga === "formal:{$lembaga}" ? 'selected' : '' }}>{{ $lembaga }}
+                                        {{ $selectedLembaga === "formal:{$lembaga}" ? 'selected' : '' }}>
+                                        {{ $lembaga }}
                                     </option>
                                 @endforeach
                             </select>
@@ -241,6 +245,53 @@
         </div>
     </div>
 
+    {{-- Modal Download Pembayaran per Periode --}}
+    <div id="downloadPembayaranModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+        <div class="w-full max-w-md mx-4 rounded-3xl bg-white p-6 shadow-2xl">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-lg font-black text-slate-800">Download Data Pembayaran</h2>
+                <button type="button" id="closeDownloadPembayaranModalBtn"
+                    class="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="mb-4 text-sm text-slate-500">Pilih periode untuk mengunduh data pembayaran siswa.</p>
+            <form id="downloadPembayaranForm" method="GET" action="{{ route('admin.siswa.exportPembayaran') }}">
+                <input type="hidden" name="search" id="pembayaranFilterSearch">
+                <input type="hidden" name="lembaga_filter" id="pembayaranFilterLembaga">
+                <input type="hidden" name="tagihan_range" id="pembayaranFilterTagihan">
+                <input type="hidden" name="sort" id="pembayaranFilterSort">
+                <input type="hidden" name="status_penanganan" id="pembayaranFilterStatusPenanganan">
+                <input type="hidden" name="periode_penanganan" id="pembayaranFilterPeriodePenanganan">
+
+                <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">Periode</label>
+                <select name="periode" required
+                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 focus:border-blue-300 focus:ring-2 focus:ring-blue-200">
+                    <option value="all">Semua Periode</option>
+                    @foreach ($periodePembayaranOptions as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                <div class="mt-6 flex justify-end gap-2">
+                    <button type="button" id="cancelDownloadPembayaranBtn"
+                        class="rounded-2xl border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" id="submitDownloadPembayaranBtn"
+                        class="rounded-2xl bg-blue-600 px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-blue-700">
+                        <i class="fas fa-download mr-1"></i> Download
+                    </button>
+                </div>
+            </form>
+
+            <div id="downloadPembayaranLoading" class="hidden py-6 text-center">
+                <i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i>
+                <p id="downloadPembayaranLoadingText" class="mt-3 text-sm font-semibold text-slate-600">
+                    Sedang mengumpulkan data...
+                </p>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script>
             document.addEventListener("DOMContentLoaded", function() {
@@ -259,7 +310,6 @@
                 const tableLoadingText = document.getElementById('tableLoadingText');
                 const resetButton = document.getElementById('resetButton');
                 const clearLembagaButton = document.getElementById('clearLembagaButton');
-                const downloadSiswaLink = document.getElementById('downloadSiswaLink');
                 const loadingMessages = [
                     'Menghitung tagihan siswa...',
                     'Menyempurnakan status pembayaran...',
@@ -334,8 +384,6 @@
                         url = `{{ route('admin.siswa.index') }}?${params.toString()}`;
                     }
 
-                    updateDownloadLink();
-
                     fetch(url, {
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest'
@@ -354,23 +402,6 @@
                             tableLoadingText.textContent = 'Gagal memuat data. Coba lagi sebentar.';
                             setTimeout(hideTableLoading, 1800);
                         });
-                }
-
-                function updateDownloadLink() {
-                    const params = new URLSearchParams({
-                        search: searchInput.value,
-                        lembaga_filter: filterLembaga.value,
-                        tagihan_range: filterTagihan.value,
-                        sort: filterSort.value,
-                        status_penanganan: filterStatusPenanganan.value,
-                        periode_penanganan: filterPeriodePenanganan.value,
-                    });
-
-                    [...params.keys()].forEach(key => {
-                        if (!params.get(key)) params.delete(key);
-                    });
-
-                    downloadSiswaLink.href = `{{ route('admin.siswa.export') }}?${params.toString()}`;
                 }
 
                 searchInput.addEventListener('keyup', debounce(fetchSiswa, 300));
@@ -449,7 +480,8 @@
 
                 document.querySelectorAll('.sortBtn').forEach(button => {
                     button.addEventListener('click', () => {
-                        const nextSort = filterSort.value === button.dataset.sort ? '' : (button.dataset.sort || '');
+                        const nextSort = filterSort.value === button.dataset.sort ? '' : (button.dataset
+                            .sort || '');
                         filterSort.value = nextSort;
                         const active = nextSort === button.dataset.sort;
                         button.classList.toggle('border-slate-700', active);
@@ -461,6 +493,104 @@
                         button.classList.toggle('text-slate-600', !active);
                         fetchSiswa();
                     });
+                });
+
+                // Modal Download Pembayaran per Periode
+                const pembayaranModal = document.getElementById('downloadPembayaranModal');
+                const openPembayaranBtn = document.getElementById('openDownloadPembayaranBtn');
+                const closePembayaranBtn = document.getElementById('closeDownloadPembayaranModalBtn');
+                const cancelPembayaranBtn = document.getElementById('cancelDownloadPembayaranBtn');
+
+                const downloadPembayaranForm = document.getElementById('downloadPembayaranForm');
+                const downloadPembayaranLoading = document.getElementById('downloadPembayaranLoading');
+                const downloadPembayaranLoadingText = document.getElementById('downloadPembayaranLoadingText');
+                const downloadMessages = [
+                    'Sedang mengumpulkan data...',
+                    'Sedang menghitung tagihan dan pembayaran...',
+                    'Sedang mengkonversi menjadi excel...',
+                    'Sedang merapikan data...',
+                    'Mohon Bersabar...'
+                ];
+                let downloadLoadingInterval;
+
+                function showDownloadLoading() {
+                    let index = 0;
+                    downloadPembayaranLoadingText.textContent = downloadMessages[index];
+                    downloadPembayaranForm.classList.add('hidden');
+                    downloadPembayaranLoading.classList.remove('hidden');
+                    clearInterval(downloadLoadingInterval);
+                    downloadLoadingInterval = setInterval(() => {
+                        index = (index + 1) % downloadMessages.length;
+                        downloadPembayaranLoadingText.textContent = downloadMessages[index];
+                    }, 1500);
+                }
+
+                function hideDownloadLoading() {
+                    clearInterval(downloadLoadingInterval);
+                    downloadPembayaranLoading.classList.add('hidden');
+                    downloadPembayaranForm.classList.remove('hidden');
+                }
+
+                function openPembayaranModal() {
+                    document.getElementById('pembayaranFilterSearch').value = searchInput.value;
+                    document.getElementById('pembayaranFilterLembaga').value = filterLembaga.value;
+                    document.getElementById('pembayaranFilterTagihan').value = filterTagihan.value;
+                    document.getElementById('pembayaranFilterSort').value = filterSort.value;
+                    document.getElementById('pembayaranFilterStatusPenanganan').value = filterStatusPenanganan.value;
+                    document.getElementById('pembayaranFilterPeriodePenanganan').value = filterPeriodePenanganan.value;
+                    hideDownloadLoading();
+                    pembayaranModal.classList.remove('hidden');
+                }
+
+                function closePembayaranModal() {
+                    pembayaranModal.classList.add('hidden');
+                    hideDownloadLoading();
+                }
+
+                openPembayaranBtn.addEventListener('click', openPembayaranModal);
+                closePembayaranBtn.addEventListener('click', closePembayaranModal);
+                cancelPembayaranBtn.addEventListener('click', closePembayaranModal);
+                pembayaranModal.addEventListener('click', e => {
+                    if (e.target === pembayaranModal) closePembayaranModal();
+                });
+
+                downloadPembayaranForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    showDownloadLoading();
+
+                    const params = new URLSearchParams(new FormData(downloadPembayaranForm));
+
+                    fetch(`${downloadPembayaranForm.action}?${params.toString()}`)
+                        .then(res => {
+                            if (!res.ok) throw new Error('Gagal mengunduh file.');
+                            const disposition = res.headers.get('Content-Disposition') || '';
+                            const match = disposition.match(/filename="?([^"]+)"?/);
+                            const filename = match ? match[1] : 'data-pembayaran-siswa.xlsx';
+                            return res.blob().then(blob => ({
+                                blob,
+                                filename
+                            }));
+                        })
+                        .then(({
+                            blob,
+                            filename
+                        }) => {
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            window.URL.revokeObjectURL(url);
+                            hideDownloadLoading();
+                            closePembayaranModal();
+                        })
+                        .catch(err => {
+                            console.error('Error downloading file:', err);
+                            downloadPembayaranLoadingText.textContent = 'Gagal mengunduh file. Coba lagi.';
+                            setTimeout(hideDownloadLoading, 2000);
+                        });
                 });
             });
         </script>
