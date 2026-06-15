@@ -64,9 +64,9 @@ class SiswaPembayaranExport implements FromCollection, WithHeadings, ShouldAutoS
                 DB::raw("{$totalSisa} as export_total_sisa"),
                 DB::raw("CASE WHEN {$totalSisa} > 0 THEN 'Belum Lunas' ELSE 'Lunas' END as export_status")
             )
-            ->orderBy('v_siswa.nama')
+            ->orderBy(DB::raw($totalSisa), 'desc')
             ->get()
-            ->map(fn ($item) => [
+            ->map(fn($item) => [
                 'idperson' => $item->idperson,
                 'nama' => $item->nama,
                 'unit_formal' => $item->unit_formal,
