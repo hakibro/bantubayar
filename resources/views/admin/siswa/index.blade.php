@@ -202,15 +202,16 @@
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold text-slate-700">Urutan tagihan terbesar</span>
-                            <button type="button" data-sort="tagihan_desc"
-                                class="sortToggleBtn relative inline-flex h-7 w-20 items-center rounded-full transition-colors {{ $selectedSort === 'tagihan_desc' ? 'bg-indigo-600' : 'bg-slate-300' }}">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wide text-slate-500">OFF</span>
+                                <button type="button" data-sort="tagihan_desc"
+                                    class="sortToggleBtn relative inline-flex h-6 w-12 items-center rounded-full transition-colors {{ $selectedSort === 'tagihan_desc' ? 'bg-indigo-600' : 'bg-slate-300' }}">
+                                    <span
+                                        class="inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform {{ $selectedSort === 'tagihan_desc' ? 'translate-x-6' : 'translate-x-0.5' }}"></span>
+                                </button>
                                 <span
-                                    class="absolute left-1 text-[9px] font-bold uppercase tracking-wide {{ $selectedSort === 'tagihan_desc' ? 'text-indigo-200' : 'text-slate-600' }}">OFF</span>
-                                <span
-                                    class="absolute right-1 text-[9px] font-bold uppercase tracking-wide {{ $selectedSort === 'tagihan_desc' ? 'text-white' : 'text-slate-500' }}">ON</span>
-                                <span
-                                    class="inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform {{ $selectedSort === 'tagihan_desc' ? 'translate-x-[3.25rem]' : 'translate-x-1' }}"></span>
-                            </button>
+                                    class="text-[10px] font-bold uppercase tracking-wide {{ $selectedSort === 'tagihan_desc' ? 'text-indigo-600' : 'text-slate-400' }}">ON</span>
+                            </div>
                         </div>
                     </div>
                     <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
@@ -498,20 +499,15 @@
                         button.classList.toggle('bg-indigo-600', willBeActive);
                         button.classList.toggle('bg-slate-300', !willBeActive);
 
-                        // Toggle OFF text color
-                        const offText = button.querySelector('span:nth-child(1)');
-                        offText.classList.toggle('text-indigo-200', willBeActive);
-                        offText.classList.toggle('text-slate-600', !willBeActive);
-
-                        // Toggle ON text color
-                        const onText = button.querySelector('span:nth-child(2)');
-                        onText.classList.toggle('text-white', willBeActive);
-                        onText.classList.toggle('text-slate-500', !willBeActive);
-
                         // Toggle switch position
-                        const switchCircle = button.querySelector('span:nth-child(3)');
-                        switchCircle.classList.toggle('translate-x-[3.25rem]', willBeActive);
-                        switchCircle.classList.toggle('translate-x-1', !willBeActive);
+                        const switchCircle = button.querySelector('span');
+                        switchCircle.classList.toggle('translate-x-6', willBeActive);
+                        switchCircle.classList.toggle('translate-x-0.5', !willBeActive);
+
+                        // Toggle ON text color (sibling span)
+                        const onText = button.parentElement.querySelector('span:last-child');
+                        onText.classList.toggle('text-indigo-600', willBeActive);
+                        onText.classList.toggle('text-slate-400', !willBeActive);
 
                         fetchSiswa();
                     });
