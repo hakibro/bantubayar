@@ -214,7 +214,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    <div class="flex flex-wrap gap-2 pb-1">
                         @foreach ($tagihanOptions as $value => $label)
                             <button type="button" data-tagihan-range="{{ $value }}"
                                 class="tagihanRangeBtn shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition {{ $selectedTagihan === $value ? 'border-rose-500 bg-rose-600 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700' }}">
