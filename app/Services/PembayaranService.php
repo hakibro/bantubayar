@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 class PembayaranService
 {
-    const PERIODES = ['20212022', '20222023', '20232024', '20242025', '20252026'];
+    const PERIODES = ['20212022', '20222023', '20232024', '20242025', '20252026', '20262027'];
 
     public function refreshStatusLunasSiswa(string $idperson): void
     {
