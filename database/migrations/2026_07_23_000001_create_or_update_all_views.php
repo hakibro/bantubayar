@@ -9,17 +9,22 @@ return new class extends Migration {
         // 1. v_lembaga_kelas — dasar untuk v_siswa
         DB::statement("
             CREATE OR REPLACE VIEW v_lembaga_kelas AS
-            SELECT
-                lembaga.idunit,
-                lembaga.title,
-                kelas.idkelas,
-                kelas.idtingkat,
-                kelas.idjurusan,
-                kelas.idrombel,
-                kelas.keterangan
-            FROM daruttaqwa_sisda.tbl_kelas kelas
-            JOIN daruttaqwa_referensi.tbl_departemen lembaga ON kelas.idunit = lembaga.idunit
-            WHERE kelas.idperiode = '20262027'
+SELECT
+    lembaga.idunit,
+    lembaga.title,
+    kelas.idkelas,
+    kelas.idtingkat,
+    kelas.idjurusan,
+    kelas.idrombel,
+    kelas.keterangan
+FROM daruttaqwa_sisda.tbl_kelas kelas
+JOIN daruttaqwa_referensi.tbl_departemen lembaga ON kelas.idunit = lembaga.idunit
+WHERE kelas.idperiode = (
+    SELECT idperiode 
+    FROM daruttaqwa_referensi.tbl_periode 
+    WHERE aktif = 1 
+    LIMIT 1
+)
         ");
 
         // 2. v_siswa_phone
@@ -113,7 +118,7 @@ return new class extends Migration {
                     ELSE 1
                 END AS is_lunas
             FROM daruttaqwa_trans.ips_siswa iis
-            WHERE iis.idperiode IN ('20212022', '20222023', '20232024', '20242025', '20252026', '20262027')
+            WHERE iis.idperiode >= '20212022'
               AND iis.status = '1'
               AND iis.tgl_jurnal < NOW()
             GROUP BY iis.idperson
