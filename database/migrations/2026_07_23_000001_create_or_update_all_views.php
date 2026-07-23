@@ -19,7 +19,7 @@ return new class extends Migration {
                 kelas.keterangan
             FROM daruttaqwa_sisda.tbl_kelas kelas
             JOIN daruttaqwa_referensi.tbl_departemen lembaga ON kelas.idunit = lembaga.idunit
-            WHERE kelas.idperiode = '20252026'
+            WHERE kelas.idperiode = '20262027'
         ");
 
         // 2. v_siswa_phone
@@ -113,7 +113,7 @@ return new class extends Migration {
                     ELSE 1
                 END AS is_lunas
             FROM daruttaqwa_trans.ips_siswa iis
-            WHERE iis.idperiode IN ('20212022', '20222023', '20232024', '20242025', '20252026')
+            WHERE iis.idperiode IN ('20212022', '20222023', '20232024', '20242025', '20252026', '20262027')
               AND iis.status = '1'
               AND iis.tgl_jurnal < NOW()
             GROUP BY iis.idperson
