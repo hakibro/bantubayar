@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\DB;
 
 class PembayaranService
 {
-    const PERIODES = ['20212022', '20222023', '20232024', '20242025', '20252026', '20262027'];
-
     public function refreshStatusLunasSiswa(string $idperson): void
     {
         $summary = DB::selectOne("
@@ -22,7 +20,7 @@ class PembayaranService
                 ), 0) AS total_tunggakan
             FROM daruttaqwa_trans.ips_siswa iis
             WHERE iis.idperson = ?
-              AND iis.idperiode IN ('20212022', '20222023', '20232024', '20242025', '20252026')
+              AND iis.idperiode >= '20212022'
               AND iis.status = '1'
               AND iis.tgl_jurnal < NOW()
         ", [$idperson, $idperson]);
@@ -61,7 +59,7 @@ class PembayaranService
                         END
                     ), 0) AS total_tunggakan
                 FROM daruttaqwa_trans.ips_siswa iis
-                WHERE iis.idperiode IN ('20212022', '20222023', '20232024', '20242025', '20252026')
+                WHERE iis.idperiode >= '20212022'
                   AND iis.status = '1'
                   AND iis.tgl_jurnal < NOW()
                 GROUP BY iis.idperson
@@ -83,11 +81,8 @@ class PembayaranService
     /**
      * Seluruh tagihan siswa (lunas maupun belum) lintas periode.
      */
-    public function getDetailPembayaran(string $idperson, ?array $periodes = null): array
+    public function getDetailPembayaran(string $idperson): array
     {
-        $periodes = $periodes ?? self::PERIODES;
-        $placeholders = implode(',', array_fill(0, count($periodes), '?'));
-
         return DB::select("
             SELECT
                 iis.idperson, iis.idperiode,
@@ -105,21 +100,18 @@ class PembayaranService
             JOIN daruttaqwa_trans.tbl_ips_main tim ON tim.ipsmain = tiu.ipsmain
             JOIN daruttaqwa_referensi.tbl_departemen td ON td.idunit = iis.idunit
             WHERE iis.idperson = ?
-              AND iis.idperiode IN ({$placeholders})
+              AND iis.idperiode >= '20212022'
               AND iis.status = '1'
               AND iis.tgl_jurnal < NOW()
             ORDER BY lunas DESC, idperiode DESC, tgl_jurnal, judul ASC
-        ", array_merge([$idperson], $periodes));
+        ", [$idperson]);
     }
 
     /**
      * Hanya item yang masih punya sisa tagihan.
      */
-    public function getDetailBelumLunas(string $idperson, ?array $periodes = null): array
+    public function getDetailBelumLunas(string $idperson): array
     {
-        $periodes = $periodes ?? self::PERIODES;
-        $placeholders = implode(',', array_fill(0, count($periodes), '?'));
-
         return DB::select("
             SELECT
                 iis.idperson, iis.idperiode,
@@ -137,22 +129,19 @@ class PembayaranService
             JOIN daruttaqwa_trans.tbl_ips_main tim ON tim.ipsmain = tiu.ipsmain
             JOIN daruttaqwa_referensi.tbl_departemen td ON td.idunit = iis.idunit
             WHERE iis.idperson = ?
-              AND iis.idperiode IN ({$placeholders})
+              AND iis.idperiode >= '20212022'
               AND iis.status = '1'
               AND iis.tgl_jurnal < NOW()
               AND (iis.jml_kredit - iis.jml_debet) > 0
             ORDER BY lunas DESC, idperiode DESC, tgl_jurnal, judul ASC
-        ", array_merge([$idperson], $periodes));
+        ", [$idperson]);
     }
 
     /**
      * Ringkasan total kredit/debet per periode.
      */
-    public function getSummaryPerPeriode(string $idperson, ?array $periodes = null): array
+    public function getSummaryPerPeriode(string $idperson): array
     {
-        $periodes = $periodes ?? self::PERIODES;
-        $placeholders = implode(',', array_fill(0, count($periodes), '?'));
-
         return DB::select("
             SELECT
                 person.idperson,
@@ -175,22 +164,19 @@ class PembayaranService
             FROM daruttaqwa_trans.ips_siswa iis
             JOIN daruttaqwa_person.tbl_person person ON person.idperson = iis.idperson
             WHERE iis.idperson = ?
-              AND iis.idperiode IN ({$placeholders})
+              AND iis.idperiode >= '20212022'
               AND iis.status = '1'
               AND iis.tgl_jurnal < NOW()
             GROUP BY person.idperson, person.nama, iis.idperiode
             ORDER BY iis.idperiode ASC
-        ", array_merge([$idperson], $periodes));
+        ", [$idperson]);
     }
 
     /**
      * Total rupiah kurang bayar siswa saat ini.
      */
-    public function getTotalBelumLunas(string $idperson, ?array $periodes = null): int
+    public function getTotalBelumLunas(string $idperson): int
     {
-        $periodes = $periodes ?? self::PERIODES;
-        $placeholders = implode(',', array_fill(0, count($periodes), '?'));
-
         $summary = DB::selectOne("
             SELECT
                 COALESCE(SUM(
@@ -202,10 +188,10 @@ class PembayaranService
                 ), 0) AS total_tunggakan
             FROM daruttaqwa_trans.ips_siswa iis
             WHERE iis.idperson = ?
-              AND iis.idperiode IN ({$placeholders})
+              AND iis.idperiode >= '20212022'
               AND iis.status = '1'
               AND iis.tgl_jurnal < NOW()
-        ", array_merge([$idperson], $periodes));
+        ", [$idperson]);
 
         return (int) ($summary->total_tunggakan ?? 0);
     }
