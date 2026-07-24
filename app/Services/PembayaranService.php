@@ -6,6 +6,17 @@ use Illuminate\Support\Facades\DB;
 
 class PembayaranService
 {
+    /** @return array<int, string> */
+    public static function getPeriodes(): array
+    {
+        return DB::table('daruttaqwa_referensi.tbl_periode')
+            ->select('idperiode')
+            ->where('idperiode', '>=', '20212022')
+            ->orderBy('idperiode')
+            ->pluck('idperiode')
+            ->all();
+    }
+
     public function refreshStatusLunasSiswa(string $idperson): void
     {
         $summary = DB::selectOne("

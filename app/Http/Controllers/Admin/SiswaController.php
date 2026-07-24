@@ -143,12 +143,12 @@ class SiswaController extends Controller
         $this->applySort($query, $request->get('sort'), 'sl_filter');
 
         $periode = $request->get('periode', 'all');
+        $periodes = PembayaranService::getPeriodes();
 
-        if (in_array($periode, PembayaranService::PERIODES, true)) {
+        if (in_array($periode, $periodes, true)) {
             $periodes = [$periode];
             $filename = "data-pembayaran-siswa-{$periode}.xlsx";
         } else {
-            $periodes = PembayaranService::PERIODES;
             $filename = 'data-pembayaran-siswa-semua-periode.xlsx';
         }
 

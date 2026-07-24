@@ -57,7 +57,7 @@
             '1jt_2jt' => '1jt - 2jt',
             '2jt_plus' => '> 2jt',
         ];
-        $periodePembayaranOptions = collect(\App\Services\PembayaranService::PERIODES)->mapWithKeys(
+        $periodePembayaranOptions = collect(\App\Services\PembayaranService::getPeriodes())->mapWithKeys(
             fn($periode) => [$periode => substr($periode, 0, 4) . '/' . substr($periode, 4, 4)],
         );
         $selectedStatusPenanganan = request('status_penanganan', '');
