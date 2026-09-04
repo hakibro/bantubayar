@@ -31,10 +31,16 @@
                             @endif
                             <h1 class="text-xl md:text-3xl font-bold flex flex-col   items-start gap-2 mb-4">
                                 {{ $siswa->nama }}
-                                <button onclick="openModal('detail')"
-                                    class="text-primary text-sm font-normal hover:underline flex items-center  gap-1">
-                                    <i class="fas fa-info-circle"></i> Info Siswa dan Pembayaran
-                                </button>
+                                <span class="inline-flex items-center gap-2">
+                                    @if (!empty($isAlumni))
+                                        <span
+                                            class="text-[9px] font-bold uppercase tracking-wider bg-gray-800 text-white px-2 py-0.5 rounded-full">Alumni</span>
+                                    @endif
+                                    <button onclick="openModal('detail')"
+                                        class="text-primary text-sm font-normal hover:underline flex items-center  gap-1">
+                                        <i class="fas fa-info-circle"></i> Info Siswa dan Pembayaran
+                                    </button>
+                                </span>
                             </h1>
                             <p class="text-sm text-gray-500 font-medium mb-1">Total Tunggakan</p>
 

@@ -28,6 +28,7 @@ require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
 require __DIR__ . '/petugas.php';
 require __DIR__ . '/penanganan.php';
+require __DIR__ . '/alumni.php';
 require __DIR__ . '/custom.php';
 
 

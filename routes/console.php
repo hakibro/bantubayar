@@ -26,6 +26,8 @@ Artisan::command('pembayaran:refresh-status-lunas {idperson?}', function () {
     $this->info("Status pembayaran {$total} siswa berhasil diperbarui.");
 })->purpose('Refresh cache status lunas dan total tunggakan siswa');
 
+$syncIntervalHours = (int) (App\Models\Setting::get('sync_interval_hours', 6));
+
 Schedule::command('pembayaran:refresh-status-lunas')
-    ->everySixHours()
+    ->cron("0 */{$syncIntervalHours} * * *")
     ->withoutOverlapping();

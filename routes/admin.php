@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\HomeVisitController;
 use App\Http\Controllers\Admin\LaporanPetugasController;
 use App\Http\Controllers\Admin\PembayaranSiswaController;
 use App\Http\Controllers\Admin\PenggunaController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SiswaController;
 
 Route::middleware(['auth', 'role:admin|monitoring'])->prefix('admin')->name('admin.')->group(function () {
@@ -57,5 +58,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::post('/', [HomeVisitController::class, 'store'])->name('store');
         Route::get('/{id}', [HomeVisitController::class, 'show'])->name('show');
         Route::get('/{id}/cetak', [HomeVisitController::class, 'cetak'])->name('cetak');
+    });
+
+    // Pengaturan (Sinkronisasi Pembayaran)
+    Route::prefix('pengaturan')->name('pengaturan.')->group(function () {
+        Route::get('', [SettingController::class, 'index'])->name('index');
+        Route::post('/sinkronisasi/interval', [SettingController::class, 'updateInterval'])->name('updateInterval');
+        Route::post('/sinkronisasi/refresh', [SettingController::class, 'refresh'])->name('refresh');
+        Route::get('/sinkronisasi/status', [SettingController::class, 'status'])->name('status');
     });
 });

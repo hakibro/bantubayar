@@ -127,6 +127,12 @@
                                     'label' => 'Laporan Petugas',
                                     'active' => 'admin.laporan.petugas',
                                 ],
+                                [
+                                    'route' => 'admin.pengaturan.index',
+                                    'icon' => 'fa-gear',
+                                    'label' => 'Pengaturan',
+                                    'active' => 'admin.pengaturan*',
+                                ],
                             ];
                         } elseif ($isMonitoring) {
                             $menus = [
@@ -162,6 +168,12 @@
                                     'icon' => 'fa-location-arrow',
                                     'label' => 'Proses',
                                     'active' => 'penanganan*',
+                                ],
+                                [
+                                    'route' => 'alumni.index',
+                                    'icon' => 'fa-user-graduate',
+                                    'label' => 'Alumni',
+                                    'active' => 'alumni*',
                                 ],
                             ];
                         }

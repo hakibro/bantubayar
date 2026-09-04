@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Penanganan;
 use App\Http\Controllers\Controller;
 use App\Models\Penanganan;
 use App\Models\PenangananKesanggupan;
-use App\Models\Siswa;
 use App\Services\PembayaranService;
 use App\Services\SiswaService;
 use Illuminate\Http\Request;
@@ -17,7 +16,9 @@ class PenangananController extends Controller
 {
     public function index(Request $request)
     {
-        $query = auth()->user()->penanganan()->with('siswa');
+        // Hanya tampilkan penanganan yang siswanya masih aktif (ada di v_siswa).
+        // Penanganan terhadap alumni ditangani lewat menu Alumni.
+        $query = auth()->user()->penanganan()->with('siswa')->whereHas('siswa');
 
         if ($request->filled('search')) {
             $query->whereHas('siswa', function ($q) use ($request) {
@@ -67,7 +68,12 @@ class PenangananController extends Controller
 
     public function show(Request $request, PembayaranService $pembayaranService, $id_siswa)
     {
-        $siswa = Siswa::findOrFail($id_siswa);
+        $siswa = Penanganan::resolveSiswa($id_siswa);
+
+        if (!$siswa) {
+            abort(404);
+        }
+
         $pembayaranService->refreshStatusLunasSiswa((string) $siswa->idperson);
 
         if (auth()->check()) {
@@ -123,13 +129,21 @@ class PenangananController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'id_siswa' => 'required|exists:v_siswa,idperson',
+            'id_siswa' => 'required',
             'jenis_penanganan' => 'required|string',
             'catatan' => 'nullable|string',
         ]);
 
         $result = \DB::transaction(function () use ($data) {
-            $siswa = Siswa::findOrFail($data['id_siswa']);
+            $siswa = Penanganan::resolveSiswa($data['id_siswa']);
+
+            if (!$siswa) {
+                return [
+                    'success' => false,
+                    'message' => 'Siswa tidak ditemukan.',
+                ];
+            }
+
             $penanganan = Penanganan::getOrCreateForSiswa($siswa);
 
             if ($penanganan->id_petugas !== Auth::id()) {
@@ -177,7 +191,15 @@ class PenangananController extends Controller
         ]);
 
         $penanganan = Penanganan::findOrFail($data['id_penanganan']);
-        $siswa = Siswa::findOrFail($penanganan->id_siswa);
+        $siswa = Penanganan::resolveSiswa($penanganan->id_siswa);
+
+        if (!$siswa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siswa tidak ditemukan.',
+            ], 404);
+        }
+
         $pembayaranService->refreshStatusLunasSiswa((string) $siswa->idperson);
         $siswa->load('statusLunas');
 
@@ -256,7 +278,14 @@ class PenangananController extends Controller
             'phone' => 'required|string',
         ]);
 
-        $siswa = Siswa::findOrFail($data['id_siswa']);
+        $siswa = Penanganan::resolveSiswa($data['id_siswa']);
+
+        if (!$siswa) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siswa tidak ditemukan.',
+            ], 404);
+        }
 
         \DB::transaction(function () use ($data, $siswa) {
             $penanganan = Penanganan::getOrCreateForSiswa($siswa);

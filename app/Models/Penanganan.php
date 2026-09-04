@@ -70,8 +70,9 @@ class Penanganan extends Model
     /**
      * Ambil penanganan aktif atau buat baru.
      * jenis_pembayaran diisi dari query langsung ke daruttaqwa_trans.
+     * Menerima Siswa (aktif) maupun Alumni (lulus) — keduanya punya idperson & saldo.
      */
-    public static function getOrCreateForSiswa(Siswa $siswa): self
+    public static function getOrCreateForSiswa($siswa): self
     {
         $penanganan = self::where('id_siswa', $siswa->idperson)
             ->latest()
@@ -91,6 +92,17 @@ class Penanganan extends Model
         }
 
         return $penanganan;
+    }
+
+    /**
+     * Resolve pemilik penanganan berdasarkan idperson, mencakup siswa aktif
+     * maupun alumni yang sudah lulus.
+     */
+    public static function resolveSiswa($idperson)
+    {
+        $siswa = Siswa::find($idperson);
+
+        return $siswa ?: Alumni::find($idperson);
     }
 
     public function addHistory(string $jenis, ?string $catatan = null): void
