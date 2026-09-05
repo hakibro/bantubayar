@@ -75,6 +75,11 @@ class Alumni extends Model
         return $this->hasMany(Penanganan::class, 'id_siswa', 'idperson');
     }
 
+    public function latestPenanganan()
+    {
+        return $this->hasOne(Penanganan::class, 'id_siswa', 'idperson')->latestOfMany();
+    }
+
     public function penangananSelesai()
     {
         return $this->penanganan()

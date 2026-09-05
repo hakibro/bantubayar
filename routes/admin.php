@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AlumniController;
 use App\Http\Controllers\Admin\AssignController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeVisitController;
@@ -48,6 +49,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Pembayaran Siswa
     Route::get('/pembayaran-siswa', [PembayaranSiswaController::class, 'index'])->name('pembayaran-siswa.index');
+
+    // Alumni
+    Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
+    Route::get('/alumni/export', [AlumniController::class, 'export'])->name('alumni.export');
+    Route::get('/alumni/{idperson}/details', [AlumniController::class, 'show'])->name('alumni.show');
 
     // Home Visit
     Route::prefix('home-visit')->name('home-visit.')->group(function () {

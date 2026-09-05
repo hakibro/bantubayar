@@ -72,191 +72,198 @@
         @endphp
 
         @if ($authUser)
-        <nav
-            class="fixed z-40 bg-white border-gray-100 
+            <nav
+                class="fixed z-40 bg-white border-gray-100 
             md:inset-y-0 md:left-0 md:w-64 md:border-r 
             bottom-0 w-full border-t 
             md:flex md:flex-col justify-between shadow-2xl md:shadow-none">
 
-            <div class="w-full">
-                <div class="hidden md:flex p-8 items-center gap-3 text-primary text-2xl font-bold italic">
-                    <i class="fas fa-credit-card"></i> {{ config('app.name', 'App') }}
-                </div>
+                <div class="w-full">
+                    <div class="hidden md:flex p-8 items-center gap-3 text-primary text-2xl font-bold italic">
+                        <i class="fas fa-credit-card"></i> {{ config('app.name', 'App') }}
+                    </div>
 
-                <div
-                    class="flex md:flex-col flex-row 
+                    <div
+                        class="flex md:flex-col flex-row 
                     md:space-y-2 md:px-4 
                     justify-around md:justify-start w-full 
                     px-2 py-3 md:py-4
                     text-gray-500 text-[10px] md:text-base">
 
-                    @php
-                        // Logika Role-Based Menu untuk mempersingkat kode
-                        $isAdmin = $authUser->hasRole('admin');
-                        $isMonitoring = $authUser->hasRole('monitoring');
-                        if ($isAdmin) {
-                            $menus = [
-                                [
-                                    'route' => 'dashboard',
-                                    'icon' => 'fa-home',
-                                    'label' => 'Beranda',
-                                    'active' => 'dashboard',
-                                ],
-                                [
-                                    'route' => 'admin.petugas.index',
-                                    'icon' => 'fa-user-shield',
-                                    'label' => 'Petugas',
-                                    'active' => 'admin.petugas*',
-                                ],
-                                [
-                                    'route' => 'admin.siswa.index',
-                                    'icon' => 'fa-user-graduate',
-                                    'label' => 'Siswa',
-                                    'active' => 'admin.siswa*',
-                                ],
+                        @php
+                            // Logika Role-Based Menu untuk mempersingkat kode
+                            $isAdmin = $authUser->hasRole('admin');
+                            $isMonitoring = $authUser->hasRole('monitoring');
+                            if ($isAdmin) {
+                                $menus = [
+                                    [
+                                        'route' => 'dashboard',
+                                        'icon' => 'fa-home',
+                                        'label' => 'Beranda',
+                                        'active' => 'dashboard',
+                                    ],
+                                    [
+                                        'route' => 'admin.petugas.index',
+                                        'icon' => 'fa-user-shield',
+                                        'label' => 'Petugas',
+                                        'active' => 'admin.petugas*',
+                                    ],
+                                    [
+                                        'route' => 'admin.siswa.index',
+                                        'icon' => 'fa-user-graduate',
+                                        'label' => 'Siswa',
+                                        'active' => 'admin.siswa*',
+                                    ],
+                                    [
+                                        'route' => 'admin.alumni.index',
+                                        'icon' => 'fa-graduation-cap',
+                                        'label' => 'Alumni',
+                                        'active' => 'admin.alumni*',
+                                    ],
 
-                                [
-                                    'route' => 'admin.home-visit.select',
-                                    'icon' => 'fa-clipboard-check',
-                                    'label' => 'Home Visit',
-                                    'active' => 'admin.home-visit*',
-                                ],
-                                [
-                                    'route' => 'admin.laporan.petugas',
-                                    'icon' => 'fa-chart-line',
-                                    'label' => 'Laporan Petugas',
-                                    'active' => 'admin.laporan.petugas',
-                                ],
-                                [
-                                    'route' => 'admin.pengaturan.index',
-                                    'icon' => 'fa-gear',
-                                    'label' => 'Pengaturan',
-                                    'active' => 'admin.pengaturan*',
-                                ],
-                            ];
-                        } elseif ($isMonitoring) {
-                            $menus = [
-                                [
-                                    'route' => 'admin.siswa.index',
-                                    'icon' => 'fa-user-graduate',
-                                    'label' => 'Siswa',
-                                    'active' => 'admin.siswa*',
-                                ],
-                                [
-                                    'route' => 'admin.laporan.petugas',
-                                    'icon' => 'fa-chart-line',
-                                    'label' => 'Laporan Petugas',
-                                    'active' => 'admin.laporan.petugas',
-                                ],
-                            ];
-                        } else {
-                            $menus = [
-                                [
-                                    'route' => 'dashboard',
-                                    'icon' => 'fa-home',
-                                    'label' => 'Beranda',
-                                    'active' => 'petugas.dashboard',
-                                ],
-                                [
-                                    'route' => 'petugas.siswa',
-                                    'icon' => 'fa-list-ul',
-                                    'label' => 'Siswa',
-                                    'active' => 'petugas.siswa*',
-                                ],
-                                [
-                                    'route' => 'penanganan.index',
-                                    'icon' => 'fa-location-arrow',
-                                    'label' => 'Proses',
-                                    'active' => 'penanganan*',
-                                ],
-                                [
-                                    'route' => 'alumni.index',
-                                    'icon' => 'fa-user-graduate',
-                                    'label' => 'Alumni',
-                                    'active' => 'alumni*',
-                                ],
-                            ];
-                        }
-                    @endphp
+                                    [
+                                        'route' => 'admin.home-visit.select',
+                                        'icon' => 'fa-clipboard-check',
+                                        'label' => 'Home Visit',
+                                        'active' => 'admin.home-visit*',
+                                    ],
+                                    [
+                                        'route' => 'admin.laporan.petugas',
+                                        'icon' => 'fa-chart-line',
+                                        'label' => 'Laporan Petugas',
+                                        'active' => 'admin.laporan.petugas',
+                                    ],
+                                    [
+                                        'route' => 'admin.pengaturan.index',
+                                        'icon' => 'fa-gear',
+                                        'label' => 'Pengaturan',
+                                        'active' => 'admin.pengaturan*',
+                                    ],
+                                ];
+                            } elseif ($isMonitoring) {
+                                $menus = [
+                                    [
+                                        'route' => 'admin.siswa.index',
+                                        'icon' => 'fa-user-graduate',
+                                        'label' => 'Siswa',
+                                        'active' => 'admin.siswa*',
+                                    ],
+                                    [
+                                        'route' => 'admin.laporan.petugas',
+                                        'icon' => 'fa-chart-line',
+                                        'label' => 'Laporan Petugas',
+                                        'active' => 'admin.laporan.petugas',
+                                    ],
+                                ];
+                            } else {
+                                $menus = [
+                                    [
+                                        'route' => 'dashboard',
+                                        'icon' => 'fa-home',
+                                        'label' => 'Beranda',
+                                        'active' => 'petugas.dashboard',
+                                    ],
+                                    [
+                                        'route' => 'petugas.siswa',
+                                        'icon' => 'fa-list-ul',
+                                        'label' => 'Siswa',
+                                        'active' => 'petugas.siswa*',
+                                    ],
+                                    [
+                                        'route' => 'penanganan.index',
+                                        'icon' => 'fa-location-arrow',
+                                        'label' => 'Proses',
+                                        'active' => 'penanganan*',
+                                    ],
+                                    [
+                                        'route' => 'alumni.index',
+                                        'icon' => 'fa-user-graduate',
+                                        'label' => 'Alumni',
+                                        'active' => 'alumni*',
+                                    ],
+                                ];
+                            }
+                        @endphp
 
-                    @foreach ($menus as $menu)
-                        <a href="{{ route($menu['route']) }}"
-                            class="flex flex-col md:flex-row items-center gap-1 md:gap-4 
+                        @foreach ($menus as $menu)
+                            <a href="{{ route($menu['route']) }}"
+                                class="flex flex-col md:flex-row items-center gap-1 md:gap-4 
                           px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-200
                           {{ request()->routeIs($menu['active']) ? $navActive : $navInactive }}">
-                            <i class="fas {{ $menu['icon'] }} text-lg md:text-xl md:w-6 text-center"></i>
-                            <span class="font-medium">{{ $menu['label'] }}</span>
-                        </a>
-                    @endforeach
+                                <i class="fas {{ $menu['icon'] }} text-lg md:text-xl md:w-6 text-center"></i>
+                                <span class="font-medium">{{ $menu['label'] }}</span>
+                            </a>
+                        @endforeach
 
-                    <button onclick="toggleLogoutPopup()"
-                        class="flex md:hidden flex-col items-center gap-1 px-3 py-2 text-gray-500">
-                        <i class="fas fa-user-circle text-lg"></i>
-                        <span class="font-medium">Akun</span>
-                    </button>
+                        <button onclick="toggleLogoutPopup()"
+                            class="flex md:hidden flex-col items-center gap-1 px-3 py-2 text-gray-500">
+                            <i class="fas fa-user-circle text-lg"></i>
+                            <span class="font-medium">Akun</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Profile & Logout Popup -->
-            <div class="px-4 py-0 md:py-4 border-t border-gray-50">
-                <div class="relative">
-                    <button onclick="toggleLogoutPopup()"
-                        class="hidden md:flex w-full items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition group">
-                        <div
-                            class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                            {{ substr($authUser->name, 0, 1) }}
-                        </div>
-                        <div class="text-left overflow-hidden">
-                            <p class="text-sm font-bold text-gray-800 truncate">{{ $authUser->name }}</p>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
-                                {{ $authUser->getRoleNames()->first() }}
-                            </p>
-                        </div>
-                        <i class="fas fa-ellipsis-v ml-auto text-gray-300 group-hover:text-gray-500"></i>
-                    </button>
+                <!-- Profile & Logout Popup -->
+                <div class="px-4 py-0 md:py-4 border-t border-gray-50">
+                    <div class="relative">
+                        <button onclick="toggleLogoutPopup()"
+                            class="hidden md:flex w-full items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition group">
+                            <div
+                                class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                                {{ substr($authUser->name, 0, 1) }}
+                            </div>
+                            <div class="text-left overflow-hidden">
+                                <p class="text-sm font-bold text-gray-800 truncate">{{ $authUser->name }}</p>
+                                <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
+                                    {{ $authUser->getRoleNames()->first() }}
+                                </p>
+                            </div>
+                            <i class="fas fa-ellipsis-v ml-auto text-gray-300 group-hover:text-gray-500"></i>
+                        </button>
 
-                    <div id="logoutPopup"
-                        class="hidden absolute bottom-full left-0 mb-2 w-full bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
-                        <div class="p-5">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md">
-                                    {{ substr($authUser->name, 0, 1) }}
-                                </div>
-                                <div class="overflow-hidden">
-                                    <p class="text-sm font-bold text-gray-800 truncate">{{ $authUser->name }}</p>
-                                    <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
-                                        {{ $authUser->getRoleNames()->first() }} •
-                                        {{ $authUser->lembaga ?? 'Umum' }}
-                                    </p>
+                        <div id="logoutPopup"
+                            class="hidden absolute bottom-full left-0 mb-2 w-full bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
+                            <div class="p-5">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md">
+                                        {{ substr($authUser->name, 0, 1) }}
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <p class="text-sm font-bold text-gray-800 truncate">{{ $authUser->name }}</p>
+                                        <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
+                                            {{ $authUser->getRoleNames()->first() }} •
+                                            {{ $authUser->lembaga ?? 'Umum' }}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="py-1">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit"
-                                    class="w-full text-left px-5 py-4 text-sm text-red-600 font-bold hover:text-red-800 hover:cursor-pointer flex items-center gap-3 transition">
-                                    <i class="fas fa-sign-out-alt"></i> Logout Aplikasi
-                                </button>
-                            </form>
+                            <div class="py-1">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="w-full text-left px-5 py-4 text-sm text-red-600 font-bold hover:text-red-800 hover:cursor-pointer flex items-center gap-3 transition">
+                                        <i class="fas fa-sign-out-alt"></i> Logout Aplikasi
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
 
 
-            <div id="mobileOverlay" onclick="toggleLogoutPopup()"
-                class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"></div>
+                <div id="mobileOverlay" onclick="toggleLogoutPopup()"
+                    class="hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"></div>
 
-        </nav>
+            </nav>
         @endif
 
 
 
         <!-- Main Content -->
-        <main class="flex-1 {{ $authUser ? 'md:ml-64 pb-20 md:pb-2' : '' }} flex flex-col h-full overflow-hidden relative">
+        <main
+            class="flex-1 {{ $authUser ? 'md:ml-64 pb-20 md:pb-2' : '' }} flex flex-col h-full overflow-hidden relative">
 
             <div class="max-w-full overflow-auto bg-bgBody">
                 @yield('content')

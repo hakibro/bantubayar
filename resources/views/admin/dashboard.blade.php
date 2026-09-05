@@ -43,19 +43,75 @@
         ];
 
         $teamCards = [
-            ['label' => 'Petugas', 'value' => $totalPetugas, 'icon' => 'fa-user-shield', 'class' => 'text-indigo-600 bg-indigo-50'],
-            ['label' => 'Bendahara', 'value' => $totalBendahara, 'icon' => 'fa-calculator', 'class' => 'text-cyan-700 bg-cyan-50'],
-            ['label' => 'Home Visit Aktif', 'value' => $homeVisitAktif, 'icon' => 'fa-house-user', 'class' => 'text-teal-700 bg-teal-50'],
-            ['label' => 'Home Visit Bulan Ini', 'value' => $homeVisitBulanIni, 'icon' => 'fa-calendar-check', 'class' => 'text-fuchsia-700 bg-fuchsia-50'],
+            [
+                'label' => 'Petugas',
+                'value' => $totalPetugas,
+                'icon' => 'fa-user-shield',
+                'class' => 'text-indigo-600 bg-indigo-50',
+            ],
+            [
+                'label' => 'Bendahara',
+                'value' => $totalBendahara,
+                'icon' => 'fa-calculator',
+                'class' => 'text-cyan-700 bg-cyan-50',
+            ],
+            [
+                'label' => 'Home Visit Aktif',
+                'value' => $homeVisitAktif,
+                'icon' => 'fa-house-user',
+                'class' => 'text-teal-700 bg-teal-50',
+            ],
+            [
+                'label' => 'Home Visit Bulan Ini',
+                'value' => $homeVisitBulanIni,
+                'icon' => 'fa-calendar-check',
+                'class' => 'text-fuchsia-700 bg-fuchsia-50',
+            ],
         ];
 
         $quickLinks = [
-            ['label' => 'Data Siswa', 'route' => 'admin.siswa.index', 'icon' => 'fa-user-graduate', 'text' => 'Cari dan lihat status pembayaran siswa.'],
-            ['label' => 'Pembayaran', 'route' => 'admin.pembayaran-siswa.index', 'icon' => 'fa-money-bill-wave', 'text' => 'Pantau data pembayaran siswa.'],
-            ['label' => 'Kelola Petugas', 'route' => 'admin.petugas.index', 'icon' => 'fa-user-shield', 'text' => 'Atur akun dan akses petugas.'],
-            ['label' => 'Assign Petugas', 'route' => 'admin.assign.index', 'icon' => 'fa-link', 'text' => 'Bagikan siswa ke petugas.'],
-            ['label' => 'Home Visit', 'route' => 'admin.home-visit.select', 'icon' => 'fa-house-chimney-medical', 'text' => 'Buat kunjungan rumah baru.'],
-            ['label' => 'Laporan Petugas', 'route' => 'admin.laporan.petugas', 'icon' => 'fa-chart-line', 'text' => 'Evaluasi progres petugas.'],
+            [
+                'label' => 'Data Siswa',
+                'route' => 'admin.siswa.index',
+                'icon' => 'fa-user-graduate',
+                'text' => 'Cari dan lihat status pembayaran siswa.',
+            ],
+            [
+                'label' => 'Data Alumni',
+                'route' => 'admin.alumni.index',
+                'icon' => 'fa-graduation-cap',
+                'text' => 'Pantau alumni yang masih memiliki tunggakan.',
+            ],
+            [
+                'label' => 'Pembayaran',
+                'route' => 'admin.pembayaran-siswa.index',
+                'icon' => 'fa-money-bill-wave',
+                'text' => 'Pantau data pembayaran siswa.',
+            ],
+            [
+                'label' => 'Kelola Petugas',
+                'route' => 'admin.petugas.index',
+                'icon' => 'fa-user-shield',
+                'text' => 'Atur akun dan akses petugas.',
+            ],
+            [
+                'label' => 'Assign Petugas',
+                'route' => 'admin.assign.index',
+                'icon' => 'fa-link',
+                'text' => 'Bagikan siswa ke petugas.',
+            ],
+            [
+                'label' => 'Home Visit',
+                'route' => 'admin.home-visit.select',
+                'icon' => 'fa-house-chimney-medical',
+                'text' => 'Buat kunjungan rumah baru.',
+            ],
+            [
+                'label' => 'Laporan Petugas',
+                'route' => 'admin.laporan.petugas',
+                'icon' => 'fa-chart-line',
+                'text' => 'Evaluasi progres petugas.',
+            ],
         ];
     @endphp
 
@@ -64,7 +120,8 @@
             <div>
                 <p class="text-sm font-semibold uppercase tracking-wide text-primary">Dashboard Admin</p>
                 <h1 class="mt-1 text-2xl font-bold text-gray-900 sm:text-3xl">Ringkasan Operasional Pembayaran</h1>
-                <p class="mt-2 text-sm text-gray-500">Pantauan siswa, penanganan, dan home visit periode {{ $monthLabel }}.</p>
+                <p class="mt-2 text-sm text-gray-500">Pantauan siswa, penanganan, dan home visit periode {{ $monthLabel }}.
+                </p>
             </div>
             <div class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
                 <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -85,7 +142,8 @@
                             <p class="text-sm font-medium text-gray-500">{{ $card['label'] }}</p>
                             <p class="mt-2 text-3xl font-bold text-gray-900">{{ number_format($card['value']) }}</p>
                         </div>
-                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg {{ $card['bg'] }} {{ $card['color'] }}">
+                        <span
+                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg {{ $card['bg'] }} {{ $card['color'] }}">
                             <i class="fas {{ $card['icon'] }} text-lg"></i>
                         </span>
                     </div>
@@ -161,11 +219,13 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <p class="text-xs uppercase text-gray-400">Aktif</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ number_format($penangananPembayaran['lunas']['aktif']) }}</p>
+                                <p class="text-2xl font-bold text-gray-900">
+                                    {{ number_format($penangananPembayaran['lunas']['aktif']) }}</p>
                             </div>
                             <div>
                                 <p class="text-xs uppercase text-gray-400">Selesai</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ number_format($penangananPembayaran['lunas']['selesai']) }}</p>
+                                <p class="text-2xl font-bold text-gray-900">
+                                    {{ number_format($penangananPembayaran['lunas']['selesai']) }}</p>
                             </div>
                         </div>
                     </div>
@@ -178,11 +238,13 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <p class="text-xs uppercase text-gray-400">Aktif</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ number_format($penangananPembayaran['belum_lunas']['aktif']) }}</p>
+                                <p class="text-2xl font-bold text-gray-900">
+                                    {{ number_format($penangananPembayaran['belum_lunas']['aktif']) }}</p>
                             </div>
                             <div>
                                 <p class="text-xs uppercase text-gray-400">Selesai</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ number_format($penangananPembayaran['belum_lunas']['selesai']) }}</p>
+                                <p class="text-2xl font-bold text-gray-900">
+                                    {{ number_format($penangananPembayaran['belum_lunas']['selesai']) }}</p>
                             </div>
                         </div>
                     </div>
@@ -207,7 +269,8 @@
                         <a href="{{ route($link['route']) }}"
                             class="group rounded-lg border border-gray-200 p-4 transition hover:border-primary/40 hover:bg-primary/5">
                             <div class="flex items-start gap-3">
-                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition group-hover:bg-primary group-hover:text-white">
+                                <span
+                                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition group-hover:bg-primary group-hover:text-white">
                                     <i class="fas {{ $link['icon'] }}"></i>
                                 </span>
                                 <div>
