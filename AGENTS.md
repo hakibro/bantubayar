@@ -179,19 +179,20 @@ Laravel 12 + Blade (server-rendered, no SPA) app for handling unpaid student tui
   - `daruttaqwa_person` (`tbl_person`)
   - `duwit` (wallet balance `person.saldo`)
 - The `bantubayar` DB only holds app tables: `users`, `roles`/`permissions`, `penanganan*`, `petugas_siswa`, `home_visit`, and `siswa_status_pembayaran` (a cache).
-- `App\Models\Siswa` maps to the **MySQL view** `v_siswa` (not a table). Primary key is `idperson` (int, non-incrementing, no timestamps). `getTotalTunggakan()` / the `total_tunggakan` accessor route through `PembayaranService`, which runs raw `DB::select` against `daruttaqwa_trans`.
-- Several models map to views, not tables: `Siswa` → `v_siswa`, `SiswaPhone` → `v_siswa_phone`, `StatusLunasSiswa` → `v_status_lunas_siswa`, `LembagaKelas` → `v_lembaga_kelas`.
+- `App\Models\Siswa` maps to the **MySQL view** `v_siswa` (not a table). Primary key is `idperson` (int, non-incrementing, no timestamps). `totalTunggakan()` / the `total_tunggakan` accessor route through `PembayaranService`, which runs raw `DB::select` against `daruttaqwa_trans`.
+- Several models map to views, not tables: `Siswa` → `v_siswa`, `SiswaPhone` → `v_siswa_phone`, `StatusLunasSiswa` → `v_status_lunas_siswa`, `LembagaKelas` → `v_lembaga_kelas`, `Alumni` → `v_alumni`.
+- `Setting` (table `settings`, key/value) is the app-level config store: use `Setting::get($key, $default)` / `Setting::set($key, $value)`. This is where runtime-tunable app config lives — not `.env`.
 
 ### Views and migrations are MySQL-only
 
 - The view definitions are created/refreshed **inside migrations** using `DB::statement("CREATE OR REPLACE VIEW ...")` (see `2026_05_04_000001_create_v_siswa_views_and_indexes.php` and later `..._v_siswa...` / `create_or_update_all_views` migrations).
 - Migrations reference external schemas and MySQL-specific SQL, so they **cannot run against sqlite**. `phpunit.xml` forces `DB_CONNECTION=sqlite` / `:memory:`, so the only tests that actually pass are the Breeze auth scaffold tests under `tests/Feature/Auth` — anything touching `v_siswa`, `PembayaranService`, or `penanganan` has no usable test path. Don't write feature tests that depend on real student/payment data.
-- **The active academic year is hardcoded** as `'20252026'` inside the view-definition migrations (e.g. `WHERE kelas.idperiode = '20252026'`) and in `PembayaranService`. On year rollover these SQL strings must be updated in the migrations, not via a config.
+- **The active academic year is derived, not hardcoded.** The latest view migration (`2026_07_23_000001_create_or_update_all_views.php`) resolves the current period via `WHERE kelas.idperiode = (SELECT idperiode FROM daruttaqwa_referensi.tbl_periode WHERE aktif = 1 LIMIT 1)`. Older migrations still contain a hardcoded `'20252026'` and `PembayaranService` filters with `idperiode >= '20212022'`, but these are historical/floor values — the active year now comes from the `aktif = 1` flag on `tbl_periode`, so year rollover is handled by flipping that flag in the external DB, not by editing migrations.
 
 ### Roles & routing
 
 - Roles (spatie): `admin`, `petugas`, `bendahara`, `monitoring`. Seeded by `UserRoleSeeder` (`php artisan db:seed`); demo logins `admin@example.com` / `petugas@example.com` / `bendahara@example.com`, password `password`.
-- Route files map one-per-role area: `routes/admin.php` (admin+monitoring), `routes/petugas.php` + `routes/bendahara.php` (role-gated), `routes/penanganan.php` (the handling flow, incl. a token-based public `wali.kesanggupan` form), `routes/custom.php` (belum-lunas list/export), `routes/web.php` (auth scaffold + a `/visit/{token}` public home-visit form).
+- Route files map one-per-role area: `routes/admin.php` (admin+monitoring), `routes/petugas.php` + `routes/bendahara.php` (role-gated), `routes/penanganan.php` (the handling flow, incl. a token-based public `wali.kesanggupan` form), `routes/custom.php` (belum-lunas list/export), `routes/alumni.php` (alumni list/detail, role `bendahara|petugas`, backed by the `v_alumni` view + `AlumniTotalTunggakanExport`), `routes/web.php` (auth scaffold + a `/visit/{token}` public home-visit form).
 - Guarding is `->middleware(['auth', 'role:...'])` — the `role` alias is registered in `bootstrap/app.php`.
 
 ### External integration
