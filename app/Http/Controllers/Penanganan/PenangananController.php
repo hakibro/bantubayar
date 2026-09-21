@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Penanganan;
 
 use App\Http\Controllers\Controller;
+use App\Models\HomeVisit;
 use App\Models\Penanganan;
 use App\Models\PenangananKesanggupan;
+use App\Services\HomeVisitEligibilityService;
 use App\Services\PembayaranService;
 use App\Services\SiswaService;
 use Illuminate\Http\Request;
@@ -313,6 +315,91 @@ class PenangananController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+
+    /**
+     * Status kelayakan home visit untuk seorang siswa (dipakai UI halaman penanganan).
+     */
+    public function statusHomeVisit(Request $request, HomeVisitEligibilityService $eligibility, $id_siswa)
+    {
+        $siswa = Penanganan::resolveSiswa($id_siswa);
+
+        if (!$siswa) {
+            return response()->json(['success' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
+        }
+
+        $hasil = $eligibility->evaluate($siswa);
+        $pengajuan = $siswa->pengajuanHomeVisitAktif();
+
+        return response()->json([
+            'success' => true,
+            'eligible' => $hasil['eligible'],
+            'syarat_terpenuhi' => $hasil['syarat_terpenuhi'],
+            'syarat_belum' => $hasil['syarat_belum'],
+            'boleh_override' => $hasil['boleh_override'],
+            'penanganan_id' => $hasil['penanganan_id'],
+            'pengajuan' => $pengajuan ? [
+                'id' => $pengajuan->id,
+                'status' => $pengajuan->status,
+                'tanggal' => $pengajuan->created_at?->format('d/m/Y H:i'),
+            ] : null,
+        ]);
+    }
+
+    /**
+     * Ajukan home visit untuk siswa yang kategorinya sudah "sulit".
+     * Dibuat sebagai pengajuan berstatus pending menunggu persetujuan admin.
+     */
+    public function ajukanHomeVisit(Request $request, HomeVisitEligibilityService $eligibility)
+    {
+        $data = $request->validate([
+            'id_siswa' => 'required',
+            'alasan_override' => 'nullable|string|max:2000',
+        ]);
+
+        $siswa = Penanganan::resolveSiswa($data['id_siswa']);
+
+        if (!$siswa) {
+            return response()->json(['success' => false, 'message' => 'Siswa tidak ditemukan.'], 404);
+        }
+
+        // Cegah pengajuan ganda yang masih aktif.
+        if ($siswa->pengajuanHomeVisitAktif()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sudah ada pengajuan home visit yang aktif untuk siswa ini.',
+            ], 422);
+        }
+
+        if (!$eligibility->bolehDiajukan($siswa, $data['alasan_override'] ?? null)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siswa belum memenuhi kategori sulit. Isi alasan untuk override manual.',
+            ], 422);
+        }
+
+        $penanganan = $siswa->penangananAktif() ?? $siswa->penanganan()->latest()->first();
+
+        $homeVisit = HomeVisit::create([
+            'siswa_id' => $siswa->idperson,
+            'admin_id' => null,
+            'penanganan_id' => $penanganan?->id,
+            'diajukan_oleh' => Auth::id(),
+            'petugas_nama' => $request->input('petugas_nama'),
+            'petugas_hp' => $request->input('petugas_hp'),
+            'tanggal_visit' => $request->input('tanggal_visit'),
+            'alasan_pengajuan' => $data['alasan_override'] ?? null,
+            'token' => \Str::uuid(),
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengajuan home visit berhasil dibuat dan menunggu persetujuan admin.',
+            'home_visit_id' => $homeVisit->id,
+            'status' => $homeVisit->status,
+        ]);
     }
 
 

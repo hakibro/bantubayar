@@ -7,9 +7,19 @@
         <div class="mb-6 p-4 bg-blue-50 rounded-lg">
             <h2 class="font-semibold text-lg mb-2">Data Siswa</h2>
             <p><span class="text-gray-600">Nama:</span> {{ $homeVisit->siswa->nama }}</p>
-            <p><span class="text-gray-600">Alamat:</span> {{ $homeVisit->siswa->AsramaPondok ?? '-' }}, Kamar
+            <p><span class="text-gray-600">ID Person:</span> {{ $homeVisit->siswa->idperson }}</p>
+            <p><span class="text-gray-600">Lembaga:</span> {{ $homeVisit->siswa->unit_formal ?? '-' }}</p>
+            <p><span class="text-gray-600">Asrama:</span> {{ $homeVisit->siswa->AsramaPondok ?? '-' }}, Kamar
                 {{ $homeVisit->siswa->KamarPondok ?? '-' }}</p>
-            <p><span class="text-gray-600">No. HP Wali:</span> {{ $homeVisit->siswa->phone ?? '-' }}</p>
+            <p><span class="text-gray-600">No. HP Wali:</span> {{ $homeVisit->siswa->phone?->phone ?? '-' }}</p>
+            @if ($homeVisit->petugas_nama)
+                <p><span class="text-gray-600">Petugas Home Visit:</span> {{ $homeVisit->petugas_nama }}
+                    ({{ $homeVisit->petugas_hp ?? '-' }})</p>
+            @endif
+            @if ($homeVisit->alasan_pengajuan)
+                <p class="mt-2 text-sm text-gray-700"><span class="text-gray-600">Catatan penugasan:</span>
+                    {{ $homeVisit->alasan_pengajuan }}</p>
+            @endif
         </div>
 
         @if (session('error'))

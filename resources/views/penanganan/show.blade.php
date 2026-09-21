@@ -139,6 +139,16 @@
                                 <i class="fas fa-check-double"></i>
                                 Hasil
                             </button>
+
+                            <button onclick="openModalHomeVisit()"
+                                class="w-full bg-amber-500 hover:bg-amber-600 text-white
+               py-3 px-6 md:py-4 rounded-2xl font-bold
+               shadow-md shadow-amber-200
+               transition active:scale-95
+               flex items-center justify-center gap-2 text-sm md:text-base">
+                                <i class="fas fa-house-user"></i>
+                                Home Visit
+                            </button>
                         </div>
                     @endif
 
@@ -344,6 +354,7 @@
     @include('penanganan.partials.modal-updatehp')
     @include('penanganan.partials.modal-detail')
     @include('penanganan.partials.modal-result')
+    @include('penanganan.partials.modal-homevisit')
 
 
 @endsection

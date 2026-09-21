@@ -102,7 +102,7 @@
             ],
             [
                 'label' => 'Home Visit',
-                'route' => 'admin.home-visit.select',
+                'route' => 'admin.home-visit.index',
                 'icon' => 'fa-house-chimney-medical',
                 'text' => 'Buat kunjungan rumah baru.',
             ],

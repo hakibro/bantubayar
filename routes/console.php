@@ -26,7 +26,13 @@ Artisan::command('pembayaran:refresh-status-lunas {idperson?}', function () {
     $this->info("Status pembayaran {$total} siswa berhasil diperbarui.");
 })->purpose('Refresh cache status lunas dan total tunggakan siswa');
 
-$syncIntervalHours = (int) (App\Models\Setting::get('sync_interval_hours', 6));
+$syncIntervalHours = 6;
+try {
+    $syncIntervalHours = (int) (App\Models\Setting::get('sync_interval_hours', 6));
+} catch (\Throwable $e) {
+    // Tabel settings belum tersedia (mis. saat test / migrasi awal).
+    $syncIntervalHours = 6;
+}
 
 Schedule::command('pembayaran:refresh-status-lunas')
     ->cron("0 */{$syncIntervalHours} * * *")

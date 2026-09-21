@@ -16,6 +16,10 @@ Route::middleware(['auth:web', 'role:bendahara|petugas'])->prefix('penanganan')-
     Route::post('/update-phone', [PenangananController::class, 'updatePhone'])->name('update_phone');
     Route::post('/kesanggupan', [PenangananController::class, 'kirimKesanggupan'])->name('kesanggupan');
 
+    // Home Visit: pengajuan oleh bendahara/petugas
+    Route::get('/home-visit/status/{id_siswa}', [PenangananController::class, 'statusHomeVisit'])->name('home_visit.status');
+    Route::post('/home-visit/ajukan', [PenangananController::class, 'ajukanHomeVisit'])->name('home_visit.ajukan');
+
     Route::put('/update/{penanganan}', [PenangananController::class, 'update'])
         ->name('update');
 

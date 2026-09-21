@@ -3,34 +3,56 @@
 namespace App\Http\Controllers;
 
 use App\Models\HomeVisit;
+use App\Models\Penanganan;
 use Illuminate\Http\Request;
 use App\Traits\ImageCompressor;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class VisitController extends Controller
 {
     use ImageCompressor;
+
     /**
-     * Tampilkan form laporan home visit
+     * Halaman gabungan untuk petugas home-visit (tanpa login):
+     * menampilkan detail tugas sekaligus form laporan.
      */
     public function form($token)
     {
         $homeVisit = HomeVisit::with('siswa')->where('token', $token)->firstOrFail();
 
-        // Jika sudah dilaporkan, arahkan ke halaman info
+        // Link hanya boleh diakses setelah disetujui admin.
+        if ($homeVisit->status === 'pending') {
+            return view('visit.belum-disetujui', compact('homeVisit'));
+        }
+
+        if (in_array($homeVisit->status, ['ditolak', 'batal'], true)) {
+            return view('visit.tidak-berlaku', compact('homeVisit'));
+        }
+
+        // Sudah dilaporkan → halaman info.
         if ($homeVisit->status === 'selesai') {
             return view('visit.sudah-dilaporkan', compact('homeVisit'));
+        }
+
+        // Tandai sedang dilaksanakan saat link pertama dibuka.
+        if ($homeVisit->status === 'disetujui') {
+            $homeVisit->update(['status' => 'dilaksanakan']);
         }
 
         return view('visit.form', compact('homeVisit'));
     }
 
     /**
-     * Proses submit laporan home visit
+     * Proses submit laporan home visit.
      */
     public function submit(Request $request, $token)
     {
         $homeVisit = HomeVisit::with('siswa')->where('token', $token)->firstOrFail();
+
+        if (!$homeVisit->bolehDilaporkan()) {
+            return redirect()->route('visit.form', $token)
+                ->with('error', 'Laporan tidak dapat dikirim untuk home visit ini.');
+        }
 
         $request->validate([
             'foto.*' => 'nullable|image',
@@ -44,16 +66,13 @@ class VisitController extends Controller
         $fotoPaths = [];
         if ($request->hasFile('foto')) {
             $files = $request->file('foto');
-            // Pastikan dalam bentuk array
             if (!is_array($files)) {
                 $files = [$files];
             }
-            // Gunakan trait untuk kompresi
             $fotoPaths = $this->compressMultipleImages($files);
-            \Log::info('Hasil kompresi foto:', $fotoPaths);
+            Log::info('Hasil kompresi foto home visit:', $fotoPaths);
         }
 
-        // Data laporan
         $laporan = [
             'foto' => $fotoPaths,
             'lokasi' => $request->lokasi,
@@ -70,11 +89,41 @@ class VisitController extends Controller
             'status' => 'selesai',
         ]);
 
+        // Catat ke riwayat penanganan bila terkait.
+        $this->catatRiwayatPenanganan($homeVisit);
+
         return redirect()->route('visit.thankyou')->with('success', 'Laporan berhasil dikirim.');
     }
 
     /**
-     * Halaman terima kasih setelah submit
+     * Tulis aksi home_visit ke penanganan_history agar masuk ke alur penanganan.
+     */
+    protected function catatRiwayatPenanganan(HomeVisit $homeVisit): void
+    {
+        $penanganan = $homeVisit->penanganan
+            ?? Penanganan::where('id_siswa', $homeVisit->siswa_id)->latest()->first();
+
+        if (!$penanganan) {
+            return;
+        }
+
+        $laporan = $homeVisit->laporan ?? [];
+        $hasil = $laporan['hasil_lainnya'] ?? ($laporan['hasil'] ?? '-');
+
+        $penanganan->addHistory(
+            'home_visit',
+            'Home visit oleh ' . ($homeVisit->petugas_nama ?: 'petugas') . ' — hasil: ' . $hasil
+                . (($laporan['catatan'] ?? null) ? '. Catatan: ' . $laporan['catatan'] : '')
+        );
+
+        // Bila home visit berhasil, tandai penanganan butuh tindak lanjut pembayaran.
+        if (($laporan['hasil'] ?? null) === 'berhasil' && $penanganan->status !== 'selesai') {
+            $penanganan->update(['status' => 'menunggu_tindak_lanjut']);
+        }
+    }
+
+    /**
+     * Halaman terima kasih setelah submit.
      */
     public function thankyou()
     {

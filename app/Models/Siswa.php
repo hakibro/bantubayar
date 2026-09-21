@@ -107,6 +107,17 @@ class Siswa extends Model
         return $this->homeVisits()->where('status', '!=', 'selesai')->latest()->first();
     }
 
+    /**
+     * Pengajuan home visit yang masih aktif (pending/disetujui) untuk siswa ini.
+     */
+    public function pengajuanHomeVisitAktif()
+    {
+        return $this->homeVisits()
+            ->whereIn('status', ['pending', 'disetujui'])
+            ->latest()
+            ->first();
+    }
+
     public function penanganan()
     {
         return $this->hasMany(Penanganan::class, 'id_siswa', 'idperson');

@@ -57,13 +57,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Home Visit
     Route::prefix('home-visit')->name('home-visit.')->group(function () {
+        Route::get('/', [HomeVisitController::class, 'index'])->name('index');
         Route::get('/select', [HomeVisitController::class, 'select'])->name('select');
         Route::get('/kelas', [HomeVisitController::class, 'kelas'])->name('kelas');
         Route::get('/kamar', [HomeVisitController::class, 'kamar'])->name('kamar');
         Route::get('/create', [HomeVisitController::class, 'create'])->name('create');
         Route::post('/', [HomeVisitController::class, 'store'])->name('store');
-        Route::get('/{id}', [HomeVisitController::class, 'show'])->name('show');
-        Route::get('/{id}/cetak', [HomeVisitController::class, 'cetak'])->name('cetak');
+        Route::post('/{id}/approve', [HomeVisitController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [HomeVisitController::class, 'reject'])->name('reject');
+        Route::post('/{id}/batal', [HomeVisitController::class, 'batal'])->name('batal');
+        Route::get('/{id}', [HomeVisitController::class, 'show'])->whereNumber('id')->name('show');
+        Route::get('/{id}/cetak', [HomeVisitController::class, 'cetak'])->whereNumber('id')->name('cetak');
     });
 
     // Pengaturan (Sinkronisasi Pembayaran)

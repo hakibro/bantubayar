@@ -122,7 +122,7 @@
                                     ],
 
                                     [
-                                        'route' => 'admin.home-visit.select',
+                                        'route' => 'admin.home-visit.index',
                                         'icon' => 'fa-clipboard-check',
                                         'label' => 'Home Visit',
                                         'active' => 'admin.home-visit*',

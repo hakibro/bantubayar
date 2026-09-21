@@ -12,6 +12,79 @@ use Illuminate\Support\Str;
 
 class HomeVisitController extends Controller
 {
+    public function index(Request $request)
+    {
+        $query = HomeVisit::with(['siswa', 'pengaju']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('siswa', function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                    ->orWhere('idperson', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $homeVisits = $query->orderBy('created_at', 'desc')->paginate(40)->withQueryString();
+
+        if ($request->ajax()) {
+            return view('admin.home-visit.partials.list', compact('homeVisits'))->render();
+        }
+
+        return view('admin.home-visit.index', compact('homeVisits'));
+    }
+
+    public function approve($id)
+    {
+        $homeVisit = HomeVisit::findOrFail($id);
+
+        if ($homeVisit->status !== 'pending') {
+            return back()->with('error', 'Pengajuan ini sudah diproses.');
+        }
+
+        $homeVisit->update([
+            'status' => 'disetujui',
+            'disetujui_oleh' => auth()->id(),
+            'disetujui_at' => now(),
+        ]);
+
+        return back()->with('success', 'Pengajuan home visit disetujui.');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $request->validate(['alasan' => 'nullable|string|max:2000']);
+        $homeVisit = HomeVisit::findOrFail($id);
+
+        if ($homeVisit->status !== 'pending') {
+            return back()->with('error', 'Pengajuan ini sudah diproses.');
+        }
+
+        $homeVisit->update([
+            'status' => 'ditolak',
+            'disetujui_oleh' => auth()->id(),
+            'disetujui_at' => now(),
+        ]);
+
+        return back()->with('success', 'Pengajuan home visit ditolak.');
+    }
+
+    public function batal($id)
+    {
+        $homeVisit = HomeVisit::findOrFail($id);
+
+        if (in_array($homeVisit->status, ['selesai', 'ditolak', 'batal'], true)) {
+            return back()->with('error', 'Home visit tidak dapat dibatalkan.');
+        }
+
+        $homeVisit->update(['status' => 'batal']);
+
+        return back()->with('success', 'Home visit dibatalkan.');
+    }
+
     public function select(Request $request)
     {
         $query = Siswa::query();
