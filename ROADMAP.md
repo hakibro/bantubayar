@@ -1,14 +1,13 @@
 # ROADMAP — Bantubayar
 
-> **Peta besar project.** Status detail & kerjaan harian ada di **Kanban Hermes**:
-> `hermes kanban --board bantubayar list`
+> **Peta besar project.** Status detail & kerjaan harian dikelola **terpisah**
+> dari file ini — di antrean kerja yang dipakai saat itu (bebas, tidak terikat
+> produk tertentu).
 >
 > File ini **jarang berubah** — hanya untuk konteks AI & arah jangka panjang.
-> Jangan salin status dari Kanban ke sini; cukup tulis nomor task-nya.
+> Jangan salin status kerja harian ke sini.
 
-- **Board Kanban:** `bantubayar`
 - **Repo:** `https://github.com/hakibro/bantubayar.git`
-- **Project Hermes:** `bantubayar`
 
 ---
 
