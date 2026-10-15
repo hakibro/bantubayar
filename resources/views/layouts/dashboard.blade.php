@@ -94,6 +94,7 @@
                             // Logika Role-Based Menu untuk mempersingkat kode
                             $isAdmin = $authUser->hasRole('admin');
                             $isMonitoring = $authUser->hasRole('monitoring');
+                            $isLembagaMonitor = $authUser->isLembagaMonitor();
                             if ($isAdmin) {
                                 $menus = [
                                     [
@@ -153,6 +154,16 @@
                                         'icon' => 'fa-chart-line',
                                         'label' => 'Laporan Petugas',
                                         'active' => 'admin.laporan.petugas',
+                                    ],
+                                ];
+                            } elseif ($isLembagaMonitor) {
+                                // Monitoring per lembaga: hanya layar Siswa (terfilter lembaga)
+                                $menus = [
+                                    [
+                                        'route' => 'admin.siswa.index',
+                                        'icon' => 'fa-user-graduate',
+                                        'label' => 'Siswa',
+                                        'active' => 'admin.siswa*',
                                     ],
                                 ];
                             } else {

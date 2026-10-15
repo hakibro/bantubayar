@@ -65,4 +65,28 @@ class User extends Authenticatable
         return $this->hasMany(HomeVisit::class, 'admin_id');
     }
 
+    /**
+     * Ambil nilai lembaga dari role user yang di-scope ke lembaga (role monitoring per lembaga).
+     * Mengembalikan null bila user tidak punya role ber-lembaga (mis. admin/monitoring global).
+     */
+    public function lembagaScope(): ?string
+    {
+        $role = $this->roles->firstWhere(fn($role) => !empty($role->lembaga));
+
+        return $role?->lembaga;
+    }
+
+    /**
+     * True bila user adalah monitoring yang dibatasi ke satu lembaga tertentu.
+     * Admin dan role monitoring global dikecualikan agar tetap melihat semua data.
+     */
+    public function isLembagaMonitor(): bool
+    {
+        if ($this->hasRole('admin')) {
+            return false;
+        }
+
+        return $this->lembagaScope() !== null;
+    }
+
 }

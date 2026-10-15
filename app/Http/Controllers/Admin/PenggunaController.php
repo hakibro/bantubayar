@@ -11,7 +11,11 @@ class PenggunaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::role(['petugas', 'bendahara', 'monitoring'])->withTrashed();
+        $query = User::whereHas('roles', function ($q) {
+                $q->whereIn('name', ['petugas', 'bendahara', 'monitoring'])
+                    ->orWhereNotNull('lembaga');
+            })
+            ->withTrashed();
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -26,7 +30,10 @@ class PenggunaController extends Controller
 
         $petugas = $query->orderBy('name')->paginate(10)->withQueryString();
 
-        $daftarLembaga = User::role(['petugas', 'bendahara', 'monitoring'])
+        $daftarLembaga = User::whereHas('roles', function ($q) {
+                $q->whereIn('name', ['petugas', 'bendahara', 'monitoring'])
+                    ->orWhereNotNull('lembaga');
+            })
             ->select('lembaga')->distinct()->pluck('lembaga')->filter()->values();
 
         // Jika request dari AJAX → return partial table saja
@@ -47,7 +54,7 @@ class PenggunaController extends Controller
             'TingkatDiniyah' => $lembagaRaw->pluck('TingkatMadin')->filter()->unique()->sort()->values(),
         ];
 
-        $roles = Role::all();
+        $roles = Role::orderBy('name')->get();
 
         return view('admin.petugas.create', compact('lembaga', 'roles'));
     }
@@ -63,11 +70,14 @@ class PenggunaController extends Controller
             'role' => 'required|exists:roles,name',
         ]);
 
+        $role = Role::where('name', $request->role)->first();
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'lembaga' => $request->lembaga,
+            // Monitoring per lembaga: lembaga diambil dari role, bukan dari input bebas
+            'lembaga' => $role?->lembaga ?: $request->lembaga,
         ]);
 
         $user->assignRole($request->role);
@@ -84,7 +94,7 @@ class PenggunaController extends Controller
             'AsramaPondok' => $lembagaRaw->pluck('AsramaPondok')->filter()->unique()->sort()->values(),
             'TingkatDiniyah' => $lembagaRaw->pluck('TingkatMadin')->filter()->unique()->sort()->values(),
         ];
-        $roles = Role::all();
+        $roles = Role::orderBy('name')->get();
         $petugas = User::findOrFail($id);
         return view('admin.petugas.edit', compact('petugas', 'lembaga', 'roles'));
     }
@@ -101,12 +111,14 @@ class PenggunaController extends Controller
             'role' => 'required|exists:roles,name',
         ]);
 
+        $role = Role::where('name', $request->role)->first();
+
         $petugas->name = $request->name;
         $petugas->email = $request->email;
         if ($request->filled('password')) {
             $petugas->password = bcrypt($request->password);
         }
-        $petugas->lembaga = $request->lembaga;
+        $petugas->lembaga = $role?->lembaga ?: $request->lembaga;
         $petugas->save();
         $petugas->syncRoles([$request->role]);
 

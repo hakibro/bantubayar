@@ -12,11 +12,15 @@ use App\Http\Controllers\Admin\SiswaController;
 
 Route::middleware(['auth', 'role:admin|monitoring'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/laporan/petugas', [LaporanPetugasController::class, 'index'])->name('laporan.petugas');
+});
 
+// Monitoring Siswa: admin, monitoring global, dan monitoring per-lembaga
+Route::middleware(['auth', 'monitoring.siswa'])->prefix('admin')->name('admin.')->group(function () {
     // Monitoring Siswa
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
     Route::get('/siswa/export', [SiswaController::class, 'export'])->name('siswa.export');
     Route::get('/siswa/export-pembayaran', [SiswaController::class, 'exportPembayaran'])->name('siswa.exportPembayaran');
+    Route::get('/siswa/export-history', [SiswaController::class, 'exportHistory'])->name('siswa.exportHistory');
     Route::get('/siswa/kelas', [SiswaController::class, 'kelas'])->name('siswa.kelas');
     Route::get('/siswa/kamar', [SiswaController::class, 'kamar'])->name('siswa.kamar');
     Route::get('/siswa/kelasDiniyah', [SiswaController::class, 'kelasDiniyah'])->name('siswa.kelasDiniyah');

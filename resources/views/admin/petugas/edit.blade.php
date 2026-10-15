@@ -131,7 +131,7 @@
 
                         @foreach ($roles as $role)
                             <option value="{{ $role->name }}" {{ $selectedRole == $role->name ? 'selected' : '' }}>
-                                {{ ucfirst($role->name) }}
+                                {{ $role->lembaga ? 'Monitoring — ' . $role->lembaga : ucfirst($role->name) }}
                             </option>
                         @endforeach
                     </select>

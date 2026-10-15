@@ -65,6 +65,10 @@
         $selectedTagihan = request('tagihan_range', '');
         $selectedLembaga = request('lembaga_filter', '');
         $selectedSort = request('sort', '');
+        $lembagaLock = $lembagaLock ?? ['locked' => false, 'value' => null];
+        if ($lembagaLock['locked']) {
+            $selectedLembaga = $lembagaLock['value'];
+        }
     @endphp
 
     <div class="clean-bg min-h-screen px-4 py-5 md:p-8">
@@ -81,6 +85,10 @@
                     <button type="button" id="openDownloadPembayaranBtn"
                         class="inline-flex rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-700">
                         <i class="fas fa-download mr-2"></i> Download Data Pembayaran Siswa
+                    </button>
+                    <button type="button" id="openDownloadHistoryBtn"
+                        class="inline-flex rounded-2xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
+                        <i class="fas fa-history mr-2"></i> Download History Pembayaran
                     </button>
                     @role('admin')
                         <a href="{{ route('admin.assign.index') }}"
@@ -115,15 +123,20 @@
                 <div class="mt-4">
                     <div class="mb-2 flex items-center justify-between gap-2">
                         <p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Lembaga</p>
-                        <button id="clearLembagaButton" type="button"
-                            class="text-xs font-bold text-indigo-600 hover:text-indigo-800">Semua</button>
+                        @unless ($lembagaLock['locked'])
+                            <button id="clearLembagaButton" type="button"
+                                class="text-xs font-bold text-indigo-600 hover:text-indigo-800">Semua</button>
+                        @else
+                            <span
+                                class="rounded-full bg-indigo-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600">Lembaga Anda</span>
+                        @endunless
                     </div>
                     <div class="grid grid-cols-3 gap-2">
                         <label class="block">
                             <span
                                 class="mb-1 block text-[10px] font-black uppercase tracking-widest text-blue-500">Formal</span>
-                            <select id="filterLembagaFormal"
-                                class="w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs font-semibold text-slate-700 focus:border-blue-300 focus:ring-2 focus:ring-blue-200">
+                            <select id="filterLembagaFormal" @disabled($lembagaLock['locked'])
+                                class="w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs font-semibold text-slate-700 focus:border-blue-300 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400">
                                 <option value="">Semua Formal</option>
                                 @foreach ($daftarLembaga['formal'] as $lembaga)
                                     <option value="formal:{{ $lembaga }}"
@@ -136,8 +149,8 @@
                         <label class="block">
                             <span
                                 class="mb-1 block text-[10px] font-black uppercase tracking-widest text-emerald-500">Pondok</span>
-                            <select id="filterLembagaPondok"
-                                class="w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs font-semibold text-slate-700 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-200">
+                            <select id="filterLembagaPondok" @disabled($lembagaLock['locked'])
+                                class="w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs font-semibold text-slate-700 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400">
                                 <option value="">Semua Pondok</option>
                                 @foreach ($daftarLembaga['pondok'] as $lembaga)
                                     <option value="pondok:{{ $lembaga }}"
@@ -149,8 +162,8 @@
                         <label class="block">
                             <span
                                 class="mb-1 block text-[10px] font-black uppercase tracking-widest text-amber-500">Diniyah</span>
-                            <select id="filterLembagaDiniyah"
-                                class="w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs font-semibold text-slate-700 focus:border-amber-300 focus:ring-2 focus:ring-amber-200">
+                            <select id="filterLembagaDiniyah" @disabled($lembagaLock['locked'])
+                                class="w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-xs font-semibold text-slate-700 focus:border-amber-300 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400">
                                 <option value="">Semua Diniyah</option>
                                 @foreach ($daftarLembaga['diniyah'] as $lembaga)
                                     <option value="diniyah:{{ $lembaga }}"
@@ -302,6 +315,66 @@
         </div>
     </div>
 
+    {{-- Modal Download History Pembayaran --}}
+    <div id="downloadHistoryModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden">
+        <div class="w-full max-w-md mx-4 rounded-3xl bg-white p-6 shadow-2xl">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-lg font-black text-slate-800">Download History Pembayaran</h2>
+                <button type="button" id="closeDownloadHistoryModalBtn"
+                    class="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="mb-4 text-sm text-slate-500">
+                Unduh riwayat pembayaran seluruh unit (SMK, MTs, Kantin, dll) per periode, diurutkan dari periode terbaru.
+            </p>
+            <form id="downloadHistoryForm" method="GET" action="{{ route('admin.siswa.exportHistory') }}">
+                <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">Jenis Data</label>
+                <div class="mb-4 grid grid-cols-2 gap-2">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="jenis" value="siswa" class="peer sr-only" checked>
+                        <span
+                            class="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700">
+                            <i class="fas fa-user-graduate"></i> Siswa
+                        </span>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="jenis" value="alumni" class="peer sr-only">
+                        <span
+                            class="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700">
+                            <i class="fas fa-graduation-cap"></i> Alumni
+                        </span>
+                    </label>
+                </div>
+
+                <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">Periode</label>
+                <select name="periode" required
+                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200">
+                    <option value="all">Semua Periode (terbaru ke terlama)</option>
+                    @foreach ($periodePembayaranOptions->reverse() as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                <div class="mt-6 flex justify-end gap-2">
+                    <button type="button" id="cancelDownloadHistoryBtn"
+                        class="rounded-2xl border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" id="submitDownloadHistoryBtn"
+                        class="rounded-2xl bg-indigo-600 px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
+                        <i class="fas fa-download mr-1"></i> Download
+                    </button>
+                </div>
+            </form>
+
+            <div id="downloadHistoryLoading" class="hidden py-6 text-center">
+                <i class="fas fa-spinner fa-spin text-3xl text-indigo-600"></i>
+                <p id="downloadHistoryLoadingText" class="mt-3 text-sm font-semibold text-slate-600">
+                    Sedang mengumpulkan data...
+                </p>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script>
             document.addEventListener("DOMContentLoaded", function() {
@@ -416,13 +489,15 @@
 
                 searchInput.addEventListener('keyup', debounce(fetchSiswa, 300));
                 resetButton.addEventListener('click', () => window.location.href = window.location.pathname);
-                clearLembagaButton.addEventListener('click', () => {
-                    filterLembaga.value = '';
-                    filterLembagaFormal.value = '';
-                    filterLembagaPondok.value = '';
-                    filterLembagaDiniyah.value = '';
-                    fetchSiswa();
-                });
+                if (clearLembagaButton) {
+                    clearLembagaButton.addEventListener('click', () => {
+                        filterLembaga.value = '';
+                        if (filterLembagaFormal) filterLembagaFormal.value = '';
+                        if (filterLembagaPondok) filterLembagaPondok.value = '';
+                        if (filterLembagaDiniyah) filterLembagaDiniyah.value = '';
+                        fetchSiswa();
+                    });
+                }
 
                 document.addEventListener('click', event => {
                     const pageLink = event.target.closest('.ajaxPage');
@@ -608,6 +683,90 @@
                             console.error('Error downloading file:', err);
                             downloadPembayaranLoadingText.textContent = 'Gagal mengunduh file. Coba lagi.';
                             setTimeout(hideDownloadLoading, 2000);
+                        });
+                });
+
+                // Modal Download History Pembayaran
+                const historyModal = document.getElementById('downloadHistoryModal');
+                const openHistoryBtn = document.getElementById('openDownloadHistoryBtn');
+                const closeHistoryBtn = document.getElementById('closeDownloadHistoryModalBtn');
+                const cancelHistoryBtn = document.getElementById('cancelDownloadHistoryBtn');
+                const downloadHistoryForm = document.getElementById('downloadHistoryForm');
+                const downloadHistoryLoading = document.getElementById('downloadHistoryLoading');
+                const downloadHistoryLoadingText = document.getElementById('downloadHistoryLoadingText');
+                let historyLoadingInterval;
+
+                function showHistoryLoading() {
+                    let index = 0;
+                    downloadHistoryLoadingText.textContent = downloadMessages[index];
+                    downloadHistoryForm.classList.add('hidden');
+                    downloadHistoryLoading.classList.remove('hidden');
+                    clearInterval(historyLoadingInterval);
+                    historyLoadingInterval = setInterval(() => {
+                        index = (index + 1) % downloadMessages.length;
+                        downloadHistoryLoadingText.textContent = downloadMessages[index];
+                    }, 1500);
+                }
+
+                function hideHistoryLoading() {
+                    clearInterval(historyLoadingInterval);
+                    downloadHistoryLoading.classList.add('hidden');
+                    downloadHistoryForm.classList.remove('hidden');
+                }
+
+                function openHistoryModal() {
+                    hideHistoryLoading();
+                    historyModal.classList.remove('hidden');
+                }
+
+                function closeHistoryModal() {
+                    historyModal.classList.add('hidden');
+                    hideHistoryLoading();
+                }
+
+                openHistoryBtn.addEventListener('click', openHistoryModal);
+                closeHistoryBtn.addEventListener('click', closeHistoryModal);
+                cancelHistoryBtn.addEventListener('click', closeHistoryModal);
+                historyModal.addEventListener('click', e => {
+                    if (e.target === historyModal) closeHistoryModal();
+                });
+
+                downloadHistoryForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    showHistoryLoading();
+
+                    const params = new URLSearchParams(new FormData(downloadHistoryForm));
+
+                    fetch(`${downloadHistoryForm.action}?${params.toString()}`)
+                        .then(res => {
+                            if (!res.ok) throw new Error('Gagal mengunduh file.');
+                            const disposition = res.headers.get('Content-Disposition') || '';
+                            const match = disposition.match(/filename="?([^"]+)"?/);
+                            const filename = match ? match[1] : 'history-pembayaran-siswa.xlsx';
+                            return res.blob().then(blob => ({
+                                blob,
+                                filename
+                            }));
+                        })
+                        .then(({
+                            blob,
+                            filename
+                        }) => {
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            window.URL.revokeObjectURL(url);
+                            hideHistoryLoading();
+                            closeHistoryModal();
+                        })
+                        .catch(err => {
+                            console.error('Error downloading file:', err);
+                            downloadHistoryLoadingText.textContent = 'Gagal mengunduh file. Coba lagi.';
+                            setTimeout(hideHistoryLoading, 2000);
                         });
                 });
             });

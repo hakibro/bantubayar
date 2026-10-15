@@ -112,7 +112,10 @@
                         <option value="" hidden>Pilih Role</option>
 
                         @foreach ($roles as $role)
-                            <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                            <option value="{{ $role->name }}"
+                                data-lembaga="{{ $role->lembaga }}">
+                                {{ $role->lembaga ? 'Monitoring — ' . $role->lembaga : ucfirst($role->name) }}
+                            </option>
                         @endforeach
                     </select>
                 </div>

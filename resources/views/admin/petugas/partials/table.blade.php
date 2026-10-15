@@ -34,6 +34,13 @@
                         </span>
                     @endif
 
+                    @php $scopedRole = $item->roles->firstWhere(fn ($role) => !empty($role->lembaga)); @endphp
+                    @if ($scopedRole)
+                        <span class="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-700">
+                            Monitoring {{ $scopedRole->lembaga }}
+                        </span>
+                    @endif
+
                 </td>
 
                 <td class="px-4 py-3 text-center">

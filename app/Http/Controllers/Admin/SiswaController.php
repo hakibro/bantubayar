@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\SiswaHistoryPembayaranExport;
 use App\Exports\SiswaPembayaranExport;
 use App\Exports\SiswaTotalTunggakanExport;
 use App\Http\Controllers\Controller;
@@ -9,6 +10,7 @@ use App\Models\LembagaKelas;
 use App\Models\User;
 use App\Models\Siswa;
 use App\Services\PembayaranService;
+use App\Services\XlsxStreamWriter;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -79,8 +81,9 @@ class SiswaController extends Controller
         }
 
         $daftarLembaga = $this->getLembagaOptions();
+        $lembagaLock = $this->lembagaFilterLock();
 
-        return view('admin.siswa.index', compact('siswa', 'petugas', 'daftarLembaga', 'statPenanganan', 'petugasPerformance'));
+        return view('admin.siswa.index', compact('siswa', 'petugas', 'daftarLembaga', 'statPenanganan', 'petugasPerformance', 'lembagaLock'));
     }
 
     public function export(Request $request)
@@ -155,6 +158,24 @@ class SiswaController extends Controller
         return Excel::download(new SiswaPembayaranExport($query, $periodes), $filename);
     }
 
+    public function exportHistory(Request $request)
+    {
+        $periode = $request->get('periode', 'all');
+        $periodes = PembayaranService::getPeriodes();
+
+        $jenis = $request->get('jenis') === 'alumni' ? 'alumni' : 'siswa';
+        $jenisSuffix = $jenis === 'alumni' ? 'alumni' : 'siswa';
+
+        if (in_array($periode, $periodes, true)) {
+            $periodes = [$periode];
+            $filename = "history-pembayaran-{$jenisSuffix}-{$periode}.xlsx";
+        } else {
+            $filename = "history-pembayaran-{$jenisSuffix}-semua-periode.xlsx";
+        }
+
+        return XlsxStreamWriter::make(new SiswaHistoryPembayaranExport($periodes, $jenis))->stream($filename);
+    }
+
     private function applySort(Builder $query, ?string $sort, string $statusAlias = 'sl'): Builder
     {
         if ($sort === 'tagihan_desc') {
@@ -170,6 +191,15 @@ class SiswaController extends Controller
     {
         $query = Siswa::query()
             ->leftJoin('v_status_lunas_siswa as sl_filter', 'sl_filter.idperson', '=', 'v_siswa.idperson');
+
+        // Scoping: monitoring per lembaga hanya melihat siswa di lembaga-nya
+        if ($lembagaScope = $this->lembagaScope()) {
+            $query->where(function ($q) use ($lembagaScope) {
+                $q->where('v_siswa.unit_formal', $lembagaScope)
+                    ->orWhere('v_siswa.AsramaPondok', $lembagaScope)
+                    ->orWhere('v_siswa.TingkatMadin', $lembagaScope);
+            });
+        }
 
         if ($request->filled('search')) {
             $qsearch = $request->search;
@@ -229,11 +259,51 @@ class SiswaController extends Controller
             ->orderBy('idtingkat')
             ->pluck('idtingkat');
 
+        // Monitoring per lembaga: kunci opsi lembaga ke lembaga user saja
+        if ($lembagaScope = $this->lembagaScope()) {
+            $formal = $formal->filter(fn($item) => $item === $lembagaScope)->values();
+            $pondok = $pondok->filter(fn($item) => $item === $lembagaScope)->values();
+            $diniyah = $diniyah->filter(fn($item) => $item === $lembagaScope)->values();
+        }
+
         return [
             'formal' => $formal,
             'pondok' => $pondok,
             'diniyah' => $diniyah,
         ];
+    }
+
+    /**
+     * Nilai lembaga yang membatasi data untuk user yang sedang login.
+     * null berarti tidak ada pembatasan (admin/monitoring global/petugas).
+     */
+    private function lembagaScope(): ?string
+    {
+        $user = auth()->user();
+
+        return $user?->isLembagaMonitor() ? $user->lembagaScope() : null;
+    }
+
+    /**
+     * Info penguncian filter lembaga untuk view. Format filter: "formal:x" | "pondok:x" | "diniyah:x".
+     */
+    private function lembagaFilterLock(): array
+    {
+        if (!$lembaga = $this->lembagaScope()) {
+            return ['locked' => false, 'value' => null];
+        }
+
+        // Tentukan tipe lembaga berdasarkan daftar opsi agar format filter cocok
+        $options = $this->getLembagaOptions();
+        if ($options['formal']->contains($lembaga)) {
+            $value = 'formal:' . $lembaga;
+        } elseif ($options['pondok']->contains($lembaga)) {
+            $value = 'pondok:' . $lembaga;
+        } else {
+            $value = 'diniyah:' . $lembaga;
+        }
+
+        return ['locked' => true, 'value' => $value];
     }
 
     private function getPetugasPerformance(Request $request, callable $applyPeriod)
@@ -316,6 +386,17 @@ class SiswaController extends Controller
     public function show($id, PembayaranService $pembayaranService)
     {
         $siswa = Siswa::with(['statusLunas', 'phone'])->findOrFail($id);
+
+        // Guard: monitoring per lembaga tidak boleh membuka siswa di luar lembaganya
+        if ($lembagaScope = $this->lembagaScope()) {
+            $inScope = collect([$siswa->unit_formal, $siswa->AsramaPondok, $siswa->TingkatMadin])
+                ->contains(fn($value) => $value === $lembagaScope);
+
+            if (!$inScope) {
+                abort(403, 'Anda tidak memiliki izin untuk melihat data siswa ini.');
+            }
+        }
+
         $pembayaranService->refreshStatusLunasSiswa((string) $siswa->idperson);
         $siswa->load('statusLunas');
 

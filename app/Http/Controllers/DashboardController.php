@@ -15,6 +15,8 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         } elseif ($user->hasRole('monitoring')) {
             return redirect()->route('admin.laporan.petugas');
+        } elseif ($user->isLembagaMonitor()) {
+            return redirect()->route('admin.siswa.index');
         } elseif ($user->hasRole(['bendahara', 'petugas'])) {
             return redirect()->route('petugas.dashboard');
         } else {
