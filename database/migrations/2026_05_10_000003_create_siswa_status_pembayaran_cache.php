@@ -15,7 +15,9 @@ return new class extends Migration {
             $table->timestamp('refreshed_at')->nullable();
         });
 
-        $this->refreshStatusPembayaran();
+        if ($this->shouldSeedCache()) {
+            $this->refreshStatusPembayaran();
+        }
 
         DB::statement("
             CREATE OR REPLACE VIEW v_status_lunas_siswa AS
@@ -25,6 +27,17 @@ return new class extends Migration {
                 is_lunas
             FROM siswa_status_pembayaran
         ");
+    }
+
+    /**
+     * Populasi awal cache ini membaca tabel lintas-database (daruttaqwa_trans.ips_siswa)
+     * yang bisa berisi puluhan ribu baris. Saat testing, query itu tidak relevan dan
+     * membuat migrasi butuh ~86 detik, sehingga dilewati. Tabel tetap dibuat kosong dan
+     * diisi lewat refresh terpisah.
+     */
+    private function shouldSeedCache(): bool
+    {
+        return ! app()->environment('testing');
     }
 
     public function down(): void

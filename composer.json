@@ -47,6 +47,7 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
+            "@php artisan db:create-testing --ansi",
             "npm install",
             "npm run build"
         ],
@@ -56,7 +57,22 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
+            "@php artisan db:create-testing --ansi",
             "@php artisan test"
+        ],
+        "test:parallel": [
+            "@php artisan config:clear --ansi",
+            "@php artisan db:create-testing --ansi",
+            "@php artisan test --parallel --processes=4"
+        ],
+        "test:setup": [
+            "@php artisan db:create-testing --ansi"
+        ],
+        "lint": [
+            "pint"
+        ],
+        "lint:test": [
+            "pint --test"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
