@@ -17,7 +17,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Petugas Visit</p>
-                        <p class="font-semibold">{{ $homeVisit->petugas_nama }} ({{ $homeVisit->petugas_hp }})</p>
+                        <p class="font-semibold">{{ $homeVisit->petugas_nama ?: '-' }} ({{ $homeVisit->petugas_hp ?: '-' }})</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Status</p>
@@ -86,9 +86,21 @@
                 @if ($homeVisit->status === 'pending')
                     <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <p class="text-sm font-semibold text-yellow-800 mb-3">Pengajuan ini menunggu persetujuan.</p>
-                        <div class="flex gap-2">
-                            <form action="{{ route('admin.home-visit.approve', $homeVisit->id) }}" method="POST">
+                        <div class="flex flex-wrap gap-2">
+                            <form action="{{ route('admin.home-visit.approve', $homeVisit->id) }}" method="POST" class="w-full space-y-3">
                                 @csrf
+                                <div>
+                                    <label for="petugas_nama" class="block text-sm font-medium">Nama petugas</label>
+                                    <input id="petugas_nama" name="petugas_nama" type="text" required maxlength="255"
+                                        value="{{ old('petugas_nama', $homeVisit->petugas_nama) }}" class="w-full rounded-lg border-gray-300">
+                                    @error('petugas_nama') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label for="petugas_hp" class="block text-sm font-medium">No. HP petugas</label>
+                                    <input id="petugas_hp" name="petugas_hp" type="tel" required maxlength="20"
+                                        value="{{ old('petugas_hp', $homeVisit->petugas_hp) }}" class="w-full rounded-lg border-gray-300">
+                                    @error('petugas_hp') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
                                 <button type="submit"
                                     class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
                                     <i class="fas fa-check"></i> Setujui

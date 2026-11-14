@@ -360,6 +360,8 @@ class PenangananController extends Controller
         $data = $request->validate([
             'id_siswa' => 'required',
             'alasan_override' => 'nullable|string|max:2000',
+            'petugas_nama' => 'nullable|string|max:255',
+            'petugas_hp' => 'nullable|string|max:20',
         ]);
 
         $siswa = Penanganan::resolveSiswa($data['id_siswa']);
@@ -390,8 +392,8 @@ class PenangananController extends Controller
             'admin_id' => null,
             'penanganan_id' => $penanganan?->id,
             'diajukan_oleh' => Auth::id(),
-            'petugas_nama' => $request->input('petugas_nama'),
-            'petugas_hp' => $request->input('petugas_hp'),
+            'petugas_nama' => $data['petugas_nama'] ?? null,
+            'petugas_hp' => $data['petugas_hp'] ?? null,
             'tanggal_visit' => $request->input('tanggal_visit'),
             'alasan_pengajuan' => $data['alasan_override'] ?? null,
             'token' => \Str::uuid(),

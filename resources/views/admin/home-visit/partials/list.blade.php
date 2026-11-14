@@ -21,7 +21,7 @@
                 {{ $item->petugas_nama }}
                 <span class="text-xs text-gray-400">({{ $item->petugas_hp ?? '-' }})</span>
             @else
-                <span class="text-gray-400 italic">share link</span>
+                <span class="text-gray-400 italic">Belum diisi</span>
             @endif
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -33,12 +33,14 @@
         <td class="px-6 py-4 whitespace-nowrap text-sm">
             <a href="{{ route('admin.home-visit.show', $item->id) }}"
                 class="text-primary hover:underline font-medium">Detail</a>
-            @if ($item->status === 'pending')
+            @if ($item->status === 'pending' && filled($item->petugas_nama) && filled($item->petugas_hp))
                 <form action="{{ route('admin.home-visit.approve', $item->id) }}" method="POST"
                     class="inline">
                     @csrf
                     <button type="submit" class="text-green-600 hover:underline ml-2">Setujui</button>
                 </form>
+            @elseif ($item->status === 'pending')
+                <span class="text-amber-700 ml-2">Lengkapi petugas di detail</span>
             @endif
         </td>
     </tr>

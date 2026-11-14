@@ -48,7 +48,7 @@
                     <label class="block text-xs font-bold text-gray-500 mb-1">Nama Petugas (opsional)</label>
                     <input type="text" id="homevisitPetugasNama"
                         class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-primaryLight outline-none"
-                        placeholder="Kosongkan bila cukup share link">
+                        placeholder="Admin akan melengkapi bila kosong">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">HP Petugas (opsional)</label>
@@ -78,7 +78,7 @@
             document.getElementById('homevisitContent').classList.add('hidden');
             document.getElementById('homevisitPengajuanAktif').classList.add('hidden');
 
-            fetch(HOMEVISIT_STATUS_URL)
+            fetch(HOMEVISIT_STATUS_URL, { headers: { 'Accept': 'application/json' } })
                 .then(res => res.json())
                 .then(data => renderHomeVisitStatus(data))
                 .catch(() => showToast('Gagal memuat status home visit', 'error'));
@@ -156,6 +156,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     body: JSON.stringify({
@@ -166,7 +167,9 @@
                     })
                 })
                 .then(async response => {
-                    const data = await response.json();
+                    const data = await response.json().catch(() => {
+                        throw new Error(`Respons tidak valid (HTTP ${response.status}). Periksa status pengajuan sebelum mencoba lagi.`);
+                    });
                     if (!response.ok) throw data;
                     return data;
                 })

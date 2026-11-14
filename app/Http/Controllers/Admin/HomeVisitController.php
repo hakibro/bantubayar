@@ -37,7 +37,7 @@ class HomeVisitController extends Controller
         return view('admin.home-visit.index', compact('homeVisits'));
     }
 
-    public function approve($id)
+    public function approve(Request $request, $id)
     {
         $homeVisit = HomeVisit::findOrFail($id);
 
@@ -45,7 +45,16 @@ class HomeVisitController extends Controller
             return back()->with('error', 'Pengajuan ini sudah diproses.');
         }
 
+        $data = validator([
+            'petugas_nama' => $request->input('petugas_nama', $homeVisit->petugas_nama),
+            'petugas_hp' => $request->input('petugas_hp', $homeVisit->petugas_hp),
+        ], [
+            'petugas_nama' => 'required|string|max:255',
+            'petugas_hp' => 'required|string|max:20',
+        ])->validate();
+
         $homeVisit->update([
+            ...$data,
             'status' => 'disetujui',
             'disetujui_oleh' => auth()->id(),
             'disetujui_at' => now(),
