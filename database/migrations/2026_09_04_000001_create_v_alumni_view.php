@@ -21,7 +21,7 @@ return new class extends Migration {
             JOIN daruttaqwa_person.tbl_person p ON p.idperson = s.idperson
             JOIN daruttaqwa_sisda.tbl_luluskel lk ON lk.idluluskel = s.idluluskel
             JOIN daruttaqwa_referensi.tbl_departemen d ON d.idunit = lk.idunit
-            LEFT JOIN bantubayar.v_siswa_phone phs ON phs.idperson = p.idperson
+            LEFT JOIN v_siswa_phone phs ON phs.idperson = p.idperson
             LEFT JOIN duwit.person dw ON dw.idperson = p.idperson
             WHERE s.alumni = 1
               AND s.idluluskel IS NOT NULL
