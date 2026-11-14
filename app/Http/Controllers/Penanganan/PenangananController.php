@@ -276,7 +276,7 @@ class PenangananController extends Controller
     {
         $data = $request->validate([
             'id_siswa' => 'required|exists:v_siswa,idperson',
-            'wali' => 'required|string',
+            'wali' => 'required|in:ayah,ibu',
             'phone' => 'required|string',
         ]);
 
@@ -289,26 +289,30 @@ class PenangananController extends Controller
             ], 404);
         }
 
-        \DB::transaction(function () use ($data, $siswa) {
-            $penanganan = Penanganan::getOrCreateForSiswa($siswa);
-
-            if ($penanganan->id_petugas !== Auth::id()) {
-                return;
-            }
-
-            $penanganan->addHistory(
-                'update phone',
-                trim('Update No. HP ke ' . $data['phone'] . ' - ' . ($data['wali'] ?? ''))
-            );
-        });
-
         try {
-            $siswaService->updateTelepon($siswa->idperson, $data['wali'], $data['phone']);
+            \DB::transaction(function () use ($data, $siswa, $siswaService) {
+                $penanganan = Penanganan::getOrCreateForSiswa($siswa);
+
+                if ($penanganan->id_petugas !== Auth::id()) {
+                    abort(403, 'Penanganan ini bukan milik Anda.');
+                }
+
+                $siswaService->updateTelepon($siswa->idperson, $data['wali'], $data['phone']);
+                $penanganan->addHistory(
+                    'update phone',
+                    trim('Update No. HP ke ' . $data['phone'] . ' - ' . $data['wali'])
+                );
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Berhasil menyimpan No. HP Wali ' . $siswa->nama . ': ' . $data['phone'] . ' - ' . $data['wali'],
             ]);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getStatusCode());
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,

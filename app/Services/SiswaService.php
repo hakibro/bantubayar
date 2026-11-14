@@ -2,27 +2,28 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class SiswaService
 {
-    public function updateTelepon(string $idperson, string $pemilik, string $nomor): array
+    public function updateTelepon(string $idperson, string $pemilik, string $nomor): void
     {
-        $response = Http::withHeaders([
-            'Accept'       => 'application/json',
-            'Content-Type' => 'application/json',
-        ])->withCookies([
-            'SWN' => env('API_SWN'),
-        ], 'api.daruttaqwa.or.id')
-            ->post(
-                'https://api.daruttaqwa.or.id/sisda/v1/update_telepon/' . $idperson,
-                ['pemilik' => $pemilik, 'nomor' => $nomor]
-            );
+        $phone = DB::table('daruttaqwa_person.tbl_person_phone')
+            ->where('idperson', $idperson)
+            ->where('pemilik', $pemilik);
 
-        if (!$response->successful()) {
-            throw new \Exception('Gagal update nomor telepon: ' . $response->body());
+        if ($phone->exists()) {
+            $phone->update(['phone_number' => $nomor]);
+
+            return;
         }
 
-        return ['status' => true, 'data' => $response->json()];
+        DB::table('daruttaqwa_person.tbl_person_phone')->insert([
+            'idperson' => $idperson,
+            'pemilik' => $pemilik,
+            'phone_number' => $nomor,
+            'status' => 1,
+            'penerima' => 1,
+        ]);
     }
 }

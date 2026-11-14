@@ -237,7 +237,7 @@ Laravel 12 + Blade (server-rendered, no SPA) app for handling unpaid student tui
 
 ### External integration
 
-- `App\Services\SiswaService::updateTelepon()` POSTs to `https://api.daruttaqwa.or.id/sisda/v1/update_telepon/{idperson}` using a cookie `SWN` from the `API_SWN` env var (not yet present in `.env.example`).
+- `App\Services\SiswaService::updateTelepon()` updates `daruttaqwa_person.tbl_person_phone` directly by `idperson` and `pemilik`; no external API credential is needed.
 - There is a secondary `mysql_second` DB connection defined in `config/database.php` (env `DB_*_SECOND`); it is only referenced in `CustomController`, and several commented-out uses remain in `web.php`.
 
 ### Commands & workflow
