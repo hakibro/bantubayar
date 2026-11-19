@@ -53,3 +53,38 @@ Homestead.json
 .env.production
 .phpactor.json
 auth.json
+
+# >>> sensitive / server config (auto-added) >>>
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+*.env
+.env.*.local
+
+# Server / runtime config (lokal, mesin-spesifik)
+.lerd.yaml
+.lerd.yml
+.php-version
+.node-version
+.nvmrc
+.tool-versions
+.phpactor.json
+Homestead.json
+Homestead.yaml
+auth.json
+.accesstokengithub
+*.pem
+*.key
+
+# Local AI / MCP tool config (berisi path & kredensial lokal)
+.mcp.json
+opencode.json
+GEMINI.md
+AGENTS.md
+.claude/
+.gemini/
+.junie/
+.cursor/
+.codex/
+# <<< sensitive / server config <<<
